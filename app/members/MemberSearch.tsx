@@ -32,7 +32,7 @@ export default function MemberSearch({
 
   useEffect(() => {
     fetchMembers()
-  }, [supabase])
+  }, [fetchMembers])
 
   const handleSearch = async () => {
     if (!supabase) return
@@ -59,8 +59,6 @@ export default function MemberSearch({
         <h1 className="text-3xl font-extrabold text-indigo-600">회원 관리</h1>
         <p className="text-sm text-gray-500 mt-2">운동 기록을 확인하거나 새로운 회원을 등록해보세요</p>
       </div>
-
-
       <div className="flex items-center justify-center mb-6 space-x-3">
         <div className="relative">
           <input

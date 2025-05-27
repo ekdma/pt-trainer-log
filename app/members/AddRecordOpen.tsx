@@ -11,7 +11,7 @@ type Props = {
   onSave: (record: NewWorkoutRecord) => void
 }
 
-export default function AddRecordForm({ member, existingTargets, onCancel, onSave }: Props) {
+export default function AddRecordForm({ member, onCancel, onSave }: Props) {
   const [target, setTarget] = useState('')
   const [workout, setWorkout] = useState('')
   const [reps, setReps] = useState<number | ''>('')
