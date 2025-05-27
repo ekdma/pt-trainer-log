@@ -1,5 +1,6 @@
 'use client'
 
+import { Plus, ArrowLeft } from 'lucide-react'
 import { useEffect, useState } from 'react'
 import { NewWorkoutRecord, Member } from './types'
 import {
@@ -169,26 +170,30 @@ export default function MemberGraphs({ member, logs: initialLogs, onBack }: Prop
           <div className="flex space-x-2">
             <Button 
               onClick={() => setIsAddRecordOpen(true)}
-              className="bg-transparent text-indigo-600 border border-indigo-600 px-5 py-2 rounded-xl hover:bg-indigo-100 transition duration-300"
+              className="flex items-center gap-1 text-sm text-green-600 border border-green-600 px-3 py-1.5 rounded-lg hover:bg-green-100 transition duration-200"
             >
+              <Plus size={16} />
                 기록 추가
             </Button>
             <Button
               onClick={onBack}
-              className="bg-transparent text-indigo-600 border border-indigo-600 px-5 py-2 rounded-xl hover:bg-indigo-100 transition duration-300"
+              className="flex items-center gap-1 text-sm text-indigo-600 border border-indigo-600 px-3 py-1.5 rounded-lg hover:bg-indigo-100 transition duration-200"
             >
-              ← Back
+              <ArrowLeft size={16} />
+              뒤로
             </Button>
 
           </div>
         </div>
 
         {/* Target 선택 버튼 그룹 */}
-        <div className="mb-6 space-x-2">
+        <div className="mb-6 flex flex-wrap gap-2">
           <button
             onClick={() => setSelectedTarget(null)}
-            className={`px-4 py-1 rounded font-medium ${
-              selectedTarget === null ? 'bg-blue-600 text-white' : 'bg-gray-200 text-gray-700 hover:bg-gray-300'
+            className={`px-3 py-1.5 rounded-full text-sm font-medium transition duration-150 border ${
+              selectedTarget === null
+                ? 'bg-blue-600 text-white shadow-md border-transparent'
+                : 'bg-white text-gray-700 hover:bg-blue-50 border-gray-300'
             }`}
           >
             통합
@@ -197,8 +202,10 @@ export default function MemberGraphs({ member, logs: initialLogs, onBack }: Prop
             <button
               key={target}
               onClick={() => setSelectedTarget(target)}
-              className={`px-4 py-1 rounded font-medium ${
-                selectedTarget === target ? 'bg-blue-600 text-white' : 'bg-gray-200 text-gray-700 hover:bg-gray-300'
+              className={`px-3 py-1.5 rounded-full text-sm font-medium transition duration-150 border ${
+                selectedTarget === target
+                  ? 'bg-blue-600 text-white shadow-md border-transparent'
+                  : 'bg-white text-gray-700 hover:bg-blue-50 border-gray-300'
               }`}
             >
               {target}

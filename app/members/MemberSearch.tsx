@@ -3,7 +3,8 @@
 import { useState, useEffect } from 'react'
 import { getSupabaseClient } from '@/lib/supabase'
 import { Member, NewWorkoutRecord } from './types'
-import { SupabaseClient } from '@supabase/supabase-js' // ✅ 추가
+import AddMemberOpen from './AddMemberOpen'
+import { SupabaseClient } from '@supabase/supabase-js'
 
 export default function MemberSearch({
   onSelectMember,
@@ -15,19 +16,21 @@ export default function MemberSearch({
   const [supabase, setSupabase] = useState<SupabaseClient | null>(null)
   const [keyword, setKeyword] = useState('')
   const [filteredMembers, setFilteredMembers] = useState<Member[]>([])
+  const [isAddMemberOpen, setIsAddMemberOpen] = useState(false)
 
   useEffect(() => {
     setSupabase(getSupabaseClient())
   }, [])
 
-  useEffect(() => {
+  const fetchMembers = async () => {
     if (!supabase) return
-    const fetchMembers = async () => {
-      const { data, error } = await supabase.from('members').select('*')
-      if (!error && data) {
-        setFilteredMembers(data)
-      }
+    const { data, error } = await supabase.from('members').select('*')
+    if (!error && data) {
+      setFilteredMembers(data)
     }
+  }
+
+  useEffect(() => {
     fetchMembers()
   }, [supabase])
 
@@ -51,37 +54,63 @@ export default function MemberSearch({
   }
 
   return (
-    <div className="flex flex-col items-center justify-center text-center min-h-screen bg-slate-50">
-      <h1 className="text-2xl font-bold text-indigo-300 mb-6">회원 검색</h1>
-      <div className="flex items-center justify-center mb-4">
-        <input
-          type="text"
-          value={keyword}
-          onChange={(e) => setKeyword(e.target.value)}
-          onKeyDown={(e) => {
-            if (e.key === 'Enter') handleSearch()
-          }}
-          placeholder="이름을 입력하세요"
-          className="border p-2 rounded mr-2 w-64 text-black placeholder-gray-400"
-        />
+    <div className="flex flex-col items-center justify-center text-center bg-slate-50 py-8">
+      <div className="text-center mb-6">
+        <h1 className="text-3xl font-extrabold text-indigo-600">회원 관리</h1>
+        <p className="text-sm text-gray-500 mt-2">운동 기록을 확인하거나 새로운 회원을 등록해보세요</p>
+      </div>
+
+
+      <div className="flex items-center justify-center mb-6 space-x-3">
+        <div className="relative">
+          <input
+            type="text"
+            value={keyword}
+            onChange={(e) => setKeyword(e.target.value)}
+            onKeyDown={(e) => {
+              if (e.key === 'Enter') handleSearch()
+            }}
+            placeholder="이름을 입력하세요"
+            className="pl-10 pr-4 py-2 w-72 border border-gray-300 rounded-full shadow-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 text-black placeholder-gray-400"
+          />
+          <span className="absolute left-3 top-2.5 text-gray-400">
+            🔍
+          </span>
+        </div>
         <button
           onClick={handleSearch}
-          className="bg-indigo-500 hover:bg-indigo-600 text-white px-4 py-2 rounded"
+          className="bg-indigo-500 hover:bg-indigo-600 text-white px-4 py-2 rounded-full shadow-md transition"
         >
           검색
         </button>
+        <button
+          onClick={() => setIsAddMemberOpen(true)}
+          className="bg-green-500 hover:bg-green-600 text-white px-4 py-2 rounded-full shadow-md transition"
+        >
+          신규회원 등록
+        </button>
       </div>
-      <ul className="space-y-2">
+
+      <ul className="space-y-3 w-full max-w-md">
         {filteredMembers.map((member) => (
           <li
             key={member.member_id}
-            className="bg-transparent text-indigo-600 border border-indigo-600 px-5 py-2 rounded-xl hover:bg-indigo-100 transition duration-300"
             onClick={() => handleSelect(member)}
+            className="bg-white border border-indigo-200 rounded-xl px-5 py-3 shadow-sm hover:shadow-md hover:bg-indigo-50 transition duration-300 cursor-pointer"
           >
-            {member.name} ({member.age}세)
+            <span className="text-indigo-700 font-semibold">{member.name}</span>
+            <span className="text-gray-500 text-sm ml-2">({member.age}세)</span>
           </li>
         ))}
       </ul>
+
+
+      {isAddMemberOpen && (
+        <AddMemberOpen
+          onClose={() => setIsAddMemberOpen(false)}
+          onMemberAdded={() => fetchMembers()}
+        />
+      )}
     </div>
   )
 }

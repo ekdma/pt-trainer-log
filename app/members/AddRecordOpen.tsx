@@ -59,85 +59,100 @@ export default function AddRecordForm({ member, existingTargets, onCancel, onSav
   }
 
   return (
-    <div className="fixed inset-0 bg-black bg-opacity-50 flex justify-center items-center z-50">
-      <form onSubmit={handleSubmit} className="bg-white p-6 rounded shadow-lg w-96">
-        <h3 className="text-lg text-gray-700 font-semibold mb-4">운동 기록 추가</h3>
-        <label className="block mb-2 text-gray-700">
-          회원이름
+    <div className="fixed inset-0 bg-black/50 flex justify-center items-center z-50">
+      <form
+        onSubmit={handleSubmit}
+        className="bg-white rounded-2xl shadow-xl w-full max-w-md p-6 space-y-5 border border-gray-100"
+      >
+        <h3 className="text-xl font-bold text-indigo-600 border-b pb-2">운동 기록 추가</h3>
+
+        {/* 이름 표시 */}
+        <div>
+          <label className="block text-sm font-medium text-gray-600 mb-1">회원 이름</label>
           <input
             type="text"
             value={member.name}
             readOnly
-            className="w-full border rounded px-2 py-1 bg-gray-100 text-gray-700 cursor-not-allowed"
+            className="w-full bg-gray-100 border border-gray-300 rounded-lg px-3 py-2 text-gray-700 cursor-not-allowed"
           />
-        </label>
+        </div>
 
-        <label className="block mb-2 text-gray-700">
-          부위 (Target)
+        {/* 부위 */}
+        <div>
+          <label className="block text-sm font-medium text-gray-600 mb-1">운동 부위</label>
           <input
-            list="target-list"
+            type="text"
             value={target}
             onChange={(e) => setTarget(e.target.value)}
-            className="w-full border rounded px-2 py-1"
             placeholder="예: Leg, Back, Chest"
-            required
+            className="w-full border border-gray-300 text-gray-700 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-indigo-400"
           />
-          <datalist id="target-list">
-            {existingTargets.map((t) => (
-              <option key={t} value={t} />
-            ))}
-          </datalist>
-        </label>
+        </div>
 
-        <label className="block mb-2 text-gray-700">
-          운동명 (Workout)
+        {/* 운동명 */}
+        <div>
+          <label className="block text-sm font-medium text-gray-600 mb-1">운동명</label>
           <input
             type="text"
             value={workout}
             onChange={(e) => setWorkout(e.target.value)}
-            className="w-full border rounded px-2 py-1"
+            placeholder="예: Squat, Lunge"
+            className="w-full border border-gray-300 text-gray-700 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-indigo-400"
             required
           />
-        </label>
+        </div>
 
-        <label className="block mb-2 text-gray-700">
-          횟수 (Reps)
-          <input
-            type="number"
-            min={0}
-            value={reps}
-            onChange={(e) => setReps(e.target.value === '' ? '' : Number(e.target.value))}
-            className="w-full border rounded px-2 py-1"
-          />
-        </label>
+        {/* 횟수 */}
+        <div className="flex gap-4">
+          <div className="w-1/2">
+            <label className="block text-sm font-medium text-gray-600 mb-1">횟수 (Reps)</label>
+            <input
+              type="number"
+              min={0}
+              value={reps}
+              onChange={(e) => setReps(e.target.value === '' ? '' : Number(e.target.value))}
+              placeholder="예: 10"
+              className="w-full border border-gray-300 text-gray-700 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-indigo-400"
+            />
+          </div>
 
-        <label className="block mb-2 text-gray-700">
-          무게 (Weight, kg)
-          <input
-            type="number"
-            min={0}
-            value={weight}
-            onChange={(e) => setWeight(e.target.value === '' ? '' : Number(e.target.value))}
-            className="w-full border rounded px-2 py-1"
-          />
-        </label>
+          {/* 무게 */}
+          <div className="w-1/2">
+            <label className="block text-sm font-medium text-gray-600 mb-1">무게 (kg)</label>
+            <input
+              type="number"
+              min={0}
+              value={weight}
+              onChange={(e) => setWeight(e.target.value === '' ? '' : Number(e.target.value))}
+              placeholder="예: 60"
+              className="w-full border border-gray-300 text-gray-700 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-indigo-400"
+            />
+          </div>
+        </div>
 
-        <label className="block mb-4 text-gray-700">
-          날짜 (Date)
+        {/* 날짜 */}
+        <div>
+          <label className="block text-sm font-medium text-gray-600 mb-1">날짜</label>
           <input
             type="date"
             value={date}
             onChange={(e) => setDate(e.target.value)}
-            className="w-full border rounded px-2 py-1"
+            className="w-full border border-gray-300 text-gray-700 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-indigo-400"
             required
           />
-        </label>
+        </div>
 
-        <div className="flex justify-end space-x-2">
-          <Button type="button" variant="outline" onClick={onCancel} className="text-gray-700">취소</Button>
-          <Button type="submit" className="text-gray-700">저장</Button>
+        {/* 버튼 */}
+        <div className="flex justify-end gap-3 pt-2">
+          <Button type="button" variant="outline" onClick={onCancel} className="text-gray-700">
+            취소
+          </Button>
+          <Button type="submit" className="bg-indigo-600 hover:bg-indigo-700 text-white">
+            저장
+          </Button>
         </div>
       </form>
     </div>
+
   )
 }
