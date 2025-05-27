@@ -7,7 +7,6 @@ import {
 } from 'recharts'
 import { Button } from '@/components/ui/button'
 import AddRecordForm from "./AddRecordOpen"
-import MemberDashboard from "./MemberDashboard"
 import { addWorkoutRecordToDB, getWorkoutRecords } from '../../lib/supabase' // 실제 경로에 맞춰 수정 필요
 
 type Props = {
@@ -41,17 +40,21 @@ function hexToHSL(H: string) {
     b = parseInt(H.substring(5, 7), 16)
   }
 
-  r /= 255; g /= 255; b /= 255
-  const max = Math.max(r, g, b), min = Math.min(r, g, b)
-  let h = 0, s = 0, l = (max + min) / 2
+  const rNorm = r / 255
+  const gNorm = g / 255
+  const bNorm = b / 255
+  const max = Math.max(rNorm, gNorm, bNorm)
+  const min = Math.min(rNorm, gNorm, bNorm)
+  let h = 0, s = 0
+  const l = (max + min) / 2
 
   if (max !== min) {
     const d = max - min
     s = l > 0.5 ? d / (2 - max - min) : d / (max + min)
     switch (max) {
-      case r: h = (g - b) / d + (g < b ? 6 : 0); break
-      case g: h = (b - r) / d + 2; break
-      case b: h = (r - g) / d + 4; break
+      case rNorm: h = (gNorm - bNorm) / d + (gNorm < bNorm ? 6 : 0); break
+      case gNorm: h = (bNorm - rNorm) / d + 2; break
+      case bNorm: h = (rNorm - gNorm) / d + 4; break
     }
     h /= 6
   }
@@ -75,13 +78,14 @@ function hslToHex(h: number, s: number, l: number) {
   else if (h < 300) { r = x; g = 0; b = c }
   else { r = c; g = 0; b = x }
 
-  r = Math.round((r + m) * 255)
-  g = Math.round((g + m) * 255)
-  b = Math.round((b + m) * 255)
+  const rFinal = Math.round((r + m) * 255)
+  const gFinal = Math.round((g + m) * 255)
+  const bFinal = Math.round((b + m) * 255)
 
   const toHex = (v: number) => v.toString(16).padStart(2, '0')
-  return `#${toHex(r)}${toHex(g)}${toHex(b)}`
+  return `#${toHex(rFinal)}${toHex(gFinal)}${toHex(bFinal)}`
 }
+
 
 // Workout 별로 Base Color에서 명도와 채도를 변형해서 색상 부여
 const usedColors: Record<string, Record<string, string>> = {}

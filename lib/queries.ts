@@ -50,7 +50,7 @@ export async function addWorkoutRecord(newRecord: WorkoutRecord): Promise<{ data
 }
 
 // 회원별 타겟 정보 조회 (MemberGraphs 컴포넌트에서 사용한다고 가정)
-export async function getTargetsByMemberId(member_id: number): Promise<any[]> {
+export async function getTargetsByMemberId(member_id: number): Promise<Member[]> {
   const { data, error } = await supabase
     .from("targets")
     .select("*")
@@ -60,5 +60,5 @@ export async function getTargetsByMemberId(member_id: number): Promise<any[]> {
     console.error("Failed to fetch targets:", error);
     return [];
   }
-  return data || [];
+  return data as Member[] || [];
 }
