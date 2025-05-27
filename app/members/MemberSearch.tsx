@@ -3,6 +3,7 @@
 import { useState, useEffect } from 'react'
 import { getSupabaseClient } from '@/lib/supabase'
 import { Member, NewWorkoutRecord } from './types'
+import { SupabaseClient } from '@supabase/supabase-js' // ✅ 추가
 
 export default function MemberSearch({
   onSelectMember,
@@ -11,7 +12,7 @@ export default function MemberSearch({
   onSelectMember: (member: Member) => void
   onSetLogs: (logs: NewWorkoutRecord[]) => void
 }) {
-  const [supabase, setSupabase] = useState<any>(null)
+  const [supabase, setSupabase] = useState<SupabaseClient | null>(null)
   const [keyword, setKeyword] = useState('')
   const [filteredMembers, setFilteredMembers] = useState<Member[]>([])
 
