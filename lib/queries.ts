@@ -1,7 +1,9 @@
-import { supabase } from "@/lib/supabase"; // 네 supabase 클라이언트 경로에 맞게 수정
+import { getSupabaseClient } from "@/lib/supabase"
 
 import type { Member, WorkoutRecord } from "../app/members/types"; 
 // 타입 경로도 네 프로젝트에 맞게 조정 필요
+
+const supabase = getSupabaseClient()
 
 interface PostgrestError {
   message: string;

@@ -1,8 +1,10 @@
 'use client'
 
 import { useState, useEffect } from 'react'
-import { supabase } from '@/lib/supabase'
+import { getSupabaseClient } from "@/lib/supabase"
 import { Member, NewWorkoutRecord } from './types'
+
+const supabase = getSupabaseClient()
 
 export default function MemberSearch({
   onSelectMember,
