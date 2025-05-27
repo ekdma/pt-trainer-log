@@ -5,6 +5,7 @@ import { getSupabaseClient } from '@/lib/supabase'
 import { Member, NewWorkoutRecord } from './types'
 import AddMemberOpen from './AddMemberOpen'
 import { SupabaseClient } from '@supabase/supabase-js'
+import { User } from 'lucide-react';
 
 export default function MemberSearch({
   onSelectMember,
@@ -97,9 +98,16 @@ export default function MemberSearch({
             onClick={() => handleSelect(member)}
             className="bg-white border border-indigo-200 rounded-xl px-5 py-3 shadow-sm hover:shadow-md hover:bg-indigo-50 transition duration-300 cursor-pointer"
           >
-            <span className="text-indigo-700 font-semibold">{member.name}</span>
-            <span className="text-gray-500 text-sm ml-2">({member.age}세)</span>
+            <div className="flex flex-col space-y-1">
+              <span className="text-xs font-bold text-white bg-indigo-500 rounded-full w-fit px-2 py-0.5">
+                {member.role}
+              </span>
+              <span className="text-indigo-700 font-semibold text-lg">{member.name}</span>
+              <span className="text-gray-500 text-sm">{member.age}세</span>
+            </div>
           </li>
+        
+        
         ))}
       </ul>
 
