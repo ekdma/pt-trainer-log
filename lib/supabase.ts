@@ -2,10 +2,19 @@
 import { createClient } from '@supabase/supabase-js'
 import { NewWorkoutRecord } from '../app/members/types' // ← 이 부분이 중요!
 
-const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!
-const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
+// 환경변수는 사용 직전에 가져오기 (빌드 타이밍 문제 회피)
+function getClient() {
+  const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL
+  const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
 
-export const supabase = createClient(supabaseUrl, supabaseAnonKey)
+  if (!supabaseUrl || !supabaseAnonKey) {
+    throw new Error('Missing Supabase environment variables')
+  }
+
+  return createClient(supabaseUrl, supabaseAnonKey)
+}
+
+export const supabase = getClient()
 
 // DB에 기록 추가
 export async function addWorkoutRecordToDB(record: NewWorkoutRecord) {
