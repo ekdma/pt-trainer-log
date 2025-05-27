@@ -5,7 +5,6 @@ import { getSupabaseClient } from '@/lib/supabase'
 import { Member, NewWorkoutRecord } from './types'
 import AddMemberOpen from './AddMemberOpen'
 import { SupabaseClient } from '@supabase/supabase-js'
-import { User } from 'lucide-react';
 
 export default function MemberSearch({
   onSelectMember,
