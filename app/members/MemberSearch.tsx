@@ -1,10 +1,8 @@
 'use client'
 
 import { useState, useEffect } from 'react'
-import { getSupabaseClient } from "@/lib/supabase"
+import { getSupabaseClient } from '@/lib/supabase'
 import { Member, NewWorkoutRecord } from './types'
-
-const supabase = getSupabaseClient()
 
 export default function MemberSearch({
   onSelectMember,
@@ -13,10 +11,16 @@ export default function MemberSearch({
   onSelectMember: (member: Member) => void
   onSetLogs: (logs: NewWorkoutRecord[]) => void
 }) {
+  const [supabase, setSupabase] = useState<any>(null)
   const [keyword, setKeyword] = useState('')
   const [filteredMembers, setFilteredMembers] = useState<Member[]>([])
 
   useEffect(() => {
+    setSupabase(getSupabaseClient())
+  }, [])
+
+  useEffect(() => {
+    if (!supabase) return
     const fetchMembers = async () => {
       const { data, error } = await supabase.from('members').select('*')
       if (!error && data) {
@@ -24,9 +28,10 @@ export default function MemberSearch({
       }
     }
     fetchMembers()
-  }, [])
+  }, [supabase])
 
   const handleSearch = async () => {
+    if (!supabase) return
     const { data: membersData } = await supabase
       .from('members')
       .select('*')
@@ -35,6 +40,7 @@ export default function MemberSearch({
   }
 
   const handleSelect = async (member: Member) => {
+    if (!supabase) return
     const { data: logsData } = await supabase
       .from('workout_logs')
       .select('*')
@@ -52,7 +58,7 @@ export default function MemberSearch({
           value={keyword}
           onChange={(e) => setKeyword(e.target.value)}
           onKeyDown={(e) => {
-            if (e.key === 'Enter') handleSearch(); 
+            if (e.key === 'Enter') handleSearch()
           }}
           placeholder="이름을 입력하세요"
           className="border p-2 rounded mr-2 w-64 text-black placeholder-gray-400"
