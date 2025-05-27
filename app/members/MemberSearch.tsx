@@ -54,13 +54,14 @@ export default function MemberSearch({
   }
 
   return (
-    <div className="flex flex-col items-center justify-center text-center bg-slate-50 py-8">
+    <div className="flex flex-col items-center justify-center text-center bg-slate-50 py-8 px-4">
       <div className="text-center mb-6">
         <h1 className="text-3xl font-extrabold text-indigo-600">회원 관리</h1>
         <p className="text-sm text-gray-500 mt-2">운동 기록을 확인하거나 새로운 회원을 등록해보세요</p>
       </div>
-      <div className="flex items-center justify-center mb-6 space-x-3">
-        <div className="relative">
+
+      <div className="flex flex-col sm:flex-row items-center justify-center mb-6 space-y-2 sm:space-y-0 sm:space-x-3 w-full max-w-md">
+        <div className="relative w-full sm:w-auto">
           <input
             type="text"
             value={keyword}
@@ -69,21 +70,21 @@ export default function MemberSearch({
               if (e.key === 'Enter') handleSearch()
             }}
             placeholder="이름을 입력하세요"
-            className="pl-10 pr-4 py-2 w-72 border border-gray-300 rounded-full shadow-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 text-black placeholder-gray-400"
+            className="pl-10 pr-4 py-2 w-full border border-gray-300 rounded-full shadow-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 text-black placeholder-gray-400"
           />
-          <span className="absolute left-3 top-2.5 text-gray-400">
-            🔍
-          </span>
+          <span className="absolute left-3 top-2.5 text-gray-400">🔍</span>
         </div>
+
         <button
           onClick={handleSearch}
-          className="bg-indigo-500 hover:bg-indigo-600 text-white px-4 py-2 rounded-full shadow-md transition"
+          className="w-full sm:w-auto bg-indigo-500 hover:bg-indigo-600 text-white px-4 py-2 rounded-full shadow-md transition"
         >
           검색
         </button>
+
         <button
           onClick={() => setIsAddMemberOpen(true)}
-          className="bg-green-500 hover:bg-green-600 text-white px-4 py-2 rounded-full shadow-md transition"
+          className="w-full sm:w-auto bg-green-500 hover:bg-green-600 text-white px-4 py-2 rounded-full shadow-md transition"
         >
           신규회원 등록
         </button>
@@ -101,7 +102,6 @@ export default function MemberSearch({
           </li>
         ))}
       </ul>
-
 
       {isAddMemberOpen && (
         <AddMemberOpen

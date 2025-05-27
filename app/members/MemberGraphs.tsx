@@ -165,24 +165,23 @@ export default function MemberGraphs({ member, logs: initialLogs, onBack }: Prop
     <div className="p-4 max-w-screen-lg mx-auto">
       <div className="space-y-6">
         {/* 상단 헤더 + 버튼 */}
-        <div className="flex justify-between items-center">
+        <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center space-y-2 sm:space-y-0">
           <h2 className="text-xl text-black font-semibold">{member.name} 님의 운동 기록</h2>
-          <div className="flex space-x-2">
+          <div className="flex flex-col sm:flex-row sm:space-x-2 space-y-2 sm:space-y-0">
             <Button 
               onClick={() => setIsAddRecordOpen(true)}
-              className="flex items-center gap-1 text-sm text-green-600 border border-green-600 px-3 py-1.5 rounded-lg hover:bg-green-100 transition duration-200"
+              className="w-full sm:w-auto flex items-center gap-1 text-sm text-green-600 border border-green-600 px-3 py-1.5 rounded-lg hover:bg-green-100 transition duration-200"
             >
               <Plus size={16} />
-                기록 추가
+              기록 추가
             </Button>
             <Button
               onClick={onBack}
-              className="flex items-center gap-1 text-sm text-indigo-600 border border-indigo-600 px-3 py-1.5 rounded-lg hover:bg-indigo-100 transition duration-200"
+              className="w-full sm:w-auto flex items-center gap-1 text-sm text-indigo-600 border border-indigo-600 px-3 py-1.5 rounded-lg hover:bg-indigo-100 transition duration-200"
             >
               <ArrowLeft size={16} />
               뒤로
             </Button>
-
           </div>
         </div>
 
@@ -242,7 +241,7 @@ export default function MemberGraphs({ member, logs: initialLogs, onBack }: Prop
             return (
               <div key={target} className="mb-10">
                 <h3 className="text-l font-semibold text-indigo-500 mb-4">{target} 부위별 그래프</h3>
-                <div className="flex flex-wrap gap-6 w-full"> {/* 가로 길이 확보 */}
+                <div className="flex flex-col lg:flex-row gap-6 w-full"> {/* 가로 길이 확보 */}
                 
                   {/* Reps 그래프 */}
                   <div className="flex-1">
@@ -311,7 +310,7 @@ export default function MemberGraphs({ member, logs: initialLogs, onBack }: Prop
               return (
                 <div key={workout} className="mb-8">
                   <p className="text-l font-semibold text-indigo-500 mb-4">{workout}</p>
-                  <div className="flex flex-wrap gap-6 w-full">
+                  <div className="flex flex-col lg:flex-row gap-6 w-full">
                     {/* Reps 그래프 */}
                     <div className="flex-1">
                       <h4 className="text-sm text-black font-medium mb-2">Reps</h4>
