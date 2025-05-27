@@ -3,6 +3,13 @@ import { supabase } from "@/lib/supabase"; // 네 supabase 클라이언트 경�
 import type { Member, WorkoutRecord } from "../app/members/types"; 
 // 타입 경로도 네 프로젝트에 맞게 조정 필요
 
+interface PostgrestError {
+  message: string;
+  details?: string;
+  hint?: string;
+  code?: string;
+}
+
 // 회원 목록 조회
 export async function getMembers(): Promise<Member[]> {
   const { data, error } = await supabase
@@ -34,7 +41,7 @@ export async function getWorkoutRecords(member_id: number): Promise<WorkoutRecor
   
 
 // 운동 기록 추가
-export async function addWorkoutRecord(newRecord: WorkoutRecord): Promise<{ data: WorkoutRecord | null; error: any }> {
+export async function addWorkoutRecord(newRecord: WorkoutRecord): Promise<{ data: WorkoutRecord | null; error: PostgrestError | null }> {
   const { data, error } = await supabase
     .from("workout_records")
     .insert([newRecord])
