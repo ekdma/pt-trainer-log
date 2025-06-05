@@ -72,7 +72,7 @@ export default function AddHealthMetricOpen({ member, onCancel, onSave, isOpen }
             type="text"
             value={target}
             onChange={(e) => setTarget(e.target.value)}
-            placeholder="예: 체중, 체지방 등"
+            placeholder="예: Body Composition, HP&BP, Overall Fitness 등"
             className="w-full border border-gray-300 text-gray-700 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-indigo-400"
           />
         </div>
