@@ -21,7 +21,7 @@ export default function MembersPage() {
               <h2 className="text-2xl font-semibold text-gray-800">
                 {selectedMember.name} 님
               </h2>
-              <button
+              {/* <button
                 onClick={() => {
                   setSelectedMember(null)
                   setActiveTab('workout')
@@ -29,7 +29,7 @@ export default function MembersPage() {
                 className="flex items-center gap-1 text-sm text-red-600 border border-red-600 px-3 py-1.5 rounded-lg hover:bg-red-100 transition duration-200"
               >
                 ← 뒤로가기
-              </button>
+              </button> */}
             </div>
 
             <div className="flex gap-2 mb-6">
