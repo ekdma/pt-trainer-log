@@ -2,16 +2,18 @@
 
 import { useState, useEffect } from 'react'
 import { getSupabaseClient } from '@/lib/supabase'
-import { Member, NewWorkoutRecord } from './types'
+import { Member, NewWorkoutRecord, HealthMetric } from './types'
 import AddMemberOpen from './AddMemberOpen'
 import { SupabaseClient } from '@supabase/supabase-js'
 
 export default function MemberSearch({
   onSelectMember,
   onSetLogs,
+  onSetHealthLogs, // ✅ 추가
 }: {
   onSelectMember: (member: Member) => void
   onSetLogs: (logs: NewWorkoutRecord[]) => void
+  onSetHealthLogs: (logs: HealthMetric[]) => void // ✅ 추가
 }) {
   const [supabase, setSupabase] = useState<SupabaseClient | null>(null)
   const [keyword, setKeyword] = useState('')
@@ -32,7 +34,7 @@ export default function MemberSearch({
 
   useEffect(() => {
     fetchMembers()
-  }, [fetchMembers])
+  }, [supabase]) // ✅ 의존성 수정
 
   const handleSearch = async () => {
     if (!supabase) return
@@ -45,11 +47,24 @@ export default function MemberSearch({
 
   const handleSelect = async (member: Member) => {
     if (!supabase) return
+
+    // ✅ 운동 기록
     const { data: logsData } = await supabase
       .from('workout_logs')
       .select('*')
       .eq('member_id', member.member_id)
+
     onSetLogs(logsData || [])
+
+    // ✅ 건강 지표 기록 추가
+    const { data: healthData } = await supabase
+      .from('health_metrics')
+      .select('*')
+      .eq('member_id', member.member_id)
+
+    onSetHealthLogs(healthData || [])
+
+    // ✅ 회원 선택
     onSelectMember(member)
   }
 
@@ -105,8 +120,6 @@ export default function MemberSearch({
               <span className="text-gray-500 text-sm">{member.age}세</span>
             </div>
           </li>
-        
-        
         ))}
       </ul>
 

@@ -19,3 +19,14 @@ export type NewWorkoutRecord = {
 
 // Supabase에서 조회하거나 삽입 결과로 받는 레코드 타입
 export type WorkoutRecord = NewWorkoutRecord
+
+export type NewHealthMetric = {
+  member_id: number
+  measure_date: string // 또는 Date (형식에 따라 조정)
+  metric_target: string
+  metric_type: string
+  metric_value: number
+}
+
+
+export type HealthMetric = NewHealthMetric
