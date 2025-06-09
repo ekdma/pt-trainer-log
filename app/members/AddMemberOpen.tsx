@@ -100,7 +100,9 @@ export default function AddMemberOpen({ onClose, onMemberAdded }: Props) {
             placeholder="예: 1995 또는 1995-07-03"
             className="w-full p-2 border border-gray-300 text-gray-700 rounded focus:ring-2 focus:ring-indigo-500 focus:outline-none"
           />
-          <p className="text-xs text-gray-500 mt-1">※ 연도만 입력 시 '01-01'로 자동 처리됩니다</p>
+          <p className="text-xs text-gray-500 mt-1">
+            ※ 연도만 입력 시 &#39;01-01&#39;로 자동 처리됩니다
+          </p>
         </div>
 
         <div className="mb-4">
