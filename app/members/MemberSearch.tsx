@@ -33,16 +33,28 @@ export default function MemberSearch({
   }
 
   useEffect(() => {
-    fetchMembers();
-  }, [fetchMembers]);
-
+    if (supabase) {
+      fetchMembers()
+    }
+  }, [supabase])
+  
   const handleSearch = async () => {
     if (!supabase) return
-    const { data: membersData } = await supabase
+    if (!keyword.trim()) {
+      fetchMembers()
+      return
+    }
+  
+    const { data: membersData, error } = await supabase
       .from('members')
       .select('*')
       .ilike('name', `%${keyword}%`)
-    setFilteredMembers(membersData || [])
+  
+    if (error) {
+      console.error('검색 에러:', error.message)
+    } else {
+      setFilteredMembers(membersData || [])
+    }
   }
 
   const handleSelect = async (member: Member) => {
