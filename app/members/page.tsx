@@ -1,16 +1,34 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import MemberSearch from './MemberSearch'
 import MemberGraphs from './MemberGraphs'
 import MemberHealthGraphs from './MemberHealthGraphs'
 import type { Member, WorkoutRecord, HealthMetric } from './types'
+import { fetchWorkoutLogs, fetchHealthLogs } from '../../utils/fetchLogs' // ✅ 따로 fetch 함수 만든다고 가정
 
 export default function MembersPage() {
   const [selectedMember, setSelectedMember] = useState<Member | null>(null)
   const [workoutLogs, setWorkoutLogs] = useState<WorkoutRecord[]>([])
   const [healthLogs, setHealthLogs] = useState<HealthMetric[]>([])
   const [activeTab, setActiveTab] = useState<'workout' | 'health'>('workout')
+
+  // ✅ 탭 전환 시 자동 새로고침
+  useEffect(() => {
+    const fetchLogs = async () => {
+      if (!selectedMember) return
+
+      if (activeTab === 'workout') {
+        const logs = await fetchWorkoutLogs(selectedMember.member_id)
+        setWorkoutLogs(logs)
+      } else {
+        const logs = await fetchHealthLogs(selectedMember.member_id)
+        setHealthLogs(logs)
+      }
+    }
+
+    fetchLogs()
+  }, [activeTab, selectedMember])
 
   return (
     <main className="flex min-h-screen flex-col p-6 bg-gray-50 overflow-auto">
@@ -21,15 +39,6 @@ export default function MembersPage() {
               <h2 className="text-2xl font-semibold text-gray-800">
                 {selectedMember.name} 님
               </h2>
-              {/* <button
-                onClick={() => {
-                  setSelectedMember(null)
-                  setActiveTab('workout')
-                }}
-                className="flex items-center gap-1 text-sm text-red-600 border border-red-600 px-3 py-1.5 rounded-lg hover:bg-red-100 transition duration-200"
-              >
-                ← 뒤로가기
-              </button> */}
             </div>
 
             <div className="flex gap-2 mb-6">
@@ -72,9 +81,12 @@ export default function MembersPage() {
           </>
         ) : (
           <MemberSearch
-            onSelectMember={setSelectedMember}
+            onSelectMember={(member) => {
+              setSelectedMember(member)
+              setActiveTab('workout')
+            }}
             onSetLogs={setWorkoutLogs}
-            onSetHealthLogs={setHealthLogs} // ✅ 추가!
+            onSetHealthLogs={setHealthLogs}
           />
         )}
       </div>

@@ -18,15 +18,21 @@ export type NewWorkoutRecord = {
 }
 
 // Supabase에서 조회하거나 삽입 결과로 받는 레코드 타입
-export type WorkoutRecord = NewWorkoutRecord
+export type WorkoutRecord = NewWorkoutRecord & {
+  workout_id: number; // Supabase auto-generated PK
+};
 
+
+// 사용자가 입력할 때 사용하는 타입 → ID는 없음
 export type NewHealthMetric = {
-  member_id: number
-  measure_date: string // 또는 Date (형식에 따라 조정)
-  metric_target: string
-  metric_type: string
-  metric_value: number
-}
+  member_id: number;
+  measure_date: string;
+  metric_target: string;
+  metric_type: string;
+  metric_value: number;
+};
 
-
-export type HealthMetric = NewHealthMetric
+// DB에서 조회되거나 삭제/수정에 쓰이는 타입 → ID 있음
+export type HealthMetric = NewHealthMetric & {
+  health_id: number; // Supabase auto-generated PK
+};

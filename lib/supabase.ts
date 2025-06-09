@@ -60,3 +60,23 @@ export async function addHealthMetricsToDB(record: NewHealthMetric) {
   const { error } = await supabase.from('health_metrics').insert([record])
   if (error) throw new Error(error.message)
 }
+
+// health_metrics 삭제
+export async function deleteHealthMetricById(id: number) {
+  const supabase = getSupabaseClient();
+  const { error } = await supabase
+    .from('health_metrics')
+    .delete()
+    .eq('health_id', id);
+  if (error) throw error;
+}
+
+// workout_log 삭제
+export async function deleteWorkoutRecordById(id: number) {
+  const supabase = getSupabaseClient();
+  const { error } = await supabase
+    .from('workout_logs')
+    .delete()
+    .eq('workout_id', id);
+  if (error) throw error;
+}

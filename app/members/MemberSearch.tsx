@@ -2,18 +2,18 @@
 
 import { useState, useEffect } from 'react'
 import { getSupabaseClient } from '@/lib/supabase'
-import { Member, NewWorkoutRecord, HealthMetric } from './types'
+import { Member, WorkoutRecord, HealthMetric } from './types'
 import AddMemberOpen from './AddMemberOpen'
 import { SupabaseClient } from '@supabase/supabase-js'
 
 export default function MemberSearch({
   onSelectMember,
   onSetLogs,
-  onSetHealthLogs, // ✅ 추가
+  onSetHealthLogs,
 }: {
   onSelectMember: (member: Member) => void
-  onSetLogs: (logs: NewWorkoutRecord[]) => void
-  onSetHealthLogs: (logs: HealthMetric[]) => void // ✅ 추가
+  onSetLogs: (logs: WorkoutRecord[]) => void
+  onSetHealthLogs: (logs: HealthMetric[]) => void
 }) {
   const [supabase, setSupabase] = useState<SupabaseClient | null>(null)
   const [keyword, setKeyword] = useState('')
@@ -34,7 +34,7 @@ export default function MemberSearch({
 
   useEffect(() => {
     fetchMembers()
-  }, [supabase]) // ✅ 의존성 수정
+  }, [supabase])
 
   const handleSearch = async () => {
     if (!supabase) return
@@ -48,7 +48,7 @@ export default function MemberSearch({
   const handleSelect = async (member: Member) => {
     if (!supabase) return
 
-    // ✅ 운동 기록
+    // 운동 기록 가져오기
     const { data: logsData } = await supabase
       .from('workout_logs')
       .select('*')
@@ -56,7 +56,7 @@ export default function MemberSearch({
 
     onSetLogs(logsData || [])
 
-    // ✅ 건강 지표 기록 추가
+    // 건강 지표 기록 가져오기
     const { data: healthData } = await supabase
       .from('health_metrics')
       .select('*')
@@ -64,8 +64,22 @@ export default function MemberSearch({
 
     onSetHealthLogs(healthData || [])
 
-    // ✅ 회원 선택
+    // 회원 선택 콜백 호출
     onSelectMember(member)
+  }
+
+  const handleDelete = async (memberId: number) => {
+    if (!supabase) return
+    const confirmDelete = confirm('정말로 이 회원을 삭제하시겠습니까?')
+    if (!confirmDelete) return
+
+    const { error } = await supabase.from('members').delete().eq('member_id', memberId)
+    if (error) {
+      alert('회원 삭제 중 문제가 발생했어요 😥')
+      return
+    }
+    alert('회원 삭제를 완료하였습니다 😊')
+    fetchMembers()
   }
 
   return (
@@ -106,21 +120,63 @@ export default function MemberSearch({
       </div>
 
       <ul className="space-y-3 w-full max-w-md">
-        {filteredMembers.map((member) => (
-          <li
-            key={member.member_id}
-            onClick={() => handleSelect(member)}
-            className="bg-white border border-indigo-200 rounded-xl px-5 py-3 shadow-sm hover:shadow-md hover:bg-indigo-50 transition duration-300 cursor-pointer"
-          >
-            <div className="flex flex-col space-y-1">
-              <span className="text-xs font-bold text-white bg-indigo-500 rounded-full w-fit px-2 py-0.5">
-                {member.role}
-              </span>
-              <span className="text-indigo-700 font-semibold text-lg">{member.name}</span>
-              <span className="text-gray-500 text-sm">{member.age}세</span>
-            </div>
-          </li>
-        ))}
+        {filteredMembers.map((member) => {
+          const formattedJoinDate = new Date(member.join_date).toLocaleDateString('ko-KR', {
+            year: 'numeric',
+            month: 'long',
+            day: 'numeric',
+          })
+          return (
+            <li
+              key={member.member_id}
+              className="bg-white border border-indigo-200 rounded-xl px-5 py-3 shadow-sm hover:shadow-md transition duration-300 flex justify-between items-center"
+            >
+              {/* 왼쪽 정보 영역 */}
+              <div
+                onClick={() => handleSelect(member)}
+                className="flex items-center gap-4 cursor-pointer hover:bg-indigo-50 rounded-md px-3 py-2 transition w-full"
+              >
+                {/* 역할 뱃지 */}
+                <span
+                  className={`text-xs font-bold text-white rounded-full px-2 py-0.5 ${
+                    member.role === 'TRAINER' ? 'bg-orange-500' : 'bg-indigo-500'
+                  }`}
+                >
+                  {member.role}
+                </span>
+
+                {/* 이름, 나이, 등록일자 */}
+                <div className="flex flex-col justify-center">
+                <span className="text-indigo-800 font-semibold text-lg leading-tight">{member.name}</span>
+                <div className="flex gap-3 text-indigo-900 text-sm mt-1">
+                  <span
+                    className="flex items-center gap-2 bg-gradient-to-r from-gray-100 via-gray-200 to-gray-100
+                    text-gray-900 px-4 py-1 rounded-full shadow-md font-medium"
+                  >
+                    {member.age}세
+                  </span>
+                  <span
+                    className="flex items-center gap-2 bg-gradient-to-r from-gray-100 via-gray-200 to-gray-100
+                    text-gray-900 px-4 py-1 rounded-full shadow-md font-medium"
+                  >
+                    📅 {formattedJoinDate}
+                  </span>
+                </div>
+              </div>
+
+              </div>
+
+              {/* 삭제 버튼 */}
+              <button
+                onClick={() => handleDelete(member.member_id)}
+                className="text-red-500 text-sm hover:text-red-700 transition ml-4"
+                title="회원 삭제"
+              >
+                ❌
+              </button>
+            </li>
+          )
+        })}
       </ul>
 
       {isAddMemberOpen && (
