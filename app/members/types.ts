@@ -4,7 +4,8 @@ export type Member = {
   join_date: string
   role: string
   creation_dt: string
-  age: number
+  birth_date: string | null
+  sex: string
 }
 
 // 사용자가 입력할 때 사용하는 타입

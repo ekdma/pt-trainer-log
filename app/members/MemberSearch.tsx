@@ -94,6 +94,19 @@ export default function MemberSearch({
     fetchMembers()
   }
 
+  const calculateAge = (birthDate: string | null) => {
+    if (!birthDate) return '?'
+    const today = new Date()
+    const birth = new Date(birthDate)
+    let age = today.getFullYear() - birth.getFullYear()
+    const m = today.getMonth() - birth.getMonth()
+    if (m < 0 || (m === 0 && today.getDate() < birth.getDate())) {
+      age--
+    }
+    return age
+  }
+  
+
   return (
     <div className="flex flex-col items-center justify-center text-center bg-slate-50 py-8 px-4">
       <div className="text-center mb-6">
@@ -163,13 +176,19 @@ export default function MemberSearch({
                 <div className="flex gap-3 text-indigo-900 text-sm mt-1">
                   <span
                     className="flex items-center gap-2 bg-gradient-to-r from-gray-100 via-gray-200 to-gray-100
-                    text-gray-900 px-4 py-1 rounded-full shadow-md font-medium"
+                    text-gray-900 px-2 py-1 rounded-full shadow-md font-small"
                   >
-                    {member.age}세
+                    {member.sex}
                   </span>
                   <span
                     className="flex items-center gap-2 bg-gradient-to-r from-gray-100 via-gray-200 to-gray-100
-                    text-gray-900 px-4 py-1 rounded-full shadow-md font-medium"
+                    text-gray-900 px-2 py-1 rounded-full shadow-md font-small"
+                  >
+                    {calculateAge(member.birth_date)}세
+                  </span>
+                  <span
+                    className="flex items-center gap-2 bg-gradient-to-r from-gray-100 via-gray-200 to-gray-100
+                    text-gray-900 px-2 py-1 rounded-full shadow-md font-small"
                   >
                     📅 {formattedJoinDate}
                   </span>
