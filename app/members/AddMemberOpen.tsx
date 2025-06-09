@@ -105,29 +105,31 @@ export default function AddMemberOpen({ onClose, onMemberAdded }: Props) {
           </p>
         </div>
 
-        <div className="mb-4">
-          <label className="block text-sm font-medium text-gray-700 mb-1">성별</label>
-          <select
-            value={sex}
-            onChange={(e) => setSex(e.target.value)}
-            className="w-full p-2 border border-gray-300 text-gray-700 rounded focus:ring-2 focus:ring-indigo-500 focus:outline-none"
-          >
-            <option value="성별" disabled>성별</option>
-            <option value="M">남자</option>
-            <option value="F">여자</option>
-          </select>
-        </div>
+        <div className="mb-4 flex space-x-4">
+          <div className="w-1/2">
+            <label className="block text-sm font-medium text-gray-700 mb-1">성별</label>
+            <select
+              value={sex}
+              onChange={(e) => setSex(e.target.value)}
+              className="w-full p-2 border border-gray-300 text-gray-700 rounded focus:ring-2 focus:ring-indigo-500 focus:outline-none"
+            >
+              <option value="성별" disabled>성별</option>
+              <option value="M">남자</option>
+              <option value="F">여자</option>
+            </select>
+          </div>
 
-        <div className="mb-4">
-          <label className="block text-sm font-medium text-gray-700 mb-1">역할</label>
-          <select
-            value={role}
-            onChange={(e) => setRole(e.target.value)}
-            className="w-full p-2 border border-gray-300 text-gray-700 rounded focus:ring-2 focus:ring-indigo-500 focus:outline-none"
-          >
-            <option value="MEMBER">회원</option>
-            <option value="TRAINER">트레이너</option>
-          </select>
+          <div className="w-1/2">
+            <label className="block text-sm font-medium text-gray-700 mb-1">역할</label>
+            <select
+              value={role}
+              onChange={(e) => setRole(e.target.value)}
+              className="w-full p-2 border border-gray-300 text-gray-700 rounded focus:ring-2 focus:ring-indigo-500 focus:outline-none"
+            >
+              <option value="MEMBER">회원</option>
+              <option value="TRAINER">트레이너</option>
+            </select>
+          </div>
         </div>
 
         <div className="mb-6">
