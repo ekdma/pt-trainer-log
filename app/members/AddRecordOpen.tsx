@@ -21,8 +21,8 @@ type WorkoutType = {
 }
 
 export default function AddRecordForm({ member, onCancel, onSave }: Props) {
-  const [valueReps, setReps] = useState<number | ''>('')
-  const [weight, setWeight] = useState<number | ''>('')
+  const [valueReps, setReps] = useState<number | ''>('') 
+  const [weight, setWeight] = useState<number | ''>('') 
   const [date, setDate] = useState(() => new Date().toISOString().slice(0, 10))
 
   const [allTypes, setAllTypes] = useState<WorkoutType[]>([])
@@ -32,20 +32,9 @@ export default function AddRecordForm({ member, onCancel, onSave }: Props) {
   const [newWorkout, setNewWorkout] = useState('')
   const [newLevel, setNewLevel] = useState('')
   const [loadingManage, setLoadingManage] = useState(false)
-
-  const [openDisclosure, setOpenDisclosure] = useState(false)
+  const [disclosureOpen, setDisclosureOpen] = useState(false)
 
   const supabase = getSupabaseClient()
-
-  useEffect(() => {
-    fetchTypes()
-  }, [])
-
-  useEffect(() => {
-    if (openDisclosure) {
-      fetchTypes()
-    }
-  }, [openDisclosure])
 
   const fetchTypes = async () => {
     const { data, error } = await supabase
@@ -53,9 +42,23 @@ export default function AddRecordForm({ member, onCancel, onSave }: Props) {
       .select('*')
       .order('target', { ascending: true })
       .order('workout', { ascending: true })
-    if (error) console.error('❌ 운동 항목 불러오기 실패:', error)
-    else setAllTypes(data || [])
+
+    if (error) {
+      console.error('❌ 운동 항목 불러오기 실패:', error)
+    } else {
+      setAllTypes(data || [])
+    }
   }
+
+  useEffect(() => {
+    fetchTypes()
+  }, [])
+
+  useEffect(() => {
+    if (disclosureOpen) {
+      fetchTypes()
+    }
+  }, [disclosureOpen])
 
   const handleSave = (e: React.FormEvent) => {
     e.preventDefault()
@@ -63,6 +66,7 @@ export default function AddRecordForm({ member, onCancel, onSave }: Props) {
       alert('모든 필드를 입력해주세요.')
       return
     }
+
     const record: NewWorkoutRecord = {
       member_id: member.member_id,
       target: selectedTarget,
@@ -71,7 +75,9 @@ export default function AddRecordForm({ member, onCancel, onSave }: Props) {
       weight: typeof weight === 'number' ? weight : 0,
       workout_date: date,
     }
+
     onSave(record)
+
     setSelectedTarget('')
     setSelectedWorkout('')
     setReps('')
@@ -85,11 +91,15 @@ export default function AddRecordForm({ member, onCancel, onSave }: Props) {
       alert('추가할 모든 항목을 입력하세요.')
       return
     }
+
     setLoadingManage(true)
+
     const { error } = await supabase
       .from('workout_types')
       .insert({ target: newTarget, workout: newWorkout, level: newLevel })
+
     setLoadingManage(false)
+
     if (error) alert('추가 실패: ' + error.message)
     else {
       await fetchTypes()
@@ -102,10 +112,12 @@ export default function AddRecordForm({ member, onCancel, onSave }: Props) {
   const handleDeleteType = async (id?: number) => {
     if (!id) return
     if (!confirm('정말 삭제하시겠습니까?')) return
+
     const { error } = await supabase
       .from('workout_types')
       .delete()
       .eq('workout_type_id', id)
+
     if (error) alert('삭제 실패: ' + error.message)
     else fetchTypes()
   }
@@ -121,7 +133,6 @@ export default function AddRecordForm({ member, onCancel, onSave }: Props) {
       >
         <h3 className="text-xl font-bold text-indigo-600 border-b pb-2">운동 기록 추가</h3>
 
-        {/* 회원 이름 */}
         <div>
           <label className="block text-sm font-medium text-gray-600 mb-1">회원 이름</label>
           <input
@@ -132,7 +143,6 @@ export default function AddRecordForm({ member, onCancel, onSave }: Props) {
           />
         </div>
 
-        {/* 분류 */}
         <div>
           <label className="block text-sm font-medium text-gray-600 mb-1">분류</label>
           <select
@@ -152,7 +162,6 @@ export default function AddRecordForm({ member, onCancel, onSave }: Props) {
           </select>
         </div>
 
-        {/* 항목 */}
         <div>
           <label className="block text-sm font-medium text-gray-600 mb-1">항목</label>
           <select
@@ -170,7 +179,6 @@ export default function AddRecordForm({ member, onCancel, onSave }: Props) {
           </select>
         </div>
 
-        {/* reps / weight */}
         <div className="flex gap-4">
           <div className="flex-1">
             <label className="block text-sm font-medium text-gray-600 mb-1">횟수 (Reps)</label>
@@ -196,7 +204,6 @@ export default function AddRecordForm({ member, onCancel, onSave }: Props) {
           </div>
         </div>
 
-        {/* 날짜 */}
         <div>
           <label className="block text-sm font-medium text-gray-600 mb-1">날짜</label>
           <input
@@ -207,7 +214,6 @@ export default function AddRecordForm({ member, onCancel, onSave }: Props) {
           />
         </div>
 
-        {/* 버튼 */}
         <div className="flex justify-end gap-3 pt-2">
           <Button type="button" variant="outline" onClick={onCancel} className="text-sm">
             취소
@@ -217,78 +223,73 @@ export default function AddRecordForm({ member, onCancel, onSave }: Props) {
           </Button>
         </div>
 
-        {/* 아코디언: 항목 관리 */}
         <Disclosure>
-          {({ open }) => {
-            useEffect(() => {
-              setOpenDisclosure(open)
-            }, [open])
-            return (
-              <>
-                <Disclosure.Button className="flex w-full justify-between items-center mt-6 text-sm font-medium text-indigo-600 hover:underline">
-                  <span>측정 항목 추가/삭제</span>
-                  <ChevronUpIcon
-                    className={`h-5 w-5 transform transition-transform ${
-                      open ? 'rotate-180' : ''
-                    }`}
+          {({ open }) => (
+            <>
+              <Disclosure.Button
+                className="flex w-full justify-between items-center mt-6 text-sm font-medium text-indigo-600 hover:underline"
+                onClick={() => setDisclosureOpen(!open)}
+              >
+                <span>측정 항목 추가/삭제</span>
+                <ChevronUpIcon
+                  className={`h-5 w-5 transform transition-transform ${open ? 'rotate-180' : ''}`}
+                />
+              </Disclosure.Button>
+              <Disclosure.Panel className="mt-2 bg-gray-50 border rounded-lg shadow-inner p-4 text-sm space-y-1 text-gray-700">
+                <div className="flex flex-wrap sm:flex-nowrap gap-2 items-end">
+                  <input
+                    type="text"
+                    value={newTarget}
+                    onChange={(e) => setNewTarget(e.target.value)}
+                    placeholder="분류"
+                    className="flex-grow min-w-[100px] border px-3 py-2 rounded-lg text-sm"
                   />
-                </Disclosure.Button>
-                <Disclosure.Panel className="mt-2 bg-gray-50 border rounded-lg shadow-inner p-4 text-sm space-y-1 text-gray-700">
-                  <div className="flex flex-wrap sm:flex-nowrap gap-2 items-end">
-                    <input
-                      type="text"
-                      value={newTarget}
-                      onChange={(e) => setNewTarget(e.target.value)}
-                      placeholder="분류"
-                      className="flex-grow min-w-[100px] border px-3 py-2 rounded-lg text-sm"
-                    />
-                    <input
-                      type="text"
-                      value={newWorkout}
-                      onChange={(e) => setNewWorkout(e.target.value)}
-                      placeholder="항목"
-                      className="flex-grow min-w-[100px] border px-3 py-2 rounded-lg text-sm"
-                    />
-                    <input
-                      type="text"
-                      value={newLevel}
-                      onChange={(e) => setNewLevel(e.target.value)}
-                      placeholder="난이도"
-                      className="w-20 border px-3 py-2 rounded-lg text-sm text-center"
-                    />
-                    <button
-                      type="button"
-                      onClick={handleAddType}
-                      disabled={loadingManage}
-                      className="text-indigo-500 hover:underline"
-                    >
-                      추가
-                    </button>
-                  </div>
+                  <input
+                    type="text"
+                    value={newWorkout}
+                    onChange={(e) => setNewWorkout(e.target.value)}
+                    placeholder="항목"
+                    className="flex-grow min-w-[100px] border px-3 py-2 rounded-lg text-sm"
+                  />
+                  <input
+                    type="text"
+                    value={newLevel}
+                    onChange={(e) => setNewLevel(e.target.value)}
+                    placeholder="난이도"
+                    className="w-20 border px-3 py-2 rounded-lg text-sm text-center"
+                  />
+                  <button
+                    type="button"
+                    onClick={handleAddType}
+                    disabled={loadingManage}
+                    className="text-indigo-500 hover:underline"
+                  >
+                    추가
+                  </button>
+                </div>
 
-                  <ul className="max-h-40 overflow-y-auto border-t pt-2 space-y-1">
-                    {allTypes.map((m) => (
-                      <li
-                        key={m.workout_type_id}
-                        className="flex justify-between items-center border-b py-1 text-gray-700"
+                <ul className="max-h-40 overflow-y-auto border-t pt-2 space-y-1">
+                  {allTypes.map((m) => (
+                    <li
+                      key={m.workout_type_id}
+                      className="flex justify-between items-center border-b py-1 text-gray-700"
+                    >
+                      <span>
+                        {m.target} / {m.workout} / {m.level}
+                      </span>
+                      <button
+                        type="button"
+                        onClick={() => handleDeleteType(m.workout_type_id)}
+                        className="text-red-500 hover:underline"
                       >
-                        <span>
-                          {m.target} / {m.workout} / {m.level}
-                        </span>
-                        <button
-                          type="button"
-                          onClick={() => handleDeleteType(m.workout_type_id)}
-                          className="text-red-500 hover:underline"
-                        >
-                          삭제
-                        </button>
-                      </li>
-                    ))}
-                  </ul>
-                </Disclosure.Panel>
-              </>
-            )
-          }}
+                        삭제
+                      </button>
+                    </li>
+                  ))}
+                </ul>
+              </Disclosure.Panel>
+            </>
+          )}
         </Disclosure>
       </form>
     </div>
