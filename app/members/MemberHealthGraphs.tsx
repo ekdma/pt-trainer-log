@@ -257,7 +257,7 @@ const MemberHealthGraphsClient: React.FC<Props> = ({ healthLogs, member, onBack 
 
             {/* 닫기 버튼 */}
             <div className="flex justify-end pt-4">
-              <Button onClick={() => setIsListOpen(false)} className="text-gray-700" variant="outline">
+              <Button onClick={() => setIsListOpen(false)} className="text-gray-700 text-sm" variant="outline">
                 닫기
               </Button>
             </div>
