@@ -82,8 +82,13 @@ const MemberHealthGraphsClient: React.FC<Props> = ({ healthLogs, member, onBack 
 
   // 초기 데이터 세팅
   useEffect(() => {
+    if (!healthLogs) return;
     setLogs(healthLogs);
   }, [healthLogs]);
+  
+  if (!healthLogs) {
+    return null;
+  }
 
 
   // ✅ 건강 기록 추가 처리 함수

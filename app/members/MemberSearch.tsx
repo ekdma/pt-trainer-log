@@ -33,8 +33,8 @@ export default function MemberSearch({
   }
 
   useEffect(() => {
-    fetchMembers()
-  }, [supabase])
+    fetchMembers();
+  }, [fetchMembers]);
 
   const handleSearch = async () => {
     if (!supabase) return
