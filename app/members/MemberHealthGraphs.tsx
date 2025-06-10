@@ -6,15 +6,42 @@ import {
 } from 'recharts';
 import { HealthMetric, Member, NewHealthMetric } from './types';
 import AddHealthMetricOpen from './AddHealthMetricOpen';
+import HealthMetricManager from './HealthMetricManager' 
 import { Plus, ArrowLeft, Minus } from 'lucide-react';
 import { addHealthMetricsToDB, getHealthMetrics, deleteHealthMetricById } from '@/lib/supabase';
-import { Button } from '@/components/ui/button'
+import { Button } from '@/components/ui/button';
 
 interface Props {
   healthLogs: HealthMetric[];
   member: Member;
-  onBack: () => void;  // onBack prop 추가
+  onBack: () => void;
 }
+
+const normalizeMetricKey = (label: string): string =>
+  label.toLowerCase().replace(/\s+/g, '_');
+
+// metric 별로 날짜별 값만 뽑아서 배열로 리턴
+function createChartDataForMetric(logs: HealthMetric[], metricType: string) {
+  const dataMap: Record<string, number | null> = {};
+
+  logs.forEach(log => {
+    if (log.metric_type === metricType) {
+      const date = log.measure_date.slice(0, 10);
+      dataMap[date] = log.metric_value;
+    }
+  });
+
+  // 날짜별로 정렬된 배열 만들기
+  // 로그의 날짜들을 모두 모아 정렬 후, 없는 날짜는 null로 채움
+  const allDates = Array.from(
+    new Set(logs.map(log => log.measure_date.slice(0, 10)))
+  ).sort();
+
+  return allDates.map(date => ({
+    date,
+    value: dataMap[date] ?? null,
+  }));
+};
 
 const colorMap: { [key: string]: string } = {
   'Weight': '#e74c3c',
@@ -24,14 +51,12 @@ const colorMap: { [key: string]: string } = {
   'Resting Heart Rate': '#f39c12',
 };
 
-const normalizeMetricKey = (label: string): string =>
-  label.toLowerCase().replace(/\s+/g, '_');
-
 const MemberHealthGraphsClient: React.FC<Props> = ({ healthLogs, member, onBack }) => {
   const [logs, setLogs] = useState<HealthMetric[]>([]);
   const [selectedTarget, setSelectedTarget] = useState<string | null>(null);
   const [isAddOpen, setIsAddOpen] = useState(false);
   const [isListOpen, setIsListOpen] = useState(false);
+  const [isHealthMetricManagerOpen, setIsHealthMetricManagerOpen] = useState(false)
 
   useEffect(() => {
     setLogs(healthLogs);
@@ -40,10 +65,6 @@ const MemberHealthGraphsClient: React.FC<Props> = ({ healthLogs, member, onBack 
   if (!member || !member.name) {
     return <p className="text-center text-gray-500 mt-8">회원 정보가 없습니다.</p>;
   }
-
-//   if (!logs || logs.length === 0) {
-//     return <p className="text-center text-gray-500 mt-8">등록된 건강 기록이 없습니다.</p>;
-//   }
 
   const targetGroups: { [target: string]: HealthMetric[] } = {};
   logs.forEach(log => {
@@ -55,34 +76,10 @@ const MemberHealthGraphsClient: React.FC<Props> = ({ healthLogs, member, onBack 
 
   const targets = Object.keys(targetGroups);
 
-  const createChartData = (logs: HealthMetric[], metricType: string) => {
-    const key = normalizeMetricKey(metricType);
-  
-    // 모든 날짜 수집 (이 metric_target 내에서)
-    const allDatesSet = new Set(logs.map(log => log.measure_date.slice(0, 10)));
-    const allDates = Array.from(allDatesSet).sort();
-  
-    // 날짜를 기준으로 기본 구조 만들기
-    const dataMap: Record<string, { date: string; [k: string]: number | string | null }> = {};
-    allDates.forEach(date => {
-      dataMap[date] = { date, [key]: null };  // 초기화
-    });
-  
-    logs.forEach(log => {
-      if (log.metric_type !== metricType) return;
-      const date = log.measure_date.slice(0, 10);
-      dataMap[date][key] = log.metric_value;
-    });
-  
-    return Object.values(dataMap);
-  };
-  
   const getMetricTypes = (logs: HealthMetric[]) =>
     Array.from(new Set(logs.map(log => log.metric_type)));
 
-
-
-  // ✅ 건강 기록 추가 처리 함수
+  // 기록 추가 처리 함수
   const handleAddRecord = async (newRecord: NewHealthMetric): Promise<void> => {
     try {
       await addHealthMetricsToDB(newRecord);
@@ -109,12 +106,21 @@ const MemberHealthGraphsClient: React.FC<Props> = ({ healthLogs, member, onBack 
     }
   };
 
+  // 표시할 타겟 선택 (통합이면 전체, 아니면 선택 타겟만)
+  const currentTargets = selectedTarget === null ? targets : [selectedTarget];
+
   return (
-    <div className="p-4 max-w-screen-lg mx-auto space-y-6">
-      {/* 상단 버튼 영역 (항상 보임) */}
+    <div className="p-4 max-w-screen-lg mx-auto space-y-10">
+      {/* 상단 버튼 영역 */}
       <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center space-y-2 sm:space-y-0">
         <h2 className="text-xl text-black font-semibold">{member.name} 님의 건강 기록</h2>
         <div className="flex flex-col sm:flex-row sm:space-x-2 space-y-2 sm:space-y-0">
+          <Button 
+            onClick={() => setIsHealthMetricManagerOpen(true)}
+            className="w-full sm:w-auto flex items-center gap-1 text-sm text-purple-600 border border-purple-600 px-3 py-1.5 rounded-lg hover:bg-purple-100 transition duration-200"
+          >
+            기록관리
+          </Button>
           <Button
             onClick={() => setIsAddOpen(true)}
             className="w-full sm:w-auto flex items-center gap-1 text-sm text-green-600 border border-green-600 px-3 py-1.5 rounded-lg hover:bg-green-100 transition duration-200"
@@ -138,81 +144,108 @@ const MemberHealthGraphsClient: React.FC<Props> = ({ healthLogs, member, onBack 
           </Button>
         </div>
       </div>
-  
-      {/* 기록이 없을 경우 메시지 출력 */}
-      {!logs || logs.length === 0 ? (
-        <p className="text-center text-gray-500 mt-8">등록된 건강 기록이 없습니다.</p>
-      ) : (
-        <>
-          {/* 타겟 선택 필터 */}
-          <div className="mb-6 flex flex-wrap gap-2">
-            <button
-              onClick={() => setSelectedTarget(null)}
-              className={`px-3 py-1.5 rounded-full text-sm font-medium transition duration-150 border ${
-                selectedTarget === null
-                  ? 'bg-blue-600 text-white shadow-md border-transparent'
-                  : 'bg-white text-gray-700 hover:bg-blue-50 border-gray-300'
-              }`}
-            >
-              통합
-            </button>
-            {targets.map(target => (
-              <button
-                key={target}
-                onClick={() => setSelectedTarget(target)}
-                className={`px-3 py-1.5 rounded-full text-sm font-medium transition duration-150 border ${
-                  selectedTarget === target
-                    ? 'bg-blue-600 text-white shadow-md border-transparent'
-                    : 'bg-white text-gray-700 hover:bg-blue-50 border-gray-300'
-                }`}
-              >
-                {target}
-              </button>
-            ))}
-          </div>
-  
-          {/* 그래프 렌더링 */}
-          {(selectedTarget === null ? targets : [selectedTarget]).map(target => {
-            const groupLogs = targetGroups[target];
-            const metricTypes = getMetricTypes(groupLogs);
-  
-            return (
-              <div key={target} className="mb-10">
-                <h3 className="text-l font-semibold text-indigo-500 mb-4">{target} 지표별 그래프</h3>
-                <div className="flex flex-col gap-10">
-                  {metricTypes.map(metric => {
-                    const data = createChartData(groupLogs, metric);
-                    const key = normalizeMetricKey(metric);
-                    return (
-                      <div key={metric} className="w-full">
-                        <h4 className="text-sm text-black font-medium mb-2">{metric}</h4>
-                        <ResponsiveContainer width="100%" height={400}>
-                          <LineChart data={data}>
-                            <CartesianGrid strokeDasharray="3 3" />
-                            <XAxis dataKey="date" tick={{ fontSize: 12 }} />
-                            <YAxis tick={{ fontSize: 12 }} />
-                            <Tooltip wrapperStyle={{ fontSize: 12 }} labelStyle={{ color: 'black' }} />
-                            <Legend wrapperStyle={{ fontSize: 12 }} />
-                            <Line
-                              type="monotone"
-                              dataKey={key}
-                              stroke={colorMap[metric] || '#8884d8'}
-                              strokeWidth={2}
-                              dot={{ r: 3 }}
-                              name={metric}
-                            />
-                          </LineChart>
-                        </ResponsiveContainer>
-                      </div>
-                    );
-                  })}
+
+      {/* 타겟 선택 필터 */}
+      <div className="mb-6 flex flex-wrap gap-2">
+        <button
+          onClick={() => setSelectedTarget(null)}
+          className={`px-3 py-1.5 rounded-full text-sm font-medium transition duration-150 border ${
+            selectedTarget === null
+              ? 'bg-blue-600 text-white shadow-md border-transparent'
+              : 'bg-white text-gray-700 hover:bg-blue-50 border-gray-300'
+          }`}
+        >
+          통합
+        </button>
+        {targets.map(target => (
+          <button
+            key={target}
+            onClick={() => setSelectedTarget(target)}
+            className={`px-3 py-1.5 rounded-full text-sm font-medium transition duration-150 border ${
+              selectedTarget === target
+                ? 'bg-blue-600 text-white shadow-md border-transparent'
+                : 'bg-white text-gray-700 hover:bg-blue-50 border-gray-300'
+            }`}
+          >
+            {target}
+          </button>
+        ))}
+      </div>
+
+      {/* 그래프 영역 */}
+      {currentTargets.map(target => {
+        const groupLogs = targetGroups[target];
+        if (!groupLogs) return null;
+        const metricTypes = getMetricTypes(groupLogs);
+
+        return (
+          <section key={target}>
+            <h3 className="text-lg font-bold text-indigo-600 mb-6">{target} 종합 그래프</h3>
+
+            {/* 그래프 전체 묶음 */}
+            <div>
+            {metricTypes.map((metric, index) => {
+              const data = createChartDataForMetric(groupLogs, metric);
+              const maxVal = Math.max(...data.map(d => d.value ?? 0)); // null은 0으로 처리
+              const isLast = index === metricTypes.length - 1;
+
+              return (
+                <div
+                  key={metric}
+                  className={`flex items-center space-x-4 w-full`}
+                  style={{ height: 250, marginBottom: 0, paddingBottom: 0 }}
+                >
+                  <div className="w-1/5 text-right pr-4 font-semibold text-gray-700">{metric}</div>
+                  <div className="w-4/5 h-full">
+                    <ResponsiveContainer width="100%" height="100%">
+                      <LineChart data={data} margin={{ top: 0, right: 20, left: 0, bottom: 0 }}>
+                        <CartesianGrid strokeDasharray="3 3" vertical={false} />
+                        <XAxis
+                          dataKey="date"
+                          tick={isLast ? { fontSize: 11 } : false}
+                          axisLine={true}
+                          tickLine={true}
+                        />
+                        <YAxis
+                          tick={{ fontSize: 11 }}
+                          domain={['auto', maxVal + 1]} // max값 + 2 적용
+                          width={40}
+                        />
+                        <Line
+                          type="monotone"
+                          dataKey="value"
+                          stroke={colorMap[metric] || '#8884d8'}
+                          strokeWidth={2}
+                          dot={{ r: 3 }}
+                          name={metric}
+                          isAnimationActive={false}
+                          label={{
+                            position: 'top',
+                            fontSize: 10,
+                            fill: '#555',
+                          }}
+                        />
+                      </LineChart>
+                    </ResponsiveContainer>
+                  </div>
                 </div>
-              </div>
-            );
-          })}
-        </>
+              );
+            })}
+            </div>
+
+          </section>
+        );
+      })}
+
+      {isHealthMetricManagerOpen && (
+        <HealthMetricManager
+          member={member}
+          logs={logs}
+          onClose={() => setIsHealthMetricManagerOpen(false)}
+          onUpdateLogs={(updatedLogs) => setLogs(updatedLogs)}
+        />
       )}
-  
+
       {/* 기록 추가 모달 */}
       {isAddOpen && (
         <AddHealthMetricOpen
@@ -223,12 +256,12 @@ const MemberHealthGraphsClient: React.FC<Props> = ({ healthLogs, member, onBack 
         />
       )}
 
+      {/* 기록 삭제 모달 */}
       {isListOpen && (
         <div className="fixed inset-0 bg-black/50 flex justify-center items-center z-50">
           <div className="bg-white rounded-2xl shadow-xl w-full max-w-md p-6 space-y-5 border border-gray-100 max-h-[80vh] overflow-y-auto">
             <h3 className="text-xl font-bold text-red-600 border-b pb-2">건강 기록 삭제</h3>
 
-            {/* 건강 기록 리스트 */}
             {logs.length === 0 ? (
               <p className="text-sm text-gray-500">삭제할 건강 기록이 없습니다.</p>
             ) : (
@@ -255,19 +288,14 @@ const MemberHealthGraphsClient: React.FC<Props> = ({ healthLogs, member, onBack 
               </ul>
             )}
 
-            {/* 닫기 버튼 */}
-            <div className="flex justify-end pt-4">
-              <Button onClick={() => setIsListOpen(false)} className="text-gray-700 text-sm" variant="outline">
-                닫기
-              </Button>
+            <div className="flex justify-end">
+              <Button onClick={() => setIsListOpen(false)}>닫기</Button>
             </div>
           </div>
         </div>
       )}
-
     </div>
   );
-  
 };
 
 export default MemberHealthGraphsClient;

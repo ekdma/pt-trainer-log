@@ -8,6 +8,7 @@ import {
 } from 'recharts'
 import { Button } from '@/components/ui/button'
 import AddRecordForm from "./AddRecordOpen"
+import WorkoutLogManager from './WorkoutLogManager' 
 import { addWorkoutRecordToDB, getWorkoutRecords, deleteWorkoutRecordById } from '../../lib/supabase' // 실제 경로에 맞춰 수정 필요
 
 type Props = {
@@ -140,6 +141,7 @@ export default function MemberGraphs({ member, logs: initialLogs, onBack }: Prop
   // 기록 추가 모달 열림 여부 상태
   const [isAddRecordOpen, setIsAddRecordOpen] = useState(false)
   const [isListOpen, setIsListOpen] = useState(false);
+  const [isWorkoutManagerOpen, setIsWorkoutManagerOpen] = useState(false)
 
   // 기록 추가 완료 콜백 예시 (부모 컴포넌트에서 실제 저장 처리할 수도 있음)
   const handleAddRecord = async (newRecord: NewWorkoutRecord): Promise<void> => {
@@ -193,6 +195,12 @@ export default function MemberGraphs({ member, logs: initialLogs, onBack }: Prop
         <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center space-y-2 sm:space-y-0">
           <h2 className="text-xl text-black font-semibold">{member.name} 님의 운동 기록</h2>
           <div className="flex flex-col sm:flex-row sm:space-x-2 space-y-2 sm:space-y-0">
+            <Button 
+              onClick={() => setIsWorkoutManagerOpen(true)}
+              className="w-full sm:w-auto flex items-center gap-1 text-sm text-purple-600 border border-purple-600 px-3 py-1.5 rounded-lg hover:bg-purple-100 transition duration-200"
+            >
+              기록관리
+            </Button>
             <Button 
               onClick={() => setIsAddRecordOpen(true)}
               className="w-full sm:w-auto flex items-center gap-1 text-sm text-green-600 border border-green-600 px-3 py-1.5 rounded-lg hover:bg-green-100 transition duration-200"
@@ -378,6 +386,15 @@ export default function MemberGraphs({ member, logs: initialLogs, onBack }: Prop
               })
             )}
           </>
+        )}
+
+        {isWorkoutManagerOpen && (
+          <WorkoutLogManager
+            member={member}
+            logs={logs}
+            onClose={() => setIsWorkoutManagerOpen(false)}
+            onUpdateLogs={(updatedLogs) => setLogs(updatedLogs)}
+          />
         )}
 
         {/* 기록 추가 모달 */}
