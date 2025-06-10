@@ -72,7 +72,9 @@ export default function HealthMetricManager({
     if (error) alert('수정 오류: ' + error.message)
     else {
       const updated = await fetchMetrics()
-      onUpdateLogs && onUpdateLogs(updated)
+      if (onUpdateLogs) {
+        onUpdateLogs(updated)
+      }
       alert('기록 수정을 완료하였습니다 😊')
     }
   }
@@ -83,7 +85,9 @@ export default function HealthMetricManager({
     if (error) alert('삭제 오류: ' + error.message)
     else {
       const updated = await fetchMetrics()
-      onUpdateLogs && onUpdateLogs(updated)
+      if (onUpdateLogs) {
+        onUpdateLogs(updated)
+      }
       alert('기록 삭제를 완료하였습니다 😊')
     }
   }
@@ -106,7 +110,9 @@ export default function HealthMetricManager({
     else {
       setNewMetric({ member_id: member.member_id })
       const updated = await fetchMetrics()
-      onUpdateLogs && onUpdateLogs(updated)
+      if (onUpdateLogs) {
+        onUpdateLogs(updated)
+      }
       alert('기록 저장을 완료하였습니다 😊')
     }
   }

@@ -17,8 +17,8 @@ interface Props {
   onBack: () => void;
 }
 
-const normalizeMetricKey = (label: string): string =>
-  label.toLowerCase().replace(/\s+/g, '_');
+// const normalizeMetricKey = (label: string): string =>
+//   label.toLowerCase().replace(/\s+/g, '_');
 
 // metric 별로 날짜별 값만 뽑아서 배열로 리턴
 function createChartDataForMetric(logs: HealthMetric[], metricType: string) {
