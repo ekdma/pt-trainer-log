@@ -2,7 +2,7 @@
 
 import React, { useEffect, useState } from 'react';
 import {
-  LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer
+  LineChart, Line, XAxis, YAxis, CartesianGrid, ResponsiveContainer
 } from 'recharts';
 import { HealthMetric, Member, NewHealthMetric } from './types';
 import AddHealthMetricOpen from './AddHealthMetricOpen';

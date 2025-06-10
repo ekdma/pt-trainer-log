@@ -28,7 +28,7 @@ interface HealthMetricManagerProps {
 
 export default function HealthMetricManager({
   member,
-  logs,
+//   logs,
   onClose,
   onUpdateLogs,
 }: HealthMetricManagerProps) {

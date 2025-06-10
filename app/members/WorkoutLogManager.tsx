@@ -29,7 +29,7 @@ interface WorkoutLogManagerProps {
 
 export default function WorkoutLogManager({
     member,
-    logs,
+    // logs,
     onClose,
     onUpdateLogs,
 }: WorkoutLogManagerProps) {
