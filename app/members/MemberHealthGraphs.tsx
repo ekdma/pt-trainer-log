@@ -111,191 +111,200 @@ const MemberHealthGraphsClient: React.FC<Props> = ({ healthLogs, member, onBack 
 
   return (
     <div className="p-4 max-w-screen-lg mx-auto space-y-10">
-      {/* 상단 버튼 영역 */}
-      <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center space-y-2 sm:space-y-0">
-        <h2 className="text-xl text-black font-semibold">{member.name} 님의 건강 기록</h2>
-        <div className="flex flex-col sm:flex-row sm:space-x-2 space-y-2 sm:space-y-0">
-          <Button 
-            onClick={() => setIsHealthMetricManagerOpen(true)}
-            className="w-full sm:w-auto flex items-center gap-1 text-sm text-purple-600 border border-purple-600 px-3 py-1.5 rounded-lg hover:bg-purple-100 transition duration-200"
-          >
-            기록관리
-          </Button>
-          <Button
-            onClick={() => setIsAddOpen(true)}
-            className="w-full sm:w-auto flex items-center gap-1 text-sm text-green-600 border border-green-600 px-3 py-1.5 rounded-lg hover:bg-green-100 transition duration-200"
-          >
-            <Plus size={16} />
-            기록 추가
-          </Button>
-          <Button 
-            onClick={() => setIsListOpen(true)} 
-            className="w-full sm:w-auto flex items-center gap-1 text-sm text-red-600 border border-red-600 px-3 py-1.5 rounded-lg hover:bg-red-100 transition duration-200"
-          >
-            <Minus size={16} />
-            기록 삭제
-          </Button>
-          <Button
-            onClick={onBack}
-            className="w-full sm:w-auto flex items-center gap-1 text-sm text-indigo-600 border border-indigo-600 px-3 py-1.5 rounded-lg hover:bg-indigo-100 transition duration-200"
-          >
-            <ArrowLeft size={16} />
-            뒤로
-          </Button>
+      <div className="space-y-6">
+        {/* 상단 버튼 영역 */}
+        <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center space-y-2 sm:space-y-0">
+          <h2 className="text-xl text-black font-semibold">{member.name} 님의 건강 기록</h2>
+          <div className="flex flex-col sm:flex-row sm:space-x-2 space-y-2 sm:space-y-0">
+            <Button 
+              onClick={() => setIsHealthMetricManagerOpen(true)}
+              className="w-full sm:w-auto flex items-center gap-1 text-sm text-purple-600 border border-purple-600 px-3 py-1.5 rounded-lg hover:bg-purple-100 transition duration-200"
+            >
+              기록관리
+            </Button>
+            <Button
+              onClick={() => setIsAddOpen(true)}
+              className="w-full sm:w-auto flex items-center gap-1 text-sm text-green-600 border border-green-600 px-3 py-1.5 rounded-lg hover:bg-green-100 transition duration-200"
+            >
+              <Plus size={16} />
+              기록 추가
+            </Button>
+            <Button 
+              onClick={() => setIsListOpen(true)} 
+              className="w-full sm:w-auto flex items-center gap-1 text-sm text-red-600 border border-red-600 px-3 py-1.5 rounded-lg hover:bg-red-100 transition duration-200"
+            >
+              <Minus size={16} />
+              기록 삭제
+            </Button>
+            <Button
+              onClick={onBack}
+              className="w-full sm:w-auto flex items-center gap-1 text-sm text-indigo-600 border border-indigo-600 px-3 py-1.5 rounded-lg hover:bg-indigo-100 transition duration-200"
+            >
+              <ArrowLeft size={16} />
+              뒤로
+            </Button>
+          </div>
         </div>
-      </div>
 
-      {/* 타겟 선택 필터 */}
-      <div className="mb-6 flex flex-wrap gap-2">
-        <button
-          onClick={() => setSelectedTarget(null)}
-          className={`px-3 py-1.5 rounded-full text-sm font-medium transition duration-150 border ${
-            selectedTarget === null
-              ? 'bg-blue-600 text-white shadow-md border-transparent'
-              : 'bg-white text-gray-700 hover:bg-blue-50 border-gray-300'
-          }`}
-        >
-          통합
-        </button>
-        {targets.map(target => (
+        {/* 타겟 선택 필터 */}
+        {targets.length > 0 && (
+          <div className="mb-6 flex flex-wrap gap-2">
           <button
-            key={target}
-            onClick={() => setSelectedTarget(target)}
+            onClick={() => setSelectedTarget(null)}
             className={`px-3 py-1.5 rounded-full text-sm font-medium transition duration-150 border ${
-              selectedTarget === target
+              selectedTarget === null
                 ? 'bg-blue-600 text-white shadow-md border-transparent'
                 : 'bg-white text-gray-700 hover:bg-blue-50 border-gray-300'
             }`}
           >
-            {target}
+            통합
           </button>
-        ))}
-      </div>
+          {targets.map(target => (
+            <button
+              key={target}
+              onClick={() => setSelectedTarget(target)}
+              className={`px-3 py-1.5 rounded-full text-sm font-medium transition duration-150 border ${
+                selectedTarget === target
+                  ? 'bg-blue-600 text-white shadow-md border-transparent'
+                  : 'bg-white text-gray-700 hover:bg-blue-50 border-gray-300'
+              }`}
+            >
+              {target}
+            </button>
+          ))}
+        </div> 
+        )}
 
-      {/* 그래프 영역 */}
-      {currentTargets.map(target => {
-        const groupLogs = targetGroups[target];
-        if (!groupLogs) return null;
-        const metricTypes = getMetricTypes(groupLogs);
 
-        return (
-          <section key={target}>
-            <h3 className="text-lg font-bold text-indigo-600 mb-6">{target} 종합 그래프</h3>
+        {/* 그래프 영역 */}
+        {currentTargets.length === 0 || currentTargets.every(target => !targetGroups[target] || targetGroups[target].length === 0) ? (
+          <p className="text-center text-gray-500 mt-8">등록된 건강 지표가 없습니다.</p>
+        ) : (
+          currentTargets.map(target => {
+            const groupLogs = targetGroups[target];
+            if (!groupLogs || groupLogs.length === 0) return null;
 
-            {/* 그래프 전체 묶음 */}
-            <div>
-            {metricTypes.map((metric, index) => {
-              const data = createChartDataForMetric(groupLogs, metric);
-              const maxVal = Math.max(...data.map(d => d.value ?? 0)); // null은 0으로 처리
-              const isLast = index === metricTypes.length - 1;
+            const metricTypes = getMetricTypes(groupLogs);
 
-              return (
-                <div
-                  key={metric}
-                  className={`flex items-center space-x-4 w-full`}
-                  style={{ height: 250, marginBottom: 0, paddingBottom: 0 }}
-                >
-                  <div className="w-1/5 text-right pr-4 font-semibold text-gray-700">{metric}</div>
-                  <div className="w-4/5 h-full">
-                    <ResponsiveContainer width="100%" height="100%">
-                      <LineChart data={data} margin={{ top: 0, right: 20, left: 0, bottom: 0 }}>
-                        <CartesianGrid strokeDasharray="3 3" vertical={false} />
-                        <XAxis
-                          dataKey="date"
-                          tick={isLast ? { fontSize: 11 } : false}
-                          axisLine={true}
-                          tickLine={true}
-                        />
-                        <YAxis
-                          tick={{ fontSize: 11 }}
-                          domain={['auto', maxVal + 1]} // max값 + 2 적용
-                          width={40}
-                        />
-                        <Line
-                          type="monotone"
-                          dataKey="value"
-                          stroke={colorMap[metric] || '#8884d8'}
-                          strokeWidth={2}
-                          dot={{ r: 3 }}
-                          name={metric}
-                          isAnimationActive={false}
-                          label={{
-                            position: 'top',
-                            fontSize: 10,
-                            fill: '#555',
-                          }}
-                        />
-                      </LineChart>
-                    </ResponsiveContainer>
-                  </div>
+            return (
+              <section key={target}>
+                <h3 className="text-lg font-bold text-indigo-600 mb-6">{target} 종합 그래프</h3>
+
+                <div>
+                  {metricTypes.map((metric, index) => {
+                    const data = createChartDataForMetric(groupLogs, metric);
+                    const maxVal = Math.max(...data.map(d => d.value ?? 0));
+                    const isLast = index === metricTypes.length - 1;
+
+                    return (
+                      <div
+                        key={metric}
+                        className="flex items-center space-x-4 w-full"
+                        style={{ height: 250, marginBottom: 0, paddingBottom: 0 }}
+                      >
+                        <div className="w-1/5 text-right pr-4 font-semibold text-gray-700">{metric}</div>
+                        <div className="w-4/5 h-full">
+                          <ResponsiveContainer width="100%" height="100%">
+                            <LineChart data={data} margin={{ top: 0, right: 20, left: 0, bottom: 0 }}>
+                              <CartesianGrid strokeDasharray="3 3" vertical={false} />
+                              <XAxis
+                                dataKey="date"
+                                tick={isLast ? { fontSize: 11 } : false}
+                                axisLine={true}
+                                tickLine={true}
+                              />
+                              <YAxis
+                                tick={{ fontSize: 11 }}
+                                domain={['auto', maxVal + 1]}
+                                width={40}
+                              />
+                              <Line
+                                type="monotone"
+                                dataKey="value"
+                                stroke={colorMap[metric] || '#8884d8'}
+                                strokeWidth={2}
+                                dot={{ r: 3 }}
+                                name={metric}
+                                isAnimationActive={false}
+                                label={{
+                                  position: 'top',
+                                  fontSize: 10,
+                                  fill: '#555',
+                                }}
+                              />
+                            </LineChart>
+                          </ResponsiveContainer>
+                        </div>
+                      </div>
+                    );
+                  })}
                 </div>
-              );
-            })}
-            </div>
+              </section>
+            );
+          })
+        )}
 
-          </section>
-        );
-      })}
 
-      {isHealthMetricManagerOpen && (
-        <HealthMetricManager
-          member={member}
-          logs={logs}
-          onClose={() => setIsHealthMetricManagerOpen(false)}
-          onUpdateLogs={(updatedLogs) => setLogs(updatedLogs)}
-        />
-      )}
+        {isHealthMetricManagerOpen && (
+          <HealthMetricManager
+            member={member}
+            logs={logs}
+            onClose={() => setIsHealthMetricManagerOpen(false)}
+            onUpdateLogs={(updatedLogs) => setLogs(updatedLogs)}
+          />
+        )}
 
-      {/* 기록 추가 모달 */}
-      {isAddOpen && (
-        <AddHealthMetricOpen
-          isOpen={isAddOpen}
-          member={member}
-          onSave={handleAddRecord}
-          onCancel={() => setIsAddOpen(false)}
-        />
-      )}
+        {/* 기록 추가 모달 */}
+        {isAddOpen && (
+          <AddHealthMetricOpen
+            isOpen={isAddOpen}
+            member={member}
+            onSave={handleAddRecord}
+            onCancel={() => setIsAddOpen(false)}
+          />
+        )}
 
-      {/* 기록 삭제 모달 */}
-      {isListOpen && (
-        <div className="fixed inset-0 bg-black/50 flex justify-center items-center z-50">
-          <div className="bg-white rounded-2xl shadow-xl w-full max-w-md p-6 space-y-5 border border-gray-100 max-h-[80vh] overflow-y-auto">
-            <h3 className="text-xl font-bold text-red-600 border-b pb-2">건강 기록 삭제</h3>
+        {/* 기록 삭제 모달 */}
+        {isListOpen && (
+          <div className="fixed inset-0 bg-black/50 flex justify-center items-center z-50">
+            <div className="bg-white rounded-2xl shadow-xl w-full max-w-md p-6 space-y-5 border border-gray-100 max-h-[80vh] overflow-y-auto">
+              <h3 className="text-xl font-bold text-red-600 border-b pb-2">건강 기록 삭제</h3>
 
-            {logs.length === 0 ? (
-              <p className="text-sm text-gray-500">삭제할 건강 기록이 없습니다.</p>
-            ) : (
-              <ul className="space-y-3">
-                {logs.map(log => (
-                  <li
-                    key={log.health_id}
-                    className="flex justify-between items-center border rounded-lg px-3 py-2 bg-gray-50 hover:bg-gray-100 transition"
-                  >
-                    <div className="text-sm text-gray-700">
-                      <strong className="text-gray-900">{log.metric_type}</strong> | {log.metric_value} |{' '}
-                      <span className="text-gray-500">{log.measure_date.slice(0, 10)}</span>
-                    </div>
-                    <Button
-                      size="sm"
-                      variant="destructive"
-                      onClick={() => handleDelete(log.health_id)}
-                      className="text-xs"
+              {logs.length === 0 ? (
+                <p className="text-sm text-gray-500">삭제할 건강 기록이 없습니다.</p>
+              ) : (
+                <ul className="space-y-3">
+                  {logs.map(log => (
+                    <li
+                      key={log.health_id}
+                      className="flex justify-between items-center border rounded-lg px-3 py-2 bg-gray-50 hover:bg-gray-100 transition"
                     >
-                      삭제
-                    </Button>
-                  </li>
-                ))}
-              </ul>
-            )}
+                      <div className="text-sm text-gray-700">
+                        <strong className="text-gray-900">{log.metric_type}</strong> | {log.metric_value} |{' '}
+                        <span className="text-gray-500">{log.measure_date.slice(0, 10)}</span>
+                      </div>
+                      <Button
+                        size="sm"
+                        variant="destructive"
+                        onClick={() => handleDelete(log.health_id)}
+                        className="text-xs"
+                      >
+                        삭제
+                      </Button>
+                    </li>
+                  ))}
+                </ul>
+              )}
 
-            <div className="flex justify-end pt-4">
-              <Button onClick={() => setIsListOpen(false)} className="text-gray-700 text-sm" variant="outline">
-                닫기
-              </Button>
+              <div className="flex justify-end pt-4">
+                <Button onClick={() => setIsListOpen(false)} className="text-gray-700 text-sm" variant="outline">
+                  닫기
+                </Button>
+              </div>
             </div>
           </div>
-        </div>
-      )}
+        )}
+      </div>
     </div>
   );
 };
