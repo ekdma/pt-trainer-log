@@ -288,8 +288,10 @@ const MemberHealthGraphsClient: React.FC<Props> = ({ healthLogs, member, onBack 
               </ul>
             )}
 
-            <div className="flex justify-end">
-              <Button onClick={() => setIsListOpen(false)}>닫기</Button>
+            <div className="flex justify-end pt-4">
+              <Button onClick={() => setIsListOpen(false)} className="text-gray-700 text-sm" variant="outline">
+                닫기
+              </Button>
             </div>
           </div>
         </div>
