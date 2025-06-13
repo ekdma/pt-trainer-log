@@ -422,15 +422,20 @@ export default function WorkoutLogManager({
                 >
                   Workout
                 </th>
-                {dates.map(date => (
-                  <th
-                    key={date}
-                    className="border border-gray-300 px-3 py-2 text-center font-semibold sticky top-0 bg-gray-100 z-10"
-                    style={{ minWidth: '90px', maxWidth: '90px' }}
-                  >
-                    {date}
-                  </th>
-                ))}
+                {dates.map(date => {
+                  const parts = date.split('-'); // ['2025', '06', '13']
+                  const year = parts[0];
+                  const monthDay = parts.slice(1).join('-'); // '06-13'
+                  return (
+                    <th
+                      key={date}
+                      className="border border-gray-300 px-3 py-2 text-center font-semibold sticky top-0 bg-gray-100 z-10"
+                      style={{ minWidth: '90px', maxWidth: '90px' }}
+                    >
+                      {year}<br />{monthDay}
+                    </th>
+                  );
+                })}
                 {addingDate !== null && (
                   <th
                     className="border border-gray-300 px-3 py-2 text-center font-semibold sticky top-0 bg-yellow-50 z-10"
