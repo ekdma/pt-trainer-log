@@ -75,7 +75,31 @@ const MemberHealthGraphsClient: React.FC<Props> = ({ healthLogs, member, onBack 
   });
 
   const targets = Object.keys(targetGroups);
+  const targetOrder = ['Body Composition', 'HP&BP', 'Overall Fitness'];
+  const targetsSorted = targetOrder.filter(t => targets.includes(t));
 
+  const metricOrderMap: { [key: string]: string[] } = {
+    'Body Composition': ['Weight', 'Skeletal Muscle Mass', 'Body Fat Mass', 'Body Fat Percentage'],
+    'HP&BP': ['Resting Heart Rate', 'Systolic BP', 'Diastolic BP'],
+    'Overall Fitness': ['Cardiopulmonary Endurance', 'Upper Body Strength', 'Lower Body Strength'],
+  };
+
+  function sortMetricsByTarget(target: string, metrics: string[]) {
+    const order = metricOrderMap[target] || [];
+    const orderLower = order.map(m => m.toLowerCase());
+  
+    return metrics
+      .slice()
+      .sort((a, b) => {
+        const aIndex = orderLower.indexOf(a.toLowerCase());
+        const bIndex = orderLower.indexOf(b.toLowerCase());
+        if (aIndex === -1 && bIndex === -1) return a.localeCompare(b);
+        if (aIndex === -1) return 1;
+        if (bIndex === -1) return -1;
+        return aIndex - bIndex;
+      });
+  }
+  
   const getMetricTypes = (logs: HealthMetric[]) =>
     Array.from(new Set(logs.map(log => log.metric_type)));
 
@@ -107,7 +131,9 @@ const MemberHealthGraphsClient: React.FC<Props> = ({ healthLogs, member, onBack 
   };
 
   // 표시할 타겟 선택 (통합이면 전체, 아니면 선택 타겟만)
-  const currentTargets = selectedTarget === null ? targets : [selectedTarget];
+  // const currentTargets = selectedTarget === null ? targets : [selectedTarget];
+  const currentTargets = selectedTarget === null ? targetsSorted : [selectedTarget];
+
 
   return (
     <div className="p-4 max-w-screen-lg mx-auto space-y-10">
@@ -184,13 +210,15 @@ const MemberHealthGraphsClient: React.FC<Props> = ({ healthLogs, member, onBack 
             const groupLogs = targetGroups[target];
             if (!groupLogs || groupLogs.length === 0) return null;
 
-            const metricTypes = getMetricTypes(groupLogs);
+            // const metricTypes = getMetricTypes(groupLogs);
+            let metricTypes = getMetricTypes(groupLogs);
+            metricTypes = sortMetricsByTarget(target, metricTypes);
 
             return (
               <section key={target}>
                 <h3 className="text-lg font-bold text-indigo-600 mb-6">{target} 종합 그래프</h3>
 
-                <div>
+                <div className="space-y-0">
                   {metricTypes.map((metric, index) => {
                     const data = createChartDataForMetric(groupLogs, metric);
                     const maxVal = Math.max(...data.map(d => d.value ?? 0));
@@ -200,7 +228,7 @@ const MemberHealthGraphsClient: React.FC<Props> = ({ healthLogs, member, onBack 
                       <div
                         key={metric}
                         className="flex items-center space-x-4 w-full"
-                        style={{ height: 250, marginBottom: 0, paddingBottom: 0 }}
+                        style={{ height: 100, marginBottom: 0, paddingBottom: 0 }}
                       >
                         <div className="w-1/5 text-right pr-4 font-semibold text-gray-700">{metric}</div>
                         <div className="w-4/5 h-full">
@@ -214,7 +242,7 @@ const MemberHealthGraphsClient: React.FC<Props> = ({ healthLogs, member, onBack 
                                 tickLine={true}
                               />
                               <YAxis
-                                tick={{ fontSize: 11 }}
+                                tick={false}
                                 domain={['auto', maxVal + 1]}
                                 width={40}
                               />
@@ -240,6 +268,7 @@ const MemberHealthGraphsClient: React.FC<Props> = ({ healthLogs, member, onBack 
                   })}
                 </div>
               </section>
+
             );
           })
         )}

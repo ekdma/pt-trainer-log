@@ -126,7 +126,12 @@ export default function MemberGraphs({ member, logs: initialLogs, onBack }: Prop
   const chartData = [...logs].sort((a, b) => new Date(a.workout_date).getTime() - new Date(b.workout_date).getTime())
 
   // 전체 Target 목록
+  const targetOrder = ['Leg', 'Back', 'Shoulder', 'Chest', 'Arm', 'Core']
+
   const targets = Array.from(new Set(chartData.map((log) => log.target)))
+    .sort((a, b) => targetOrder.indexOf(a) - targetOrder.indexOf(b))
+
+  // const targets = Array.from(new Set(chartData.map((log) => log.target)))
 
   // Target별 그룹화
   const targetGroups: Record<string, WorkoutRecord[]> = {}
@@ -280,14 +285,14 @@ export default function MemberGraphs({ member, logs: initialLogs, onBack }: Prop
               })
               const weightData = Object.entries(weightDateGrouped).map(([date, workouts]) => ({ date, ...workouts }))
 
-              const workoutsInGroup = Array.from(new Set(groupLogs.map((log) => log.workout)))
+              const workoutsInGroup = Array.from(new Set(groupLogs.map((log) => log.workout))).sort()
 
               return (
                 <div key={target} className="mb-10">
                   <h3 className="text-l font-semibold text-indigo-500 mb-4">{target} 부위별 그래프</h3>
                   <div className="flex flex-col lg:flex-row gap-6 w-full">
                     {/* Reps 그래프 */}
-                    <div className="flex-1">
+                    {/* <div className="flex-1">
                       <h4 className="text-sm text-black font-medium mb-2">Reps</h4>
                       <ResponsiveContainer width="100%" height={400}>
                         <LineChart data={repsData}>
@@ -307,7 +312,7 @@ export default function MemberGraphs({ member, logs: initialLogs, onBack }: Prop
                           ))}
                         </LineChart>
                       </ResponsiveContainer>
-                    </div>
+                    </div> */}
 
                     {/* Weight 그래프 */}
                     <div className="flex-1">
@@ -342,7 +347,9 @@ export default function MemberGraphs({ member, logs: initialLogs, onBack }: Prop
             {targetGroups[selectedTarget]?.length === 0 || !targetGroups[selectedTarget] ? (
               <p className="text-center text-gray-500 mt-8">등록된 운동 기록이 없습니다.</p>
             ) : (
-              Array.from(new Set(targetGroups[selectedTarget].map((log) => log.workout))).map((workout) => {
+              Array.from(new Set(targetGroups[selectedTarget].map((log) => log.workout)))
+                .sort()
+                .map((workout) => { 
                 const filtered = chartData.filter((d) => d.workout === workout && d.target === selectedTarget)
                 if (filtered.length === 0) return null
                 const color = getColorForWorkout(selectedTarget, workout)
@@ -352,7 +359,7 @@ export default function MemberGraphs({ member, logs: initialLogs, onBack }: Prop
                     <p className="text-l font-semibold text-indigo-500 mb-4">{workout}</p>
                     <div className="flex flex-col lg:flex-row gap-6 w-full">
                       {/* Reps 그래프 */}
-                      <div className="flex-1">
+                      {/* <div className="flex-1">
                         <h4 className="text-sm text-black font-medium mb-2">Reps</h4>
                         <ResponsiveContainer width="100%" height={400}>
                           <LineChart data={filtered}>
@@ -364,7 +371,7 @@ export default function MemberGraphs({ member, logs: initialLogs, onBack }: Prop
                             <Line type="monotone" dataKey="reps" name="Reps" stroke={color} />
                           </LineChart>
                         </ResponsiveContainer>
-                      </div>
+                      </div> */}
 
                       {/* Weight 그래프 */}
                       <div className="flex-1">
