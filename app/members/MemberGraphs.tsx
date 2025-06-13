@@ -275,7 +275,7 @@ export default function MemberGraphs({ member, logs: initialLogs, onBack }: Prop
                 if (!repsDateGrouped[log.workout_date]) repsDateGrouped[log.workout_date] = {}
                 repsDateGrouped[log.workout_date][log.workout] = log.reps
               })
-              const repsData = Object.entries(repsDateGrouped).map(([date, workouts]) => ({ date, ...workouts }))
+              // const repsData = Object.entries(repsDateGrouped).map(([date, workouts]) => ({ date, ...workouts }))
 
               // 날짜별 Workout별 Weight 집계
               const weightDateGrouped: Record<string, Record<string, number>> = {}

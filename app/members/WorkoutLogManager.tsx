@@ -1,6 +1,6 @@
 'use client'
 
-import { Plus, ArrowLeft, Minus } from 'lucide-react'
+import { Plus} from 'lucide-react'
 import { useEffect, useState } from 'react'
 import { getSupabaseClient } from '@/lib/supabase'
 import { Button } from '@/components/ui/button'
@@ -27,12 +27,26 @@ interface WorkoutLogManagerProps {
   onUpdateLogs?: (updatedLogs: WorkoutRecord[]) => void
 }
 
+type InsertLog = {
+  member_id: string | number;
+  target: string;
+  workout: string;
+  workout_date: string;
+  reps: number;
+  weight: number;
+}
+
+type UpdateLog = {
+  id: string | number;
+  weight: number;
+}
+
 export default function WorkoutLogManager({
   member,
   onClose,
   onUpdateLogs,
 }: WorkoutLogManagerProps) {
-  const [workoutLogs, setWorkoutLogs] = useState<WorkoutRecord[]>([])
+  // const [workoutLogs, setWorkoutLogs] = useState<WorkoutRecord[]>([])
   const [dates, setDates] = useState<string[]>([])
   const [rows, setRows] = useState<{ target: string; workout: string }[]>([])
   const [logMap, setLogMap] = useState<Record<string, Record<string, { weight: number; id?: number }>>>({})
@@ -65,7 +79,7 @@ export default function WorkoutLogManager({
     }
   
     const logs = data ?? []
-    setWorkoutLogs(logs)
+    // setWorkoutLogs(logs)
     if (onUpdateLogs) onUpdateLogs(logs)   // ★ 여기 추가 ★
 
     const uniqueDates = Array.from(new Set(logs.map(l => l.workout_date))).sort()
@@ -98,36 +112,36 @@ export default function WorkoutLogManager({
     setLogMap(newLogMap)
   }
 
-  const handleUpdate = async (
-    rowKey: string,
-    date: string,
-    value: number
-  ) => {
-    const [target, workout] = rowKey.split('||')
-    const entry = logMap[rowKey]?.[date] || {}
-    const id = entry.id
+  // const handleUpdate = async (
+  //   rowKey: string,
+  //   date: string,
+  //   value: number
+  // ) => {
+  //   const [target, workout] = rowKey.split('||')
+  //   const entry = logMap[rowKey]?.[date] || {}
+  //   const id = entry.id
 
-    if (id) {
-      const { error } = await supabase
-        .from('workout_logs')
-        .update({ weight: value })
-        .eq('workout_id', id)
-      if (error) alert('업데이트 오류: ' + error.message)
-    } else {
-      const insertData = {
-        member_id: member.member_id,
-        target,
-        workout,
-        workout_date: date,
-        reps: 0,
-        weight: value,
-      }
-      const { error } = await supabase.from('workout_logs').insert(insertData)
-      if (error) alert('삽입 오류: ' + error.message)
-    }
+  //   if (id) {
+  //     const { error } = await supabase
+  //       .from('workout_logs')
+  //       .update({ weight: value })
+  //       .eq('workout_id', id)
+  //     if (error) alert('업데이트 오류: ' + error.message)
+  //   } else {
+  //     const insertData = {
+  //       member_id: member.member_id,
+  //       target,
+  //       workout,
+  //       workout_date: date,
+  //       reps: 0,
+  //       weight: value,
+  //     }
+  //     const { error } = await supabase.from('workout_logs').insert(insertData)
+  //     if (error) alert('삽입 오류: ' + error.message)
+  //   }
 
-    fetchLogs()
-  }
+  //   fetchLogs()
+  // }
 
   const startAddingDate = () => {
     if (addingDate !== null) return
@@ -135,51 +149,51 @@ export default function WorkoutLogManager({
     setNewLogInputs({})
   }
 
-  const saveNewDateAndLogs = async () => {
-    if (!addingDate) {
-      alert('날짜를 입력해주세요')
-      return
-    }
-    if (dates.includes(addingDate)) {
-      alert('이미 존재하는 날짜입니다.')
-      return
-    }
+  // const saveNewDateAndLogs = async () => {
+  //   if (!addingDate) {
+  //     alert('날짜를 입력해주세요')
+  //     return
+  //   }
+  //   if (dates.includes(addingDate)) {
+  //     alert('이미 존재하는 날짜입니다.')
+  //     return
+  //   }
 
-    const inserts: any[] = []
-    for (const row of rows) {
-      const key = `${row.target}||${row.workout}`
-      const input = newLogInputs[key]
-      if (input) {
-        const weightNum = Number(input.weight)
-        if (weightNum > 0) {
-          inserts.push({
-            member_id: member.member_id,
-            target: row.target,
-            workout: row.workout,
-            workout_date: addingDate,
-            reps: 0,
-            weight: weightNum,
-          })
-        }
-      }
-    }
+  //   const inserts: any[] = []
+  //   for (const row of rows) {
+  //     const key = `${row.target}||${row.workout}`
+  //     const input = newLogInputs[key]
+  //     if (input) {
+  //       const weightNum = Number(input.weight)
+  //       if (weightNum > 0) {
+  //         inserts.push({
+  //           member_id: member.member_id,
+  //           target: row.target,
+  //           workout: row.workout,
+  //           workout_date: addingDate,
+  //           reps: 0,
+  //           weight: weightNum,
+  //         })
+  //       }
+  //     }
+  //   }
 
-    if (inserts.length === 0) {
-      alert('적어도 하나 이상의 weight를 입력해주세요 😎')
-      return
-    }
+  //   if (inserts.length === 0) {
+  //     alert('적어도 하나 이상의 weight를 입력해주세요 😎')
+  //     return
+  //   }
 
-    const { error } = await supabase.from('workout_logs').insert(inserts)
-    if (error) {
-      alert('삽입 오류: ' + error.message)
-      return
-    }
+  //   const { error } = await supabase.from('workout_logs').insert(inserts)
+  //   if (error) {
+  //     alert('삽입 오류: ' + error.message)
+  //     return
+  //   }
 
-    setDates(prev => [...prev, addingDate].sort())
-    setAddingDate(null)
-    setNewLogInputs({})
-    fetchLogs()
-  }
+  //   setDates(prev => [...prev, addingDate].sort())
+  //   setAddingDate(null)
+  //   setNewLogInputs({})
+  //   fetchLogs()
+  // }
 
   const cancelAddingDate = () => {
     setAddingDate(null)
@@ -207,46 +221,46 @@ export default function WorkoutLogManager({
     }))
   }
 
-  const saveNewWorkout = async () => {
-    if (!newTarget.trim() || !newWorkout.trim()) {
-      alert('운동 부위와 운동 이름을 입력해주세요.')
-      return
-    }
+  // const saveNewWorkout = async () => {
+  //   if (!newTarget.trim() || !newWorkout.trim()) {
+  //     alert('운동 부위와 운동 이름을 입력해주세요.')
+  //     return
+  //   }
 
-    const inserts = []
-    for (const date of dates) {
-      const inputs = newWorkoutInputs[date]
-      if (!inputs) continue
-      const weightNum = Number(inputs.weight)
-      if (weightNum > 0) {
-        inserts.push({
-          member_id: member.member_id,
-          target: newTarget.trim(),
-          workout: newWorkout.trim(),
-          workout_date: date,
-          reps: 0,
-          weight: weightNum,
-        })
-      }
-    }
+  //   const inserts = []
+  //   for (const date of dates) {
+  //     const inputs = newWorkoutInputs[date]
+  //     if (!inputs) continue
+  //     const weightNum = Number(inputs.weight)
+  //     if (weightNum > 0) {
+  //       inserts.push({
+  //         member_id: member.member_id,
+  //         target: newTarget.trim(),
+  //         workout: newWorkout.trim(),
+  //         workout_date: date,
+  //         reps: 0,
+  //         weight: weightNum,
+  //       })
+  //     }
+  //   }
 
-    if (inserts.length === 0) {
-      alert('적어도 하나 이상의 weight를 입력해주세요 😎')
-      return
-    }
+  //   if (inserts.length === 0) {
+  //     alert('적어도 하나 이상의 weight를 입력해주세요 😎')
+  //     return
+  //   }
 
-    const { error } = await supabase.from('workout_logs').insert(inserts)
-    if (error) {
-      alert('삽입 오류: ' + error.message)
-      return
-    }
+  //   const { error } = await supabase.from('workout_logs').insert(inserts)
+  //   if (error) {
+  //     alert('삽입 오류: ' + error.message)
+  //     return
+  //   }
 
-    setAddingRow(false)
-    setNewTarget('')
-    setNewWorkout('')
-    setNewWorkoutInputs({})
-    fetchLogs()
-  }
+  //   setAddingRow(false)
+  //   setNewTarget('')
+  //   setNewWorkout('')
+  //   setNewWorkoutInputs({})
+  //   fetchLogs()
+  // }
 
   const cancelAddingRow = () => {
     setAddingRow(false)
@@ -284,8 +298,8 @@ export default function WorkoutLogManager({
   }  
 
   const saveAllChanges = async () => {
-    const inserts: any[] = []
-    const updates: any[] = []
+    const inserts: InsertLog[] = []
+    const updates: UpdateLog[] = []
   
     // 1. 기존 수정된 셀
     for (const entry of modifiedCells) {
@@ -450,7 +464,7 @@ export default function WorkoutLogManager({
                       {workout}
                     </td>
                     {dates.map(date => {
-                      const logEntry = logMap[rowKey]?.[date]
+                      // const logEntry = logMap[rowKey]?.[date]
                       return (
                         <td
                           key={date}
