@@ -119,31 +119,84 @@ function getColorForWorkout(target: string, workout: string) {
 
 export default function MemberGraphs({ member, logs: initialLogs, onBack }: Props) {
   const [logs, setLogs] = useState<WorkoutRecord[]>([])
-  const [allTypes, setAllTypes] = useState<WorkoutType[]>([]);
-  const [isOrderModalOpen, setIsOrderModalOpen] = useState(false)
-  const [isAddRecordOpen, setIsAddRecordOpen] = useState(false)
-  const [isListOpen, setIsListOpen] = useState(false)
-  const [isWorkoutManagerOpen, setIsWorkoutManagerOpen] = useState(false)
-  const [selectedTarget, setSelectedTarget] = useState<string | null>(null)
 
   useEffect(() => {
     setLogs(initialLogs)
   }, [initialLogs])
   
-  useEffect(() => {
-    getWorkoutTypes()
-      .then(types => {
-        setAllTypes(types)
-      })
-      .catch(console.error)
-  }, [])
+  const [isOrderModalOpen, setIsOrderModalOpen] = useState(false)
+  const [allTypes, setAllTypes] = useState<WorkoutType[]>([]);
 
-  useEffect(() => {
-    if (isOrderModalOpen) {
-      getWorkoutTypes().then(setAllTypes).catch(console.error)
+  // 날짜 오름차순 정렬
+  const chartData = [...logs].sort((a, b) => new Date(a.workout_date).getTime() - new Date(b.workout_date).getTime())
+
+  // 전체 Target 목록
+  const targetOrder = ['Leg', 'Back', 'Shoulder', 'Chest', 'Arm', 'Core']
+
+  const targets = Array.from(new Set(chartData.map((log) => log.target)))
+    .sort((a, b) => targetOrder.indexOf(a) - targetOrder.indexOf(b))
+
+  // const targets = Array.from(new Set(chartData.map((log) => log.target)))
+
+  // Target별 그룹화
+  const targetGroups: Record<string, WorkoutRecord[]> = {}
+  chartData.forEach((log) => {
+    if (!targetGroups[log.target]) targetGroups[log.target] = []
+    targetGroups[log.target].push(log)
+  })
+
+  // 선택된 Target 상태, null = 통합 (전체)
+  const [selectedTarget, setSelectedTarget] = useState<string | null>(null)
+
+  // 기록 추가 모달 열림 여부 상태
+  const [isAddRecordOpen, setIsAddRecordOpen] = useState(false)
+  const [isListOpen, setIsListOpen] = useState(false);
+  const [isWorkoutManagerOpen, setIsWorkoutManagerOpen] = useState(false)
+
+  // 기록 추가 완료 콜백 예시 (부모 컴포넌트에서 실제 저장 처리할 수도 있음)
+  const handleAddRecord = async (newRecord: NewWorkoutRecord): Promise<void> => {
+    try {
+      await addWorkoutRecordToDB(newRecord)
+      const updatedLogs = await getWorkoutRecords(member.member_id.toString())
+  
+      // [1] 정렬된 상태로 업데이트
+      const sortedLogs = updatedLogs.sort(
+        (a, b) => new Date(a.workout_date).getTime() - new Date(b.workout_date).getTime()
+      )
+      setLogs(sortedLogs)
+  
+      // [2] 해당 운동의 타겟 탭 자동 선택
+      setSelectedTarget(newRecord.target)
+  
+      // [3] 모달 닫기
+      setIsAddRecordOpen(false)
+      alert('기록 저장을 완료하였습니다 😊')
+    } catch (error) {
+      console.error('기록 저장 실패:', error)
+      alert('기록 저장 중 문제가 발생했어요 😥')
     }
-  }, [isOrderModalOpen])
+  }
+  
 
+  const handleDelete = async (id: number) => {
+    if (!confirm('해당 기록을 삭제하시겠습니까?')) return;
+    try {
+      await deleteWorkoutRecordById(id);
+      const updated = await getWorkoutRecords(member.member_id.toString());
+  
+      // 정렬된 상태로 설정
+      const sorted = updated.sort(
+        (a, b) => new Date(a.workout_date).getTime() - new Date(b.workout_date).getTime()
+      )
+      setLogs(sorted);
+  
+      alert('기록 삭제를 완료하였습니다 😊');
+    } catch (e) {
+      console.error('삭제 중 오류:', e);
+      alert('삭제 중 문제가 발생했어요 😥');
+    }
+  };
+  
   function fetchWorkoutTypes() {
     getWorkoutTypes()
       .then(types => setAllTypes(types))
@@ -155,54 +208,6 @@ export default function MemberGraphs({ member, logs: initialLogs, onBack }: Prop
       fetchWorkoutTypes();
     }
   }, [isOrderModalOpen]);
-  
-  // 날짜 오름차순 정렬
-  const chartData = [...logs].sort((a, b) => new Date(a.workout_date).getTime() - new Date(b.workout_date).getTime())
-
-  // 전체 Target 목록
-  const targets = Array.from(
-    new Set(chartData.map((log) => log.target))
-  ).sort((a, b) => {
-    const aOrder = allTypes.find(w => w.target === a)?.order_target ?? 999
-    const bOrder = allTypes.find(w => w.target === b)?.order_target ?? 999
-    return aOrder - bOrder
-  })
-
-  // Target별 그룹화
-  const targetGroups: Record<string, WorkoutRecord[]> = {}
-  chartData.forEach((log) => {
-    if (!targetGroups[log.target]) targetGroups[log.target] = []
-    targetGroups[log.target].push(log)
-  })
-
-  const handleAddRecord = async (newRecord: NewWorkoutRecord): Promise<void> => {
-    try {
-      await addWorkoutRecordToDB(newRecord)
-      const updatedLogs = await getWorkoutRecords(member.member_id.toString())
-      const sortedLogs = updatedLogs.sort((a, b) => new Date(a.workout_date).getTime() - new Date(b.workout_date).getTime())
-      setLogs(sortedLogs)
-      setSelectedTarget(newRecord.target)
-      setIsAddRecordOpen(false)
-      alert('기록 저장을 완료하였습니다 😊')
-    } catch (error) {
-      console.error('기록 저장 실패:', error)
-      alert('기록 저장 중 문제가 발생했어요 😥')
-    }
-  }
-  
-  const handleDelete = async (id: number) => {
-    if (!confirm('해당 기록을 삭제하시겠습니까?')) return;
-    try {
-      await deleteWorkoutRecordById(id);
-      const updated = await getWorkoutRecords(member.member_id.toString());
-      const sorted = updated.sort((a, b) => new Date(a.workout_date).getTime() - new Date(b.workout_date).getTime())
-      setLogs(sorted);
-      alert('기록 삭제를 완료하였습니다 😊');
-    } catch (e) {
-      console.error('삭제 중 오류:', e);
-      alert('삭제 중 문제가 발생했어요 😥');
-    }
-  }
 
   return (
     <div className="p-4 max-w-screen-lg mx-auto">
@@ -286,6 +291,15 @@ export default function MemberGraphs({ member, logs: initialLogs, onBack }: Prop
               const groupLogs = targetGroups[target]
               if (!groupLogs || groupLogs.length === 0) return null
 
+              // 날짜별 Workout별 Reps 집계
+              const repsDateGrouped: Record<string, Record<string, number>> = {}
+              groupLogs.forEach((log) => {
+                if (!repsDateGrouped[log.workout_date]) repsDateGrouped[log.workout_date] = {}
+                repsDateGrouped[log.workout_date][log.workout] = log.reps
+              })
+              // const repsData = Object.entries(repsDateGrouped).map(([date, workouts]) => ({ date, ...workouts }))
+
+              // 날짜별 Workout별 Weight 집계
               const weightDateGrouped: Record<string, Record<string, number>> = {}
               groupLogs.forEach((log) => {
                 if (!weightDateGrouped[log.workout_date]) weightDateGrouped[log.workout_date] = {}
@@ -295,17 +309,34 @@ export default function MemberGraphs({ member, logs: initialLogs, onBack }: Prop
 
               const workoutsInGroup = Array.from(new Set(groupLogs.map((log) => log.workout))).sort()
 
-              // ⬇️ order_workout 순서로 정렬
-              const sortedWorkouts = workoutsInGroup.sort((a, b) => {
-                const aOrder = allTypes.find(w => w.workout === a && w.target === target)?.order_workout ?? 999
-                const bOrder = allTypes.find(w => w.workout === b && w.target === target)?.order_workout ?? 999
-                return aOrder - bOrder
-              })
-
               return (
                 <div key={target} className="mb-10">
                   <h3 className="text-l font-semibold text-indigo-500 mb-4">{target} 부위별 그래프</h3>
                   <div className="flex flex-col lg:flex-row gap-6 w-full">
+                    {/* Reps 그래프 */}
+                    {/* <div className="flex-1">
+                      <h4 className="text-sm text-black font-medium mb-2">Reps</h4>
+                      <ResponsiveContainer width="100%" height={400}>
+                        <LineChart data={repsData}>
+                          <CartesianGrid strokeDasharray="3 3" />
+                          <XAxis dataKey="date" tick={{ fontSize: 12 }} />
+                          <YAxis tick={{ fontSize: 12 }} />
+                          <Tooltip wrapperStyle={{ fontSize: 12 }} labelStyle={{ color: 'black' }} />
+                          <Legend wrapperStyle={{ fontSize: 12 }} />
+                          {workoutsInGroup.map((workout) => (
+                            <Line
+                              key={workout}
+                              type="monotone"
+                              dataKey={workout}
+                              name={workout}
+                              stroke={getColorForWorkout(target, workout)}
+                            />
+                          ))}
+                        </LineChart>
+                      </ResponsiveContainer>
+                    </div> */}
+
+                    {/* Weight 그래프 */}
                     <div className="flex-1">
                       <h4 className="text-sm text-black font-medium mb-2">Weight (kg)</h4>
                       <ResponsiveContainer width="100%" height={400}>
@@ -315,7 +346,7 @@ export default function MemberGraphs({ member, logs: initialLogs, onBack }: Prop
                           <YAxis tick={{ fontSize: 12 }} />
                           <Tooltip wrapperStyle={{ fontSize: 12 }} labelStyle={{ color: 'black' }} />
                           <Legend wrapperStyle={{ fontSize: 12 }} />
-                          {sortedWorkouts.map((workout) => (
+                          {workoutsInGroup.map((workout) => (
                             <Line
                               key={workout}
                               type="monotone"
@@ -338,41 +369,53 @@ export default function MemberGraphs({ member, logs: initialLogs, onBack }: Prop
             {targetGroups[selectedTarget]?.length === 0 || !targetGroups[selectedTarget] ? (
               <p className="text-center text-gray-500 mt-8">등록된 운동 기록이 없습니다.</p>
             ) : (
-              allTypes
-                .filter(w => w.target === selectedTarget)
-                .sort((a, b) => (a.order_workout ?? 999) - (b.order_workout ?? 999))
-                .map(({ workout }) => {
-                  const filtered = chartData.filter(
-                    (d) => d.workout === workout && d.target === selectedTarget
-                  )
-                  if (filtered.length === 0) return null
-                  const color = getColorForWorkout(selectedTarget, workout)
+              Array.from(new Set(targetGroups[selectedTarget].map((log) => log.workout)))
+                .sort()
+                .map((workout) => { 
+                const filtered = chartData.filter((d) => d.workout === workout && d.target === selectedTarget)
+                if (filtered.length === 0) return null
+                const color = getColorForWorkout(selectedTarget, workout)
 
-                  return (
-                    <div key={workout} className="mb-8">
-                      <p className="text-l font-semibold text-indigo-500 mb-4">{workout}</p>
-                      <div className="flex flex-col lg:flex-row gap-6 w-full">
-                        <div className="flex-1">
-                          <h4 className="text-sm text-black font-medium mb-2">Weight (kg)</h4>
-                          <ResponsiveContainer width="100%" height={400}>
-                            <LineChart data={filtered}>
-                              <CartesianGrid strokeDasharray="3 3" />
-                              <XAxis dataKey="workout_date" tick={{ fontSize: 12 }} />
-                              <YAxis tick={{ fontSize: 12 }} />
-                              <Tooltip wrapperStyle={{ fontSize: 12 }} labelStyle={{ color: 'black' }} />
-                              <Legend wrapperStyle={{ fontSize: 12 }} />
-                              <Line type="monotone" dataKey="weight" name="Weight" stroke={color} />
-                            </LineChart>
-                          </ResponsiveContainer>
-                        </div>
+                return (
+                  <div key={workout} className="mb-8">
+                    <p className="text-l font-semibold text-indigo-500 mb-4">{workout}</p>
+                    <div className="flex flex-col lg:flex-row gap-6 w-full">
+                      {/* Reps 그래프 */}
+                      {/* <div className="flex-1">
+                        <h4 className="text-sm text-black font-medium mb-2">Reps</h4>
+                        <ResponsiveContainer width="100%" height={400}>
+                          <LineChart data={filtered}>
+                            <CartesianGrid strokeDasharray="3 3" />
+                            <XAxis dataKey="workout_date" tick={{ fontSize: 12 }} />
+                            <YAxis tick={{ fontSize: 12 }} />
+                            <Tooltip wrapperStyle={{ fontSize: 12 }} labelStyle={{ color: 'black' }} />
+                            <Legend wrapperStyle={{ fontSize: 12 }} />
+                            <Line type="monotone" dataKey="reps" name="Reps" stroke={color} />
+                          </LineChart>
+                        </ResponsiveContainer>
+                      </div> */}
+
+                      {/* Weight 그래프 */}
+                      <div className="flex-1">
+                        <h4 className="text-sm text-black font-medium mb-2">Weight (kg)</h4>
+                        <ResponsiveContainer width="100%" height={400}>
+                          <LineChart data={filtered}>
+                            <CartesianGrid strokeDasharray="3 3" />
+                            <XAxis dataKey="workout_date" tick={{ fontSize: 12 }} />
+                            <YAxis tick={{ fontSize: 12 }} />
+                            <Tooltip wrapperStyle={{ fontSize: 12 }} labelStyle={{ color: 'black' }} />
+                            <Legend wrapperStyle={{ fontSize: 12 }} />
+                            <Line type="monotone" dataKey="weight" name="Weight" stroke={color} />
+                          </LineChart>
+                        </ResponsiveContainer>
                       </div>
                     </div>
-                  )
-                })
+                  </div>
+                )
+              })
             )}
           </>
         )}
-
 
         {isOrderModalOpen && (
           <OrderManagementModal
@@ -385,14 +428,11 @@ export default function MemberGraphs({ member, logs: initialLogs, onBack }: Prop
         
         {isWorkoutManagerOpen && (
           <WorkoutLogManager
-          member={member}
-          logs={logs}
-          onClose={() => {
-            setIsWorkoutManagerOpen(false);
-            fetchWorkoutTypes(); // ✅ 새로 불러오기
-          }}
-          onUpdateLogs={(updatedLogs) => setLogs(updatedLogs)}
-        />
+            member={member}
+            logs={logs}
+            onClose={() => setIsWorkoutManagerOpen(false)}
+            onUpdateLogs={(updatedLogs) => setLogs(updatedLogs)}
+          />
         )}
 
         {/* 기록 추가 모달 */}

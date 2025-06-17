@@ -50,7 +50,9 @@ export default function WorkoutLogManager({
   const [dates, setDates] = useState<string[]>([])
   const [rows, setRows] = useState<{ target: string; workout: string }[]>([])
   const [logMap, setLogMap] = useState<Record<string, Record<string, { weight: number; id?: number }>>>({})
-  const [addingDate, setAddingDate] = useState<string | null>(null)
+  const today = new Date().toISOString().split('T')[0];
+  const [addingDate, setAddingDate] = useState<string | null>(null);
+  // const [addingDate, setAddingDate] = useState<string | null>(null)
   const [newLogInputs, setNewLogInputs] = useState<Record<string, { weight: string }>>({})
   const [addingRow, setAddingRow] = useState(false)
   const [newTarget, setNewTarget] = useState('')
@@ -144,10 +146,10 @@ export default function WorkoutLogManager({
   // }
 
   const startAddingDate = () => {
-    if (addingDate !== null) return
-    setAddingDate('')
-    setNewLogInputs({})
-  }
+    if (addingDate !== null) return;
+    setAddingDate(today); // 또는 null로 설정
+    setNewLogInputs({});
+  };
 
   // const saveNewDateAndLogs = async () => {
   //   if (!addingDate) {
@@ -439,13 +441,14 @@ export default function WorkoutLogManager({
                 {addingDate !== null && (
                   <th
                     className="border border-gray-300 px-3 py-2 text-center font-semibold sticky top-0 bg-yellow-50 z-10"
-                    style={{ minWidth: '90px', maxWidth: '90px' }}
+                    style={{ minWidth: '90px', maxWidth: '140px', whiteSpace: 'normal' }}
                   >
                     <input
                       type="date"
-                      className="text-xs w-full text-center border border-gray-300 rounded"
+                      className="text-xs w-full text-center border border-gray-300 rounded leading-tight"
                       value={addingDate}
                       onChange={e => setAddingDate(e.target.value)}
+                      style={{ lineHeight: '1.1rem' }}
                     />
                   </th>
                 )}

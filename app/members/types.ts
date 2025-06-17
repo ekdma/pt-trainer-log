@@ -37,3 +37,12 @@ export type NewHealthMetric = {
 export type HealthMetric = NewHealthMetric & {
   health_id: number; // Supabase auto-generated PK
 };
+
+
+export type WorkoutType = {
+  workout_type_id: number;
+  target: string;
+  workout: string;
+  order_target?: number;
+  order_workout?: number;
+};
