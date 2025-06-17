@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from "react";
 import { DndContext, closestCenter } from "@dnd-kit/core";
 import { WorkoutType } from './types'
+import type { DragEndEvent } from "@dnd-kit/core";
 
 import {
   arrayMove,
@@ -92,24 +93,29 @@ export default function OrderManagementModal({ allTypes, isOpen, onClose, onRefr
   }, [selectedTarget, allTypes]);
   
   // DND 핸들러
-  const handleDragEnd = (event: any) => {
+  const handleDragEnd = (event: DragEndEvent) => {
     const { active, over } = event;
     if (!over || active.id === over.id) return;
 
     if (activeTab === "target") {
-      const oldIndex = targetOrder.indexOf(active.id);
-      const newIndex = targetOrder.indexOf(over.id);
+      const oldIndex = targetOrder.indexOf(active.id as string);
+      const newIndex = targetOrder.indexOf(over.id as string);
       setTargetOrder(arrayMove(targetOrder, oldIndex, newIndex));
     } else if (activeTab === "workout") {
-      const oldIndex = workoutOrder.indexOf(active.id);
-      const newIndex = workoutOrder.indexOf(over.id);
+      const oldIndex = workoutOrder.indexOf(active.id as string);
+      const newIndex = workoutOrder.indexOf(over.id as string);
       setWorkoutOrder(arrayMove(workoutOrder, oldIndex, newIndex));
     }
   };
 
+
+  type WorkoutOrderUpdate =
+    | { target: string; order_target: number }
+    | { workout_type_id: number; order_workout: number };
+
   const handleSave = async () => {
     setLoading(true);
-    const updates: any[] = [];
+    const updates: WorkoutOrderUpdate[] = [];
 
     if (activeTab === "target") {
       updates.push(
@@ -130,7 +136,9 @@ export default function OrderManagementModal({ allTypes, isOpen, onClose, onRefr
       );
     }
 
-    const { error } = await supabase.rpc("update_workout_orders", { changes: updates });
+    const { error } = await supabase.rpc("update_workout_orders", {
+      changes: updates,
+    });
 
     setLoading(false);
     if (error) {
@@ -138,7 +146,7 @@ export default function OrderManagementModal({ allTypes, isOpen, onClose, onRefr
     } else {
       alert("순서가 저장되었습니다.");
       onClose();
-      onRefreshAllTypes(); // DB 반영 후 화면 재조회
+      onRefreshAllTypes();
     }
   };
 
