@@ -4,7 +4,7 @@ import { useState, useEffect } from 'react'
 import MemberSearch from './MemberSearch'
 import MemberGraphs from './MemberGraphs'
 import MemberHealthGraphs from './MemberHealthGraphs'
-import type { Member, WorkoutRecord, HealthMetric } from './types'
+import type { Member, WorkoutRecord, HealthMetric, WorkoutType } from './types'
 import { fetchWorkoutLogs, fetchHealthLogs } from '../../utils/fetchLogs' // ✅ 따로 fetch 함수 만든다고 가정
 
 export default function MembersPage() {
@@ -12,6 +12,7 @@ export default function MembersPage() {
   const [workoutLogs, setWorkoutLogs] = useState<WorkoutRecord[]>([])
   const [healthLogs, setHealthLogs] = useState<HealthMetric[]>([])
   const [activeTab, setActiveTab] = useState<'workout' | 'health'>('workout')
+  const [workoutTypes, setWorkoutTypes] = useState<WorkoutType[]>([]);
 
   // ✅ 탭 전환 시 자동 새로고침
   useEffect(() => {
@@ -69,6 +70,7 @@ export default function MembersPage() {
                 member={selectedMember}
                 record={workoutLogs.filter(log => log.member_id === selectedMember.member_id)}
                 logs={workoutLogs.filter(log => log.member_id === selectedMember.member_id)}
+                workoutTypes={workoutTypes} // ✅ 추가된 부분
                 onBack={() => setSelectedMember(null)}
               />
             ) : (
