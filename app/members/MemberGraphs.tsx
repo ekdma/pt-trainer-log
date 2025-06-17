@@ -13,12 +13,13 @@ import OrderManagementModal from './OrderManagementModal'
 import { addWorkoutRecordToDB, getWorkoutRecords, deleteWorkoutRecordById, getWorkoutTypes } from '../../lib/supabase' // 실제 경로에 맞춰 수정 필요
 
 type Props = {
-  member: Member
-  record: WorkoutRecord[]
-  logs: WorkoutRecord[]
+  member: Member;
+  record: WorkoutRecord[];
+  logs: WorkoutRecord[];
   workoutTypes: WorkoutType[];
-  onBack: () => void
-}
+  setWorkoutTypes: React.Dispatch<React.SetStateAction<WorkoutType[]>>; // ✅ 추가
+  onBack: () => void;
+};
 
 // Base colors per target muscle group (hex)
 const targetColorMap: Record<string, string> = {
@@ -155,7 +156,7 @@ export default function MemberGraphs({ member, logs: initialLogs, onBack }: Prop
       fetchWorkoutTypes();
     }
   }, [isOrderModalOpen]);
-  
+
   // 날짜 오름차순 정렬
   const chartData = [...logs].sort((a, b) => new Date(a.workout_date).getTime() - new Date(b.workout_date).getTime())
 

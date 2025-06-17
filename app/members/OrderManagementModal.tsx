@@ -144,7 +144,7 @@ export default function OrderManagementModal({ allTypes, isOpen, onClose, onRefr
     if (error) {
       alert("순서 저장 중 오류 발생: " + error.message);
     } else {
-      alert("순서가 저장되었습니다.");
+      alert("순서가 저장되었습니다 😊");
       onClose();
       onRefreshAllTypes();
     }

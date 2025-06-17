@@ -70,7 +70,8 @@ export default function MembersPage() {
                 member={selectedMember}
                 record={workoutLogs.filter(log => log.member_id === selectedMember.member_id)}
                 logs={workoutLogs.filter(log => log.member_id === selectedMember.member_id)}
-                workoutTypes={workoutTypes} // ✅ 추가된 부분
+                workoutTypes={workoutTypes}
+                setWorkoutTypes={setWorkoutTypes} // ✅ 추가
                 onBack={() => setSelectedMember(null)}
               />
             ) : (
