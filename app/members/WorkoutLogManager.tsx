@@ -64,138 +64,88 @@ export default function WorkoutLogManager({
   const hasNewWorkoutInputs = addingRow && Object.values(newWorkoutInputs).some(input => Number(input.weight) > 0)
   const canSave = hasModifiedCells || hasNewLogInputs || hasNewWorkoutInputs
   const supabase = getSupabaseClient()
+  const [isEmptyLog, setIsEmptyLog] = useState(false) // 로그 비었는지 여부
 
   useEffect(() => {
     fetchLogs()
   }, [member.member_id])
 
   const fetchLogs = async () => {
-    const { data, error } = await supabase
+    const { data: logs, error: logError } = await supabase
       .from('workout_logs')
       .select('*')
       .eq('member_id', member.member_id)
   
-    if (error) {
-      alert('불러오기 오류: ' + error.message)
+    if (logError) {
+      alert('불러오기 오류: ' + logError.message)
       return
     }
   
-    const logs = data ?? []
-    // setWorkoutLogs(logs)
-    if (onUpdateLogs) onUpdateLogs(logs)   // ★ 여기 추가 ★
-
-    const uniqueDates = Array.from(new Set(logs.map(l => l.workout_date))).sort()
-    const uniqueRows = Array.from(
-      new Set(logs.map(l => `${l.target}||${l.workout}`))
+    const { data: workoutTypes, error: typeError } = await supabase
+      .from('workout_types')
+      .select('target, workout, order_target, order_workout')
+  
+    if (typeError) {
+      alert('운동 타입 불러오기 오류: ' + typeError.message)
+      return
+    }
+  
+    if (onUpdateLogs) onUpdateLogs(logs ?? [])
+  
+    const uniqueDates = Array.from(new Set((logs ?? []).map(l => l.workout_date))).sort()
+  
+    const typeMap = new Map<string, { order_target: number; order_workout: number }>()
+    for (const type of workoutTypes ?? []) {
+      typeMap.set(`${type.target}||${type.workout}`, {
+        order_target: type.order_target,
+        order_workout: type.order_workout
+      })
+    }
+  
+    const uniqueRowKeys = Array.from(
+      new Set((logs ?? []).map(l => `${l.target}||${l.workout}`))
     )
-      .map(row => {
-        const [target, workout] = row.split('||')
+  
+    const uniqueRows = uniqueRowKeys
+      .map(rowKey => {
+        const [target, workout] = rowKey.split('||')
         return { target, workout }
       })
       .sort((a, b) => {
-        if (a.target === b.target) {
-          return a.workout.localeCompare(b.workout)
+        const keyA = `${a.target}||${a.workout}`
+        const keyB = `${b.target}||${b.workout}`
+  
+        const orderA = typeMap.get(keyA) || { order_target: 999, order_workout: 999 }
+        const orderB = typeMap.get(keyB) || { order_target: 999, order_workout: 999 }
+  
+        if (orderA.order_target !== orderB.order_target) {
+          return orderA.order_target - orderB.order_target
         }
-        return a.target.localeCompare(b.target)
+        return orderA.order_workout - orderB.order_workout
       })
-
+  
     const newLogMap: typeof logMap = {}
-    logs.forEach(l => {
+    for (const l of logs ?? []) {
       const rowKey = `${l.target}||${l.workout}`
       if (!newLogMap[rowKey]) newLogMap[rowKey] = {}
       newLogMap[rowKey][l.workout_date] = {
         weight: l.weight,
         id: l.workout_id,
       }
-    })
-
+    }
+  
     setDates(uniqueDates)
     setRows(uniqueRows)
     setLogMap(newLogMap)
+    setIsEmptyLog((logs ?? []).length === 0)
   }
-
-  // const handleUpdate = async (
-  //   rowKey: string,
-  //   date: string,
-  //   value: number
-  // ) => {
-  //   const [target, workout] = rowKey.split('||')
-  //   const entry = logMap[rowKey]?.[date] || {}
-  //   const id = entry.id
-
-  //   if (id) {
-  //     const { error } = await supabase
-  //       .from('workout_logs')
-  //       .update({ weight: value })
-  //       .eq('workout_id', id)
-  //     if (error) alert('업데이트 오류: ' + error.message)
-  //   } else {
-  //     const insertData = {
-  //       member_id: member.member_id,
-  //       target,
-  //       workout,
-  //       workout_date: date,
-  //       reps: 0,
-  //       weight: value,
-  //     }
-  //     const { error } = await supabase.from('workout_logs').insert(insertData)
-  //     if (error) alert('삽입 오류: ' + error.message)
-  //   }
-
-  //   fetchLogs()
-  // }
+  
 
   const startAddingDate = () => {
     if (addingDate !== null) return;
     setAddingDate(today); // 또는 null로 설정
     setNewLogInputs({});
   };
-
-  // const saveNewDateAndLogs = async () => {
-  //   if (!addingDate) {
-  //     alert('날짜를 입력해주세요')
-  //     return
-  //   }
-  //   if (dates.includes(addingDate)) {
-  //     alert('이미 존재하는 날짜입니다.')
-  //     return
-  //   }
-
-  //   const inserts: any[] = []
-  //   for (const row of rows) {
-  //     const key = `${row.target}||${row.workout}`
-  //     const input = newLogInputs[key]
-  //     if (input) {
-  //       const weightNum = Number(input.weight)
-  //       if (weightNum > 0) {
-  //         inserts.push({
-  //           member_id: member.member_id,
-  //           target: row.target,
-  //           workout: row.workout,
-  //           workout_date: addingDate,
-  //           reps: 0,
-  //           weight: weightNum,
-  //         })
-  //       }
-  //     }
-  //   }
-
-  //   if (inserts.length === 0) {
-  //     alert('적어도 하나 이상의 weight를 입력해주세요 😎')
-  //     return
-  //   }
-
-  //   const { error } = await supabase.from('workout_logs').insert(inserts)
-  //   if (error) {
-  //     alert('삽입 오류: ' + error.message)
-  //     return
-  //   }
-
-  //   setDates(prev => [...prev, addingDate].sort())
-  //   setAddingDate(null)
-  //   setNewLogInputs({})
-  //   fetchLogs()
-  // }
 
   const cancelAddingDate = () => {
     setAddingDate(null)
@@ -214,6 +164,11 @@ export default function WorkoutLogManager({
     setNewTarget('')
     setNewWorkout('')
     setNewWorkoutInputs({})
+  
+    // 오늘 날짜를 dates에 추가 (중복 방지)
+    if (dates.length === 0 && !dates.includes(today)) {
+      setDates(prev => [...prev, today])
+    }
   }
 
   const handleNewWorkoutInputChange = (date: string, value: string) => {
@@ -222,47 +177,6 @@ export default function WorkoutLogManager({
       [date]: { weight: value },
     }))
   }
-
-  // const saveNewWorkout = async () => {
-  //   if (!newTarget.trim() || !newWorkout.trim()) {
-  //     alert('운동 부위와 운동 이름을 입력해주세요.')
-  //     return
-  //   }
-
-  //   const inserts = []
-  //   for (const date of dates) {
-  //     const inputs = newWorkoutInputs[date]
-  //     if (!inputs) continue
-  //     const weightNum = Number(inputs.weight)
-  //     if (weightNum > 0) {
-  //       inserts.push({
-  //         member_id: member.member_id,
-  //         target: newTarget.trim(),
-  //         workout: newWorkout.trim(),
-  //         workout_date: date,
-  //         reps: 0,
-  //         weight: weightNum,
-  //       })
-  //     }
-  //   }
-
-  //   if (inserts.length === 0) {
-  //     alert('적어도 하나 이상의 weight를 입력해주세요 😎')
-  //     return
-  //   }
-
-  //   const { error } = await supabase.from('workout_logs').insert(inserts)
-  //   if (error) {
-  //     alert('삽입 오류: ' + error.message)
-  //     return
-  //   }
-
-  //   setAddingRow(false)
-  //   setNewTarget('')
-  //   setNewWorkout('')
-  //   setNewWorkoutInputs({})
-  //   fetchLogs()
-  // }
 
   const cancelAddingRow = () => {
     setAddingRow(false)
@@ -563,10 +477,15 @@ export default function WorkoutLogManager({
         </div>
 
 
+        {isEmptyLog && (
+          <div className="mt-4 text-center text-sm text-gray-500">
+            등록된 운동 로그가 없습니다. 먼저 운동을 추가해주세요 😎
+          </div>
+        )}          
 
         <div className="mt-6 flex flex-wrap justify-end gap-2 sm:gap-3">
           {/* 날짜 추가 */}
-          {addingDate === null && !addingRow && (
+          {addingDate === null && !addingRow && !isEmptyLog && (
             <Button
               variant="outline"
               size="sm"
@@ -579,7 +498,7 @@ export default function WorkoutLogManager({
           )}
 
           {/* 날짜 추가 취소 */}
-          {addingDate !== null && (
+          {addingDate && (
             <Button
               variant="outline"
               size="sm"
