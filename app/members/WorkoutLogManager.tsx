@@ -488,7 +488,7 @@ export default function WorkoutLogManager({
           {addingDate === null && !addingRow && !isEmptyLog && (
             <Button
               variant="outline"
-              size="sm"
+              // size="sm"
               onClick={startAddingDate}
               className="h-9 min-w-[100px] px-4 text-sm flex items-center gap-1.5 text-yellow-600 border-yellow-500 hover:bg-yellow-50"
             >
@@ -501,9 +501,10 @@ export default function WorkoutLogManager({
           {addingDate && (
             <Button
               variant="outline"
-              size="sm"
+              // size="sm"
               onClick={cancelAddingDate}
-              className="h-9 min-w-[100px] px-4 text-sm text-gray-600 border-gray-400 hover:bg-gray-50"
+              type="button"
+              className="h-9 text-sm"
             >
               취소
             </Button>
@@ -513,7 +514,7 @@ export default function WorkoutLogManager({
           {addingDate === null && !addingRow && (
             <Button
               variant="outline"
-              size="sm"
+              // size="sm"
               onClick={startAddingRow}
               className="h-9 min-w-[100px] px-4 text-sm flex items-center gap-1.5 text-green-600 border-green-500 hover:bg-green-50"
             >
@@ -525,10 +526,11 @@ export default function WorkoutLogManager({
           {/* 운동 추가 취소 */}
           {addingRow && (
             <Button
-              size="sm"
+              // size="sm"
               onClick={cancelAddingRow}
               variant="outline"
-              className="h-9 min-w-[100px] px-4 text-sm text-gray-600 border-gray-400 hover:bg-gray-50"
+              type="button"
+              className="h-9 text-sm"
             >
               취소
             </Button>
@@ -539,14 +541,16 @@ export default function WorkoutLogManager({
             onClick={saveAllChanges} 
             disabled={!canSave}
             variant="outline"
-            className="h-9 min-w-[100px] px-4 text-sm text-blue-600 border-blue-500 hover:bg-blue-50 disabled:opacity-50 disabled:cursor-not-allowed"
+            className="h-9 bg-indigo-600 hover:bg-indigo-700 text-white text-sm disabled:opacity-50 disabled:cursor-not-allowed"
+            
           >
             저장
           </Button>
           <Button  
             onClick={onClose}
             variant="outline"
-            className="h-9 min-w-[100px] px-4 text-sm text-gray-600 border-gray-400 hover:bg-gray-50"
+            type="button"
+            className="h-9 text-sm"
           >
             닫기
           </Button>

@@ -44,11 +44,21 @@ function createChartDataForMetric(logs: HealthMetric[], metricType: string) {
 };
 
 const colorMap: { [key: string]: string } = {
-  'Weight': '#e74c3c',
-  'Body Fat Mass': '#3498db',
-  'Skeletal Muscle Mass': '#2ecc71',
-  'Body Fat Percentage': '#9b59b6',
-  'Resting Heart Rate': '#f39c12',
+  // Body Composition 
+  'Weight': '#e74c3c',              // 진한 빨강 (기존 유지)
+  'Skeletal Muscle Mass': '#27ae60', // 선명한 초록 (기존보다 조금 더 진함)
+  'Body Fat Mass': '#2980b9',       // 진한 파랑 (기존보다 조금 더 진함)
+  'Body Fat Percentage': '#8e44ad', // 보라 (기존과 비슷하지만 조금 더 짙음)
+
+  // HP & BP  
+  'Resting Heart Rate': '#f39c12',  // 선명한 주황 (기존 유지)
+  'Systolic BP': '#d35400',         // 진한 오렌지
+  'Diastolic BP': '#e67e22',        // 밝은 주황
+
+  // Overall Fitness 
+  'Cardiopulmonary Endurance': '#16a085',  // 청록색
+  'Upper Body Strength': '#2980b9',        // 진한 파랑 (Body Fat Mass와 통일 가능)
+  'Lower Body Strength': '#c0392b',        // 강렬한 빨강 (Weight와 비슷 톤)
 };
 
 const MemberHealthGraphsClient: React.FC<Props> = ({ healthLogs, member, onBack }) => {
@@ -228,10 +238,15 @@ const MemberHealthGraphsClient: React.FC<Props> = ({ healthLogs, member, onBack 
                       <div
                         key={metric}
                         className="flex items-center space-x-4 w-full"
-                        style={{ height: 100, marginBottom: 0, paddingBottom: 0 }}
+                        style={{ height: 110, marginBottom: 0, paddingBottom: 0 }}  // 높이 약간 키움
                       >
-                        <div className="w-1/5 text-right pr-4 font-semibold text-gray-700">{metric}</div>
-                        <div className="w-4/5 h-full">
+                        <div
+                          className="w-[15%] text-right pr-2 font-semibold text-gray-700"
+                          style={{ whiteSpace: 'normal', wordBreak: 'break-word' }}  // 줄바꿈 가능하게
+                        >
+                          {metric}
+                        </div>
+                        <div className="w-[85%] h-full">
                           <ResponsiveContainer width="100%" height="100%">
                             <LineChart data={data} margin={{ top: 0, right: 20, left: 0, bottom: 0 }}>
                               <CartesianGrid strokeDasharray="3 3" vertical={false} />
