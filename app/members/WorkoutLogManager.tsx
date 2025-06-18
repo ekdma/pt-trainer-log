@@ -60,12 +60,12 @@ export default function WorkoutLogManager({
   const [addingRow, setAddingRow] = useState(false)
   const [newTarget, setNewTarget] = useState('')
   const [newWorkout, setNewWorkout] = useState('')
-  const [newWorkoutInputs, setNewWorkoutInputs] = useState<Record<string, { weight: string }>>({})
+  // const [newWorkoutInputs, setNewWorkoutInputs] = useState<Record<string, { weight: string }>>({})
   const [modifiedCells, setModifiedCells] = useState<{ rowKey: string; date: string; weight: number; id?: number }[]>([])
   const hasModifiedCells = modifiedCells.length > 0
   const hasNewLogInputs = addingDate !== null && Object.values(newLogInputs).some(input => Number(input.weight) > 0)
-  const hasNewWorkoutInputs = addingRow && Object.values(newWorkoutInputs).some(input => Number(input.weight) > 0)
-  const canSave = hasModifiedCells || hasNewLogInputs || hasNewWorkoutInputs
+  // const hasNewWorkoutInputs = addingRow && Object.values(newWorkoutInputs).some(input => Number(input.weight) > 0)
+  const canSave = hasModifiedCells || hasNewLogInputs //|| hasNewWorkoutInputs
   const supabase = getSupabaseClient()
   const [isEmptyLog, setIsEmptyLog] = useState(false) // 로그 비었는지 여부
   const [disclosureOpen, setDisclosureOpen] = useState(false)
@@ -298,21 +298,21 @@ export default function WorkoutLogManager({
     }
   
     // 3. 신규 운동 행 추가된 셀 입력 (newTarget + newWorkoutInputs)
-    if (addingRow) {
-      for (const date of dates) {
-        const weight = Number(newWorkoutInputs[date]?.weight)
-        if (weight > 0) {
-          inserts.push({
-            member_id: member.member_id,
-            target: newTarget,
-            workout: newWorkout,
-            workout_date: date,
-            reps: 0,
-            weight,
-          })
-        }
-      }
-    }
+    // if (addingRow) {
+    //   for (const date of dates) {
+    //     const weight = Number(newWorkoutInputs[date]?.weight)
+    //     if (weight > 0) {
+    //       inserts.push({
+    //         member_id: member.member_id,
+    //         target: newTarget,
+    //         workout: newWorkout,
+    //         workout_date: date,
+    //         reps: 0,
+    //         weight,
+    //       })
+    //     }
+    //   }
+    // }
   
     // Supabase 저장 처리
     const updateErrors: string[] = []
