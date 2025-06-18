@@ -109,10 +109,10 @@ export default function MemberSearch({
   }
   
   const sortedMembers = [...filteredMembers].sort((a, b) => {
-    // 1. 역할 우선순위: TRAINER 먼저
-    if (a.role !== b.role) {
-      return a.role === 'TRAINER' ? -1 : 1
-    }
+    // // 1. 역할 우선순위: TRAINER 먼저
+    // if (a.role !== b.role) {
+    //   return a.role === 'TRAINER' ? -1 : 1
+    // }
   
     // 2. 이름 가나다/알파벳 순 정렬 (localeCompare 사용)
     return a.name.localeCompare(b.name, 'ko')
@@ -175,10 +175,20 @@ export default function MemberSearch({
                 {/* 역할 뱃지 */}
                 <span
                   className={`text-xs font-bold text-white rounded-full px-2 py-0.5 ${
-                    member.role === 'TRAINER' ? 'bg-orange-500' : 'bg-indigo-500'
+                    member.level === 'Level 1'
+                      ? 'bg-yellow-500'
+                      : member.level === 'Level 2'
+                      ? 'bg-green-500'
+                      : member.level === 'Level 3'
+                      ? 'bg-blue-500'
+                      : member.level === 'Level 4'
+                      ? 'bg-red-500'
+                      : member.level === 'Level 5'
+                      ? 'bg-black'
+                      : 'bg-gray-400' // 기본 fallback 색상 (예외 처리용)
                   }`}
                 >
-                  {member.role}
+                  {member.level}
                 </span>
 
                 {/* 이름 + 정보 */}

@@ -2,7 +2,7 @@ export type Member = {
   member_id: number
   name: string
   join_date: string
-  role: string
+  level: string
   creation_dt: string
   birth_date: string | null
   sex: string
@@ -45,4 +45,5 @@ export type WorkoutType = {
   workout: string;
   order_target?: number;
   order_workout?: number;
+  level?: string;
 };

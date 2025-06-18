@@ -14,8 +14,8 @@ export default function AddMemberOpen({ onClose, onMemberAdded }: Props) {
 
   const [name, setName] = useState('')
   const [birthInput, setBirthInput] = useState('')
-  const [sex, setSex] = useState('성별') // ✅ default option
-  const [role, setRole] = useState('MEMBER')
+  const [sex, setSex] = useState('F') // ✅ default option
+  const [level, setLevel] = useState('Level 1')
   const [joinDate, setJoinDate] = useState<string>(() => new Date().toISOString().slice(0, 10))
   const [loading, setLoading] = useState(false)
   const [errorMsg, setErrorMsg] = useState('')
@@ -33,19 +33,34 @@ export default function AddMemberOpen({ onClose, onMemberAdded }: Props) {
       return
     }
 
-    if (sex === '성별') {
-      setErrorMsg('성별을 선택하세요')
-      return
-    }
+    // if (sex === '성별') {
+    //   setErrorMsg('성별을 선택하세요')
+    //   return
+    // }
 
     let birthDate: string
 
     if (/^\d{4}$/.test(birthInput)) {
+      // 4자리: 연도만 입력한 경우
       birthDate = `${birthInput}-01-01`
     } else if (/^\d{4}-\d{2}-\d{2}$/.test(birthInput)) {
+      // yyyy-mm-dd 형식
       birthDate = birthInput
+    } else if (/^\d{8}$/.test(birthInput)) {
+      // 8자리 숫자 (yyyyMMdd)
+      const year = birthInput.slice(0, 4)
+      const month = birthInput.slice(4, 6)
+      const day = birthInput.slice(6, 8)
+    
+      // 유효한 날짜인지 간단한 검증 추가 (선택 사항)
+      if (parseInt(month) >= 1 && parseInt(month) <= 12 && parseInt(day) >= 1 && parseInt(day) <= 31) {
+        birthDate = `${year}-${month}-${day}`
+      } else {
+        setErrorMsg('생일 형식이 올바르지 않습니다 (예: 1995, 1995-07-03, 또는 19950703)')
+        return
+      }
     } else {
-      setErrorMsg('생일 형식이 올바르지 않습니다 (예: 1995 또는 1995-07-03)')
+      setErrorMsg('생일 형식이 올바르지 않습니다 (예: 1995, 1995-07-03, 또는 19950703)')
       return
     }
 
@@ -56,7 +71,7 @@ export default function AddMemberOpen({ onClose, onMemberAdded }: Props) {
         name,
         birth_date: birthDate,
         sex,
-        role,
+        level,
         join_date: joinDate,
       },
     ])
@@ -97,7 +112,7 @@ export default function AddMemberOpen({ onClose, onMemberAdded }: Props) {
             type="text"
             value={birthInput}
             onChange={(e) => setBirthInput(e.target.value)}
-            placeholder="예: 1995 또는 1995-07-03"
+            placeholder="예: 1995 또는 19950703"
             className="w-full p-2 border border-gray-300 text-gray-700 rounded focus:ring-2 focus:ring-indigo-500 focus:outline-none"
           />
           <p className="text-xs text-gray-500 mt-1">
@@ -113,21 +128,24 @@ export default function AddMemberOpen({ onClose, onMemberAdded }: Props) {
               onChange={(e) => setSex(e.target.value)}
               className="w-full p-2 border border-gray-300 text-gray-700 rounded focus:ring-2 focus:ring-indigo-500 focus:outline-none"
             >
-              <option value="성별" disabled>성별</option>
-              <option value="M">남자</option>
+              {/* <option value="성별" disabled>성별</option> */}
               <option value="F">여자</option>
+              <option value="M">남자</option>
             </select>
           </div>
 
           <div className="w-1/2">
-            <label className="block text-sm font-medium text-gray-700 mb-1">역할</label>
+            <label className="block text-sm font-medium text-gray-700 mb-1">Level</label>
             <select
-              value={role}
-              onChange={(e) => setRole(e.target.value)}
+              value={level}
+              onChange={(e) => setLevel(e.target.value)}
               className="w-full p-2 border border-gray-300 text-gray-700 rounded focus:ring-2 focus:ring-indigo-500 focus:outline-none"
             >
-              <option value="MEMBER">회원</option>
-              <option value="TRAINER">트레이너</option>
+              <option value="Level 1">Level 1</option>
+              <option value="Level 2">Level 2</option>
+              <option value="Level 3">Level 3</option>
+              <option value="Level 4">Level 4</option>
+              <option value="Level 5">Level 5</option>
             </select>
           </div>
         </div>

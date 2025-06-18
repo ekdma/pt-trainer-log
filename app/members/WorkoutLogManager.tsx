@@ -4,10 +4,13 @@ import { Plus} from 'lucide-react'
 import { useEffect, useState } from 'react'
 import { getSupabaseClient } from '@/lib/supabase'
 import { Button } from '@/components/ui/button'
+import { Disclosure } from '@headlessui/react'
+import { ChevronUpIcon } from '@heroicons/react/20/solid'
 
 type Member = {
   member_id: number
   name: string
+  level: string
 }
 
 type WorkoutRecord = {
@@ -48,7 +51,7 @@ export default function WorkoutLogManager({
 }: WorkoutLogManagerProps) {
   // const [workoutLogs, setWorkoutLogs] = useState<WorkoutRecord[]>([])
   const [dates, setDates] = useState<string[]>([])
-  const [rows, setRows] = useState<{ target: string; workout: string }[]>([])
+  const [rows, setRows] = useState<{ target: string; workout: string; level: string }[]>([])
   const [logMap, setLogMap] = useState<Record<string, Record<string, { weight: number; id?: number }>>>({})
   const today = new Date().toISOString().split('T')[0];
   const [addingDate, setAddingDate] = useState<string | null>(null);
@@ -65,10 +68,22 @@ export default function WorkoutLogManager({
   const canSave = hasModifiedCells || hasNewLogInputs || hasNewWorkoutInputs
   const supabase = getSupabaseClient()
   const [isEmptyLog, setIsEmptyLog] = useState(false) // 로그 비었는지 여부
+  const [disclosureOpen, setDisclosureOpen] = useState(false)
+  const [newLevel, setNewLevel] = useState('')
+  const [loadingManage, setLoadingManage] = useState(false)
+  const [allTypes, setAllTypes] = useState<
+    { workout_type_id: number; target: string; workout: string; level: string; order_target: number; order_workout: number }[]
+  >([])
 
   useEffect(() => {
     fetchLogs()
   }, [member.member_id])
+
+  useEffect(() => {
+    if (disclosureOpen) {
+      fetchLogs()
+    }
+  }, [disclosureOpen])
 
   const fetchLogs = async () => {
     const { data: logs, error: logError } = await supabase
@@ -81,48 +96,73 @@ export default function WorkoutLogManager({
       return
     }
   
+    const { data: memberInfo, error: memberError } = await supabase
+      .from('members')
+      .select('level')
+      .eq('member_id', member.member_id)
+      .single()
+  
+    if (memberError || !memberInfo) {
+      alert('멤버 정보 불러오기 오류: ' + (memberError?.message ?? '데이터 없음'))
+      return
+    }
+  
+    const memberLevel = memberInfo.level // ex. "Level 2"
+    const levelNumber = parseInt(memberLevel.replace(/\D/g, '')) // 숫자만 추출: 2
+  
     const { data: workoutTypes, error: typeError } = await supabase
       .from('workout_types')
-      .select('target, workout, order_target, order_workout')
+      .select('workout_type_id, target, workout, order_target, order_workout, level')
   
     if (typeError) {
       alert('운동 타입 불러오기 오류: ' + typeError.message)
       return
     }
   
+    // member level 이하만 필터링 (ex. Level 1, Level 2)
+    const allowedTypes = (workoutTypes ?? []).filter(t => {
+      const typeLevel = parseInt(t.level.replace(/\D/g, ''))
+      return typeLevel <= levelNumber
+    })
+  
+    // target + workout 기준으로 중복 제거 (level 높은 것이 우선)
+    const typeMap = new Map<string, typeof allowedTypes[number]>()
+    for (const type of allowedTypes) {
+      const key = `${type.target}||${type.workout}`
+      const existing = typeMap.get(key)
+      if (!existing || parseInt(type.level.replace(/\D/g, '')) > parseInt(existing.level.replace(/\D/g, ''))) {
+        typeMap.set(key, type)
+      }
+    }
+  
+    const filteredTypes = Array.from(typeMap.values())
+  
     if (onUpdateLogs) onUpdateLogs(logs ?? [])
   
     const uniqueDates = Array.from(new Set((logs ?? []).map(l => l.workout_date))).sort()
   
-    const typeMap = new Map<string, { order_target: number; order_workout: number }>()
-    for (const type of workoutTypes ?? []) {
-      typeMap.set(`${type.target}||${type.workout}`, {
+    const orderMap = new Map<string, { order_target: number; order_workout: number }>()
+    for (const type of filteredTypes) {
+      orderMap.set(`${type.target}||${type.workout}`, {
         order_target: type.order_target,
         order_workout: type.order_workout
       })
     }
   
-    const uniqueRowKeys = Array.from(
-      new Set((logs ?? []).map(l => `${l.target}||${l.workout}`))
-    )
-  
-    const uniqueRows = uniqueRowKeys
-      .map(rowKey => {
-        const [target, workout] = rowKey.split('||')
-        return { target, workout }
-      })
-      .sort((a, b) => {
-        const keyA = `${a.target}||${a.workout}`
-        const keyB = `${b.target}||${b.workout}`
-  
-        const orderA = typeMap.get(keyA) || { order_target: 999, order_workout: 999 }
-        const orderB = typeMap.get(keyB) || { order_target: 999, order_workout: 999 }
-  
-        if (orderA.order_target !== orderB.order_target) {
-          return orderA.order_target - orderB.order_target
-        }
-        return orderA.order_workout - orderB.order_workout
-      })
+    const rows = filteredTypes.sort((a, b) => {
+      const levelA = parseInt(a.level.replace(/\D/g, '')) || 999
+      const levelB = parseInt(b.level.replace(/\D/g, '')) || 999
+    
+      if (levelA !== levelB) return levelA - levelB
+    
+      const orderA = orderMap.get(`${a.target}||${a.workout}`) || { order_target: 999, order_workout: 999 }
+      const orderB = orderMap.get(`${b.target}||${b.workout}`) || { order_target: 999, order_workout: 999 }
+    
+      if (orderA.order_target !== orderB.order_target) {
+        return orderA.order_target - orderB.order_target
+      }
+      return orderA.order_workout - orderB.order_workout
+    })
   
     const newLogMap: typeof logMap = {}
     for (const l of logs ?? []) {
@@ -135,10 +175,12 @@ export default function WorkoutLogManager({
     }
   
     setDates(uniqueDates)
-    setRows(uniqueRows)
+    setRows(rows.map(r => ({ target: r.target, workout: r.workout, level: r.level })))
+    setAllTypes(workoutTypes ?? [])
     setLogMap(newLogMap)
     setIsEmptyLog((logs ?? []).length === 0)
   }
+  
   
 
   const startAddingDate = () => {
@@ -307,6 +349,68 @@ export default function WorkoutLogManager({
     }
   }
 
+  const handleAddType = async () => {
+    if (!newTarget || !newWorkout || !newLevel) {
+      alert('모든 필드를 입력해주세요.')
+      return
+    }
+  
+    setLoadingManage(true)
+  
+    // 1. 같은 target이 있는지 찾기
+    const existingTarget = allTypes.find(t => t.target === newTarget)
+  
+    let order_target: number
+  
+    if (existingTarget) {
+      order_target = existingTarget.order_target // 기존 값 재사용
+    } else {
+      // 2. 없다면 최대값 + 1로 새로 부여
+      const maxOrder = allTypes.reduce((max, t) => Math.max(max, t.order_target ?? 0), 0)
+      order_target = maxOrder + 1
+    }
+  
+    // 3. order_workout은 해당 target 내에서 가장 큰 값 + 1
+    const sameTargetWorkouts = allTypes.filter(t => t.target === newTarget)
+    const maxOrderWorkout = sameTargetWorkouts.reduce((max, t) => Math.max(max, t.order_workout ?? 0), 0)
+    const order_workout = maxOrderWorkout + 1
+  
+    const { error } = await supabase.from('workout_types').insert([
+      {
+        target: newTarget,
+        workout: newWorkout,
+        level: newLevel,
+        order_target,
+        order_workout,
+      }
+    ])
+  
+    if (error) {
+      alert('추가 중 오류 발생: ' + error.message)
+    } else {
+      setNewTarget('')
+      setNewWorkout('')
+      setNewLevel('')
+      // 다시 불러오기
+      fetchLogs()
+    }
+  
+    setLoadingManage(false)
+  }
+  
+
+  const handleDeleteType = async (id?: number) => {
+    if (!id) return
+    if (!confirm('정말 삭제하시겠습니까?')) return
+
+    const { error } = await supabase
+      .from('workout_types')
+      .delete()
+      .eq('workout_type_id', id)
+
+    if (error) alert('삭제 실패: ' + error.message)
+    else fetchLogs()
+  }
   
 
   return (
@@ -316,107 +420,120 @@ export default function WorkoutLogManager({
         className="relative bg-white rounded-lg shadow-lg max-w-6xl w-full max-h-[90vh] p-6 text-gray-700 flex flex-col"
         onClick={e => e.stopPropagation()}
       >
-        <h2 className="text-2xl font-semibold mb-6 text-gray-800 flex-shrink-0">
-          운동 기록 관리
-        </h2>
+        <div className="mb-6">
+          <div className="flex items-center gap-3 mb-2">
+            <div className="w-1 h-6 bg-blue-500 rounded" />
+            <h2 className="text-2xl font-bold text-gray-800">운동 기록 관리</h2>
+            <div
+              className={`ml-2 px-3 py-1 rounded-md text-white font-semibold shadow-sm text-xs ${
+                member.level === 'Level 1' ? 'bg-yellow-500' :
+                member.level === 'Level 2' ? 'bg-green-500' :
+                member.level === 'Level 3' ? 'bg-blue-500' :
+                member.level === 'Level 4' ? 'bg-red-500' :
+                member.level === 'Level 5' ? 'bg-black' :
+                'bg-gray-400'
+              }`}
+            >
+              {member.level}
+            </div>
+          </div>
+        </div>
+
 
         {/* overflow-x-auto로 좌우 스크롤 가능하게 래핑 */}
-        <div className="overflow-x-auto flex-1">
-          <table className="min-w-full border border-gray-300 text-sm table-fixed">
+        <div className="overflow-x-auto">
+          <table className="min-w-full text-sm border border-gray-300 table-auto">
             <thead className="bg-gray-100 text-gray-700 select-none">
               <tr>
-                {/* sticky + left 고정, z-index로 겹침 방지, bg-gray-200 적용 */}
-                <th
-                  className="border border-gray-300 px-3 py-2 text-left font-semibold sticky left-0 bg-gray-200 z-30"
-                  style={{ minWidth: '120px', maxWidth: '120px' }}
-                >
+                <th className="border border-gray-300 px-2 py-2 text-left font-bold min-w-[70px] sticky left-0 bg-gray-200 z-40 whitespace-normal">
+                  Level
+                </th>
+                <th className="border border-gray-300 px-2 py-2 text-left font-bold min-w-[100px] sticky left-[80px] bg-gray-200 z-30 whitespace-normal">
                   Target
                 </th>
-                <th
-                  className="border border-gray-300 px-3 py-2 text-left font-semibold sticky left-[120px] bg-gray-200 z-20"
-                  style={{ minWidth: '140px', maxWidth: '140px' }}
-                >
+                <th className="border border-gray-300 px-2 py-2 text-left font-bold min-w-[120px] sticky left-[200px] bg-gray-200 z-20 whitespace-normal">
                   Workout
                 </th>
-                {dates.map(date => {
-                  const parts = date.split('-'); // ['2025', '06', '13']
-                  const year = parts[0];
-                  const monthDay = parts.slice(1).join('-'); // '06-13'
+                {dates.map((date) => {
+                  const [year, ...rest] = date.split('-');
                   return (
                     <th
                       key={date}
-                      className="border border-gray-300 px-3 py-2 text-center font-semibold sticky top-0 bg-gray-100 z-10"
-                      style={{ minWidth: '90px', maxWidth: '90px' }}
+                      className="border px-2 py-1 text-center font-semibold bg-gray-100 z-10 min-w-[80px] whitespace-normal"
                     >
-                      {year}<br />{monthDay}
+                      {year}
+                      <br />
+                      {rest.join('-')}
                     </th>
                   );
                 })}
-                {addingDate !== null && (
-                  <th
-                    className="border border-gray-300 px-3 py-2 text-center font-semibold sticky top-0 bg-yellow-50 z-10"
-                    style={{ minWidth: '90px', maxWidth: '140px', whiteSpace: 'normal' }}
-                  >
+                {addingDate && (
+                  <th className="border px-2 py-1 text-center font-semibold bg-yellow-50 z-10 min-w-[90px]">
                     <input
                       type="date"
-                      className="text-xs w-full text-center border border-gray-300 rounded leading-tight"
+                      className="text-xs w-full text-center border border-gray-300 rounded"
                       value={addingDate}
-                      onChange={e => setAddingDate(e.target.value)}
-                      style={{ lineHeight: '1.1rem' }}
+                      onChange={(e) => setAddingDate(e.target.value)}
                     />
                   </th>
                 )}
               </tr>
             </thead>
             <tbody className="bg-white">
-              {rows.map(({ target, workout }) => {
-                const rowKey = `${target}||${workout}`
+              {rows.map(({ target, workout, level }) => {
+                const rowKey = `${target}||${workout}`;
+
+                const levelColor = {
+                  'Level 1': 'bg-yellow-400',
+                  'Level 2': 'bg-green-400',
+                  'Level 3': 'bg-blue-400',
+                  'Level 4': 'bg-red-400',
+                  'Level 5': 'bg-gray-800',
+                }[level] || 'bg-gray-400';
+
                 return (
-                  <tr key={rowKey} className="hover:bg-blue-50">
+                  <tr key={rowKey} className="hover:bg-blue-50 text-sm">
                     <td
-                      className="border border-gray-300 px-3 py-1 whitespace-nowrap sticky left-0 bg-gray-100 z-20 font-medium"
-                      style={{ minWidth: '120px', maxWidth: '120px' }}
+                      className="border px-2 py-1 sticky left-0 z-30 font-semibold relative pl-6 whitespace-normal bg-gray-50"
+                    >
+                      <span className={`absolute left-1 top-1/2 -translate-y-1/2 w-3 h-3 rounded-full ${levelColor}`} />
+                      {level}
+                    </td>
+                    <td
+                      className="border px-2 py-1 sticky left-[80px] bg-gray-50 z-20 font-semibold whitespace-normal"
                     >
                       {target}
                     </td>
                     <td
-                      className="border border-gray-300 px-3 py-1 whitespace-nowrap sticky left-[120px] bg-gray-100 z-10"
-                      style={{ minWidth: '140px', maxWidth: '140px' }}
+                      className="border px-2 py-1 sticky left-[200px] bg-gray-50 z-10 font-semibold whitespace-normal"
                     >
                       {workout}
                     </td>
-                    {dates.map(date => {
-                      // const logEntry = logMap[rowKey]?.[date]
-                      return (
-                        <td
-                          key={date}
-                          className="border border-gray-300 px-2 py-1 text-center"
-                          style={{ minWidth: '90px', maxWidth: '90px' }}
-                        >
-                          <input
-                            type="number"
-                            className="w-full text-center border border-gray-200 rounded"
-                            value={logMap[rowKey]?.[date]?.weight || ''}
-                            onChange={e =>
-                              handleCellChange(rowKey, date, Number(e.target.value))
-                            }
-                          />
-                        </td>
-                      )
-                    })}
-                    {addingDate !== null && (
+                    {dates.map((date) => (
                       <td
-                        className="border border-gray-300 px-2 py-1 text-center bg-yellow-50"
-                        style={{ minWidth: '90px', maxWidth: '90px' }}
+                        key={date}
+                        className="border px-2 py-1 text-center min-w-[80px]"
                       >
+                        <input
+                          type="number"
+                          className="w-full text-center border border-gray-200 rounded text-sm"
+                          value={logMap[rowKey]?.[date]?.weight || ''}
+                          onChange={(e) =>
+                            handleCellChange(rowKey, date, Number(e.target.value))
+                          }
+                        />
+                      </td>
+                    ))}
+                    {addingDate && (
+                      <td className="border px-2 py-1 text-center bg-yellow-50 min-w-[90px]">
                         <input
                           type="number"
                           min={0}
                           value={newLogInputs[rowKey]?.weight || ''}
-                          onChange={e =>
+                          onChange={(e) =>
                             handleNewLogInputChange(rowKey, e.target.value)
                           }
-                          className="w-full text-center rounded border border-yellow-400 focus:outline-none focus:ring-1 focus:ring-yellow-500"
+                          className="w-full text-center rounded border border-yellow-400 focus:ring-1 focus:ring-yellow-500 text-sm"
                           placeholder="-"
                         />
                       </td>
@@ -426,7 +543,7 @@ export default function WorkoutLogManager({
               })}
 
               {/* 새 운동 항목 추가 */}
-              {addingRow && (
+              {/* {addingRow && (
                 <tr className="bg-green-50">
                   <td
                     className="border border-gray-300 px-3 py-1 whitespace-nowrap sticky left-0 bg-green-100 z-10"
@@ -471,7 +588,7 @@ export default function WorkoutLogManager({
                     </td>
                   ))}
                 </tr>
-              )}
+              )} */}
             </tbody>
           </table>
         </div>
@@ -479,13 +596,13 @@ export default function WorkoutLogManager({
 
         {isEmptyLog && (
           <div className="mt-4 text-center text-sm text-gray-500">
-            등록된 운동 로그가 없습니다. 먼저 운동을 추가해주세요 😎
+            등록된 운동 로그가 없습니다. 기록을 추가해주세요 😎
           </div>
         )}          
 
         <div className="mt-6 flex flex-wrap justify-end gap-2 sm:gap-3">
           {/* 날짜 추가 */}
-          {addingDate === null && !addingRow && !isEmptyLog && (
+          {addingDate === null && !addingRow && (
             <Button
               variant="outline"
               // size="sm"
@@ -511,7 +628,7 @@ export default function WorkoutLogManager({
           )}
 
           {/* 운동 추가 */}
-          {addingDate === null && !addingRow && (
+          {/* {addingDate === null && !addingRow && !isEmptyLog && (
             <Button
               variant="outline"
               // size="sm"
@@ -521,10 +638,10 @@ export default function WorkoutLogManager({
               <Plus size={16} />
               운동 추가
             </Button>
-          )}
+          )} */}
 
           {/* 운동 추가 취소 */}
-          {addingRow && (
+          {/* {addingRow && (
             <Button
               // size="sm"
               onClick={cancelAddingRow}
@@ -534,7 +651,7 @@ export default function WorkoutLogManager({
             >
               취소
             </Button>
-          )}
+          )} */}
 
           {/* 저장/닫기 버튼 */}
           <Button 
@@ -555,6 +672,106 @@ export default function WorkoutLogManager({
             닫기
           </Button>
         </div>
+
+        <Disclosure>
+          {({ open }) => (
+            <>
+              <Disclosure.Button
+                className="flex w-full justify-between items-center mt-6 text-sm font-medium text-indigo-600 hover:underline"
+                onClick={() => setDisclosureOpen(!open)}
+              >
+                <span>측정 항목 추가/삭제</span>
+                <ChevronUpIcon
+                  className={`h-5 w-5 transform transition-transform ${open ? 'rotate-180' : ''}`}
+                />
+              </Disclosure.Button>
+
+              <Disclosure.Panel className="mt-2 bg-white border rounded-xl shadow-md p-6 text-sm space-y-4 text-gray-800">
+                <div className="grid grid-cols-1 sm:grid-cols-[1.5fr_1.5fr_1fr_auto] gap-4 items-end">
+                  {/* Target Input */}
+                  <div>
+                    <label className="block text-xs font-semibold text-gray-500 mb-1">분류 (Target)</label>
+                    <input
+                      type="text"
+                      value={newTarget}
+                      onChange={(e) => setNewTarget(e.target.value)}
+                      placeholder="예: Leg"
+                      className="w-full border rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-300"
+                    />
+                  </div>
+
+                  {/* Workout Input */}
+                  <div>
+                    <label className="block text-xs font-semibold text-gray-500 mb-1">항목 (Workout)</label>
+                    <input
+                      type="text"
+                      value={newWorkout}
+                      onChange={(e) => setNewWorkout(e.target.value)}
+                      placeholder="예: Squat"
+                      className="w-full border rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-300"
+                    />
+                  </div>
+
+                  {/* Level Select */}
+                  <div>
+                    <label className="block text-xs font-semibold text-gray-500 mb-1">난이도 (Level)</label>
+                    <select
+                      value={newLevel}
+                      onChange={(e) => setNewLevel(e.target.value)}
+                      className="w-full border rounded-lg px-3 py-2 text-sm text-center focus:outline-none focus:ring-2 focus:ring-indigo-300"
+                    >
+                      <option value="">선택</option>
+                      <option value="Level 1">Level 1</option>
+                      <option value="Level 2">Level 2</option>
+                      <option value="Level 3">Level 3</option>
+                      <option value="Level 4">Level 4</option>
+                      <option value="Level 5">Level 5</option>
+                    </select>
+                  </div>
+
+                  {/* Add Button */}
+                  <div>
+                    <button
+                      type="button"
+                      onClick={handleAddType}
+                      disabled={loadingManage}
+                      className="w-fit bg-indigo-600 text-white px-3 py-1 rounded-md text-xs font-medium hover:bg-indigo-700 transition disabled:opacity-50"
+                    >
+                      추가
+                    </button>
+                  </div>
+                </div>
+
+                <ul className="max-h-40 overflow-y-auto border-t pt-3 space-y-1 text-sm text-gray-700">
+                {[...allTypes]
+                  .sort((a, b) => {
+                    // level은 문자열, order_target / order_workout은 숫자
+                    if (a.level !== b.level) return a.level.localeCompare(b.level)
+                    if (a.order_target !== b.order_target) return a.order_target - b.order_target
+                    return a.order_workout - b.order_workout
+                  })
+                  .map((m) => (
+                    <li
+                      key={m.workout_type_id}
+                      className="flex justify-between items-center border-b py-1 px-1"
+                    >
+                      <span>{m.target} / {m.workout} / {m.level}</span>
+                      <button
+                        type="button"
+                        onClick={() => handleDeleteType(m.workout_type_id)}
+                        className="text-red-500 hover:underline text-xs"
+                      >
+                        삭제
+                      </button>
+                    </li>
+                ))}
+
+                </ul>
+              </Disclosure.Panel>
+            </>
+          )}
+        </Disclosure>
+
 
 
       </div>
