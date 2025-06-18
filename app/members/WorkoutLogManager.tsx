@@ -201,31 +201,31 @@ export default function WorkoutLogManager({
     }))
   }
 
-  const startAddingRow = () => {
-    setAddingRow(true)
-    setNewTarget('')
-    setNewWorkout('')
-    setNewWorkoutInputs({})
+  // const startAddingRow = () => {
+  //   setAddingRow(true)
+  //   setNewTarget('')
+  //   setNewWorkout('')
+  //   setNewWorkoutInputs({})
   
-    // 오늘 날짜를 dates에 추가 (중복 방지)
-    if (dates.length === 0 && !dates.includes(today)) {
-      setDates(prev => [...prev, today])
-    }
-  }
+  //   // 오늘 날짜를 dates에 추가 (중복 방지)
+  //   if (dates.length === 0 && !dates.includes(today)) {
+  //     setDates(prev => [...prev, today])
+  //   }
+  // }
 
-  const handleNewWorkoutInputChange = (date: string, value: string) => {
-    setNewWorkoutInputs(prev => ({
-      ...prev,
-      [date]: { weight: value },
-    }))
-  }
+  // const handleNewWorkoutInputChange = (date: string, value: string) => {
+  //   setNewWorkoutInputs(prev => ({
+  //     ...prev,
+  //     [date]: { weight: value },
+  //   }))
+  // }
 
-  const cancelAddingRow = () => {
-    setAddingRow(false)
-    setNewTarget('')
-    setNewWorkout('')
-    setNewWorkoutInputs({})
-  }
+  // const cancelAddingRow = () => {
+  //   setAddingRow(false)
+  //   setNewTarget('')
+  //   setNewWorkout('')
+  //   setNewWorkoutInputs({})
+  // }
 
   const handleCellChange = (rowKey: string, date: string, value: number | string) => {
     const weight = Number(value)
