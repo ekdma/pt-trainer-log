@@ -5,6 +5,7 @@ import { getSupabaseClient } from '@/lib/supabase'
 import { Member, WorkoutRecord, HealthMetric } from './types'
 import AddMemberOpen from './AddMemberOpen'
 import { SupabaseClient } from '@supabase/supabase-js'
+import EditMemberModal from './EditMemberModal'
 
 export default function MemberSearch({
   onSelectMember,
@@ -19,6 +20,7 @@ export default function MemberSearch({
   const [keyword, setKeyword] = useState('')
   const [filteredMembers, setFilteredMembers] = useState<Member[]>([])
   const [isAddMemberOpen, setIsAddMemberOpen] = useState(false)
+  const [editingMember, setEditingMember] = useState<Member | null>(null)
 
   useEffect(() => {
     setSupabase(getSupabaseClient())
@@ -106,6 +108,15 @@ export default function MemberSearch({
     return age
   }
   
+  const sortedMembers = [...filteredMembers].sort((a, b) => {
+    // 1. 역할 우선순위: TRAINER 먼저
+    if (a.role !== b.role) {
+      return a.role === 'TRAINER' ? -1 : 1
+    }
+  
+    // 2. 이름 가나다/알파벳 순 정렬 (localeCompare 사용)
+    return a.name.localeCompare(b.name, 'ko')
+  })
 
   return (
     <div className="flex flex-col items-center justify-center text-center bg-slate-50 py-8 px-4">
@@ -145,7 +156,7 @@ export default function MemberSearch({
       </div>
 
       <ul className="space-y-3 w-full max-w-md">
-        {filteredMembers.map((member) => {
+        {sortedMembers.map((member) => {
           const formattedJoinDate = new Date(member.join_date).toLocaleDateString('ko-KR', {
             year: 'numeric',
             month: 'long',
@@ -156,10 +167,10 @@ export default function MemberSearch({
               key={member.member_id}
               className="bg-white border border-indigo-200 rounded-xl px-5 py-3 shadow-sm hover:shadow-md transition duration-300 flex justify-between items-center"
             >
-              {/* 왼쪽 정보 영역 */}
+              {/* 왼쪽 정보 클릭 영역 */}
               <div
                 onClick={() => handleSelect(member)}
-                className="flex items-center gap-4 cursor-pointer hover:bg-indigo-50 rounded-md px-3 py-2 transition w-full"
+                className="flex items-center gap-4 cursor-pointer hover:bg-indigo-50 rounded-md px-3 py-2 transition flex-1"
               >
                 {/* 역할 뱃지 */}
                 <span
@@ -170,46 +181,55 @@ export default function MemberSearch({
                   {member.role}
                 </span>
 
-                {/* 이름, 나이, 등록일자 */}
-                <div className="flex flex-col justify-center">
-                <span className="text-indigo-800 font-semibold text-lg leading-tight">{member.name}</span>
-                <div className="flex gap-3 text-indigo-900 text-sm mt-1">
-                  <span
-                    className="flex items-center gap-2 bg-gradient-to-r from-gray-100 via-gray-200 to-gray-100
-                    text-gray-900 px-2 py-1 rounded-full shadow-md font-small"
-                  >
-                    {member.sex}
+                {/* 이름 + 정보 */}
+                <div className="flex flex-col">
+                  <span className="text-indigo-800 font-semibold text-lg leading-tight">
+                    {member.name}
                   </span>
-                  <span
-                    className="flex items-center gap-2 bg-gradient-to-r from-gray-100 via-gray-200 to-gray-100
-                    text-gray-900 px-2 py-1 rounded-full shadow-md font-small"
-                  >
-                    {calculateAge(member.birth_date)}세
-                  </span>
-                  <span
-                    className="flex items-center gap-2 bg-gradient-to-r from-gray-100 via-gray-200 to-gray-100
-                    text-gray-900 px-2 py-1 rounded-full shadow-md font-small"
-                  >
-                    📅 {formattedJoinDate}
-                  </span>
+                  <div className="flex gap-2 text-indigo-900 text-sm mt-1 flex-wrap">
+                    <span className="flex items-center gap-1 bg-gray-100 text-gray-900 px-2 py-1 rounded-full shadow-sm">
+                      {member.sex}
+                    </span>
+                    <span className="flex items-center gap-1 bg-gray-100 text-gray-900 px-2 py-1 rounded-full shadow-sm">
+                      {calculateAge(member.birth_date)}세
+                    </span>
+                    <span className="flex items-center gap-1 bg-gray-100 text-gray-900 px-2 py-1 rounded-full shadow-sm">
+                      📅 {formattedJoinDate}
+                    </span>
+                  </div>
                 </div>
               </div>
 
+              {/* 오른쪽 버튼 영역 */}
+              <div className="flex items-center gap-2 ml-4">
+                <button
+                  onClick={() => setEditingMember(member)}
+                  className="text-blue-500 text-xs hover:text-blue-700 transition"
+                  title="회원 정보 수정"
+                >
+                  ✏️
+                </button>
+                <button
+                  onClick={() => handleDelete(member.member_id)}
+                  className="text-red-500 text-xs hover:text-red-700 transition"
+                  title="회원 삭제"
+                >
+                  ❌
+                </button>
               </div>
-
-              {/* 삭제 버튼 */}
-              <button
-                onClick={() => handleDelete(member.member_id)}
-                className="text-red-500 text-sm hover:text-red-700 transition ml-4"
-                title="회원 삭제"
-              >
-                ❌
-              </button>
             </li>
+
           )
         })}
       </ul>
-
+      {editingMember && supabase && (
+        <EditMemberModal
+          member={editingMember}
+          supabase={supabase}
+          onClose={() => setEditingMember(null)}
+          onUpdate={fetchMembers}
+        />
+      )}
       {isAddMemberOpen && (
         <AddMemberOpen
           onClose={() => setIsAddMemberOpen(false)}

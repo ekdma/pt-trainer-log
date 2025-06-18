@@ -2,6 +2,7 @@ import React, { useEffect, useState } from "react";
 import { DndContext, closestCenter } from "@dnd-kit/core";
 import { WorkoutType } from './types'
 import type { DragEndEvent } from "@dnd-kit/core";
+import { useSensors, useSensor, TouchSensor, MouseSensor } from "@dnd-kit/core";
 
 import {
   arrayMove,
@@ -24,6 +25,7 @@ function SortableItem({ id }: { id: string }) {
   const style = {
     transform: CSS.Transform.toString(transform),
     transition,
+    touchAction: "none" as const
   };
   return (
     <li
@@ -53,6 +55,16 @@ export default function OrderManagementModal({ allTypes, isOpen, onClose, onRefr
   const [loading, setLoading] = useState(false);
 
   const uniqueTargets = Array.from(new Set(allTypes.map((t) => t.target)));
+
+  const sensors = useSensors(
+    useSensor(MouseSensor),
+    useSensor(TouchSensor, {
+      activationConstraint: {
+        delay: 150,
+        tolerance: 5,
+      },
+    })
+  );
 
   // 초기 Target 순서 설정
   useEffect(() => {
@@ -194,7 +206,8 @@ export default function OrderManagementModal({ allTypes, isOpen, onClose, onRefr
         )}
 
         {/* 정렬 리스트 */}
-        <DndContext collisionDetection={closestCenter} onDragEnd={handleDragEnd}>
+        
+        <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={handleDragEnd}>
           <SortableContext
             items={activeTab === "target" ? targetOrder : workoutOrder}
             strategy={verticalListSortingStrategy}
