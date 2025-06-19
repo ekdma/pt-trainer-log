@@ -116,11 +116,11 @@ const MemberHealthGraphsClient: React.FC<Props> = ({ healthLogs, member, onBack 
     return aOrder - bOrder;
   });
 
-  const metricOrderMap: { [key: string]: string[] } = {
-    'Body Composition': ['Weight', 'Skeletal Muscle Mass', 'Body Fat Mass', 'Body Fat Percentage'],
-    'HP&BP': ['Resting Heart Rate', 'Systolic BP', 'Diastolic BP'],
-    'Overall Fitness': ['Cardiopulmonary Endurance', 'Upper Body Strength', 'Lower Body Strength'],
-  };
+  // const metricOrderMap: { [key: string]: string[] } = {
+  //   'Body Composition': ['Weight', 'Skeletal Muscle Mass', 'Body Fat Mass', 'Body Fat Percentage'],
+  //   'HP&BP': ['Resting Heart Rate', 'Systolic BP', 'Diastolic BP'],
+  //   'Overall Fitness': ['Cardiopulmonary Endurance', 'Upper Body Strength', 'Lower Body Strength'],
+  // };
 
   // function sortMetricsByTarget(target: string, metrics: string[]) {
   //   const order = metricOrderMap[target] || [];
@@ -261,7 +261,7 @@ const MemberHealthGraphsClient: React.FC<Props> = ({ healthLogs, member, onBack 
               if (!metricTypesMap[log.measure_date]) metricTypesMap[log.measure_date] = {};
               metricTypesMap[log.measure_date][log.metric_type] = log.metric_value;
             });
-            const valueData = Object.entries(metricTypesMap).map(([date, metric_types]) => ({ date, ...metric_types }));
+            // const valueData = Object.entries(metricTypesMap).map(([date, metric_types]) => ({ date, ...metric_types }));
 
             // 운동 종류 추출 및 정렬
             const typesInGroup = Array.from(new Set(groupLogs.map((log) => log.metric_type)));

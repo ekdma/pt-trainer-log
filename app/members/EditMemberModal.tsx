@@ -24,38 +24,47 @@ export default function EditMemberModal({
   }
 
   const handleSubmit = async () => {
-    setErrorMsg('')
-    setLoading(true)
+    setErrorMsg('');
+    setLoading(true);
   
-    const updates: any = {
+    const updates: {
+      name: string;
+      birth_date: string | null;
+      join_date: string | null;
+      sex: string;
+      level: string;
+      before_level?: string;
+      modified_dt?: string;
+    } = {
       name: formData.name,
       birth_date: formData.birth_date,
       join_date: formData.join_date,
       sex: formData.sex,
       level: formData.level,
-    }
+    };
+    
   
     // level이 변경된 경우에만 before_level과 modified_dt 추가
     if (formData.level !== member.level) {
-      updates.before_level = member.level
-      updates.modified_dt = new Date().toISOString()
+      updates.before_level = member.level;
+      updates.modified_dt = new Date().toISOString();
     }
   
     const { error } = await supabase
       .from('members')
       .update(updates)
-      .eq('member_id', formData.member_id)
+      .eq('member_id', formData.member_id);
   
-    setLoading(false)
+    setLoading(false);
   
     if (error) {
-      setErrorMsg('회원 정보 수정 중 문제가 발생했어요 😥')
+      setErrorMsg('회원 정보 수정 중 문제가 발생했어요 😥');
     } else {
-      alert('회원 정보를 성공적으로 수정했어요 ✅')
-      onUpdate()
-      onClose()
+      alert('회원 정보를 성공적으로 수정했어요 ✅');
+      onUpdate();
+      onClose();
     }
-  }
+  };  
 
   return (
     <div className="fixed inset-0 bg-black bg-opacity-40 backdrop-blur-sm flex items-center justify-center z-50">

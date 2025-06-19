@@ -12,7 +12,7 @@ export default function MembersPage() {
   const [workoutLogs, setWorkoutLogs] = useState<WorkoutRecord[]>([])
   const [healthLogs, setHealthLogs] = useState<HealthMetric[]>([])
   const [activeTab, setActiveTab] = useState<'workout' | 'health'>('workout')
-  const [workoutTypes, setWorkoutTypes] = useState<WorkoutType[]>([]);
+  // const [workoutTypes, setWorkoutTypes] = useState<WorkoutType[]>([]);
 
   // ✅ 탭 전환 시 자동 새로고침
   useEffect(() => {

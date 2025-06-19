@@ -83,18 +83,26 @@ export default function MemberSearch({
   }
 
   const handleDelete = async (memberId: number) => {
-    if (!supabase) return
-    const confirmDelete = confirm('정말로 이 회원을 삭제하시겠습니까?')
-    if (!confirmDelete) return
-
-    const { error } = await supabase.from('members').delete().eq('member_id', memberId)
-    if (error) {
-      alert('회원 삭제 중 문제가 발생했어요 😥')
-      return
+    if (!supabase) return;
+  
+    const password = prompt('비밀번호를 입력하세요 🤐');
+    if (password !== '2213') {
+      alert('비밀번호가 일치하지 않습니다 ❌');
+      return;
     }
-    alert('회원 삭제를 완료하였습니다 😊')
-    fetchMembers()
-  }
+  
+    const confirmDelete = confirm('정말로 이 회원을 삭제하시겠습니까?');
+    if (!confirmDelete) return;
+  
+    const { error } = await supabase.from('members').delete().eq('member_id', memberId);
+    if (error) {
+      alert('회원 삭제 중 문제가 발생했어요 😥');
+      return;
+    }
+  
+    alert('회원 삭제를 완료하였습니다 😊');
+    fetchMembers();
+  };
 
   const calculateAge = (birthDate: string | null) => {
     if (!birthDate) return '?'
