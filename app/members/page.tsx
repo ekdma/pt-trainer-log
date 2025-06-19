@@ -4,7 +4,7 @@ import { useState, useEffect } from 'react'
 import MemberSearch from './MemberSearch'
 import MemberGraphs from './MemberGraphs'
 import MemberHealthGraphs from './MemberHealthGraphs'
-import type { Member, WorkoutRecord, HealthMetric, WorkoutType } from './types'
+import type { Member, WorkoutRecord, HealthMetric } from './types'
 import { fetchWorkoutLogs, fetchHealthLogs } from '../../utils/fetchLogs' // ✅ 따로 fetch 함수 만든다고 가정
 
 export default function MembersPage() {
