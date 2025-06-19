@@ -71,7 +71,8 @@ export default function AddMemberOpen({ onClose, onMemberAdded }: Props) {
         name,
         birth_date: birthDate,
         sex,
-        level,
+        level: level,
+        before_level: level,
         join_date: joinDate,
       },
     ])

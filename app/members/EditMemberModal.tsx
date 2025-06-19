@@ -26,20 +26,28 @@ export default function EditMemberModal({
   const handleSubmit = async () => {
     setErrorMsg('')
     setLoading(true)
-
+  
+    const updates: any = {
+      name: formData.name,
+      birth_date: formData.birth_date,
+      join_date: formData.join_date,
+      sex: formData.sex,
+      level: formData.level,
+    }
+  
+    // level이 변경된 경우에만 before_level과 modified_dt 추가
+    if (formData.level !== member.level) {
+      updates.before_level = member.level
+      updates.modified_dt = new Date().toISOString()
+    }
+  
     const { error } = await supabase
       .from('members')
-      .update({
-        name: formData.name,
-        birth_date: formData.birth_date,
-        join_date: formData.join_date,
-        sex: formData.sex,
-        level: formData.level,
-      })
+      .update(updates)
       .eq('member_id', formData.member_id)
-
+  
     setLoading(false)
-
+  
     if (error) {
       setErrorMsg('회원 정보 수정 중 문제가 발생했어요 😥')
     } else {

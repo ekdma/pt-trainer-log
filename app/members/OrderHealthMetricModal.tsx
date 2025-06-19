@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from "react";
 import { DndContext, closestCenter } from "@dnd-kit/core";
-import { WorkoutType } from './types'
+import { HealthMetricType } from './types'
 import type { DragEndEvent } from "@dnd-kit/core";
 import { useSensors, useSensor, TouchSensor, MouseSensor } from "@dnd-kit/core";
 
@@ -43,18 +43,18 @@ function SortableItem({ id }: { id: string }) {
 type Props = {
   isOpen: boolean;
   onClose: () => void;
-  allTypes: WorkoutType[];
+  allTypes: HealthMetricType[];
   onRefreshAllTypes: () => void;
 }
 
 export default function OrderManagementModal({ allTypes, isOpen, onClose, onRefreshAllTypes }: Props) {
-  const [activeTab, setActiveTab] = useState<"target" | "workout">("target");
+  const [activeTab, setActiveTab] = useState<"metric_target" | "metric_type">("metric_target");
   const [targetOrder, setTargetOrder] = useState<string[]>([]);
   const [selectedTarget, setSelectedTarget] = useState<string | null>(null);
   const [workoutOrder, setWorkoutOrder] = useState<string[]>([]);
   const [loading, setLoading] = useState(false);
 
-  const uniqueTargets = Array.from(new Set(allTypes.map((t) => t.target)));
+  const uniqueTargets = Array.from(new Set(allTypes.map((t) => t.metric_target)));
 
   const sensors = useSensors(
     useSensor(MouseSensor),
@@ -70,12 +70,12 @@ export default function OrderManagementModal({ allTypes, isOpen, onClose, onRefr
   useEffect(() => {
     const targetMap = new Map<string, number>();
     for (const t of allTypes) {
-      if (!targetMap.has(t.target)) {
-        const found = allTypes.find((x) => x.target === t.target);
+      if (!targetMap.has(t.metric_target)) {
+        const found = allTypes.find((x) => x.metric_target === t.metric_target);
         if (typeof found?.["order_target"] === "number") {
-          targetMap.set(t.target, found["order_target"]);
+          targetMap.set(t.metric_target, found["order_target"]);
         } else {
-          targetMap.set(t.target, 999); // 순서 없으면 뒤로
+          targetMap.set(t.metric_target, 999); // 순서 없으면 뒤로
         }
       }
     }
@@ -88,17 +88,17 @@ export default function OrderManagementModal({ allTypes, isOpen, onClose, onRefr
   // Workout 순서 설정 (Target 선택 시)
   useEffect(() => {
     if (!selectedTarget) return;
-    const filtered = allTypes.filter((t) => t.target === selectedTarget);
+    const filtered = allTypes.filter((t) => t.metric_target === selectedTarget);
     const workoutMap = new Map<string, number>();
     for (const f of filtered) {
-      if (typeof f["order_workout"] === "number") {
-        workoutMap.set(f.workout, f["order_workout"]);
+      if (typeof f["order_type"] === "number") {
+        workoutMap.set(f.metric_type, f["order_type"]);
       } else {
-        workoutMap.set(f.workout, 999);
+        workoutMap.set(f.metric_type, 999);
       }
     }
     const sorted = filtered
-      .map((f) => f.workout)
+      .map((f) => f.metric_type)
       .filter((w, i, arr) => arr.indexOf(w) === i)
       .sort((a, b) => (workoutMap.get(a) ?? 999) - (workoutMap.get(b) ?? 999));
     setWorkoutOrder(sorted);
@@ -109,11 +109,11 @@ export default function OrderManagementModal({ allTypes, isOpen, onClose, onRefr
     const { active, over } = event;
     if (!over || active.id === over.id) return;
 
-    if (activeTab === "target") {
+    if (activeTab === "metric_target") {
       const oldIndex = targetOrder.indexOf(active.id as string);
       const newIndex = targetOrder.indexOf(over.id as string);
       setTargetOrder(arrayMove(targetOrder, oldIndex, newIndex));
-    } else if (activeTab === "workout") {
+    } else if (activeTab === "metric_type") {
       const oldIndex = workoutOrder.indexOf(active.id as string);
       const newIndex = workoutOrder.indexOf(over.id as string);
       setWorkoutOrder(arrayMove(workoutOrder, oldIndex, newIndex));
@@ -121,35 +121,35 @@ export default function OrderManagementModal({ allTypes, isOpen, onClose, onRefr
   };
 
 
-  type WorkoutOrderUpdate =
-    | { target: string; order_target: number }
-    | { workout_type_id: number; order_workout: number };
+  type HealthMetricUpdate =
+    | { metric_target: string; order_target: number }
+    | { health_metric_type_id: number; order_type: number };
 
   const handleSave = async () => {
     setLoading(true);
-    const updates: WorkoutOrderUpdate[] = [];
+    const updates: HealthMetricUpdate[] = [];
   
-    if (activeTab === "target") {
+    if (activeTab === "metric_target") {
       // 모든 target에 대해 일괄 업데이트
       for (let i = 0; i < targetOrder.length; i++) {
-        const target = targetOrder[i];
-        updates.push({ target, order_target: i });
+        const metric_target = targetOrder[i];
+        updates.push({ metric_target, order_target: i });
       }
-    } else if (activeTab === "workout" && selectedTarget) {
+    } else if (activeTab === "metric_type" && selectedTarget) {
       // 선택된 target의 workout 목록을 기준으로 전체 workout_type_id 찾기
       for (let i = 0; i < workoutOrder.length; i++) {
         const workoutName = workoutOrder[i];
         const matchingWorkoutIds = allTypes
-          .filter((t) => t.target === selectedTarget && t.workout === workoutName)
-          .map((t) => t.workout_type_id);
+          .filter((t) => t.metric_target === selectedTarget && t.metric_type === workoutName)
+          .map((t) => t.health_metric_type_id);
   
         for (const id of matchingWorkoutIds) {
-          updates.push({ workout_type_id: id, order_workout: i });
+          updates.push({ health_metric_type_id: id, order_type: i });
         }
       }
     }
   
-    const { error } = await supabase.rpc("update_workout_orders", {
+    const { error } = await supabase.rpc("update_metric_orders", {
       changes: updates,
     });
   
@@ -173,25 +173,25 @@ export default function OrderManagementModal({ allTypes, isOpen, onClose, onRefr
         {/* 탭 */}
         <div className="flex space-x-4">
           <button
-            onClick={() => setActiveTab("target")}
+            onClick={() => setActiveTab("metric_target")}
             className={`px-3 py-1 rounded ${
-              activeTab === "target" ? "bg-indigo-500 text-white" : "bg-gray-100 text-gray-700"
+              activeTab === "metric_target" ? "bg-indigo-500 text-white" : "bg-gray-100 text-gray-700"
             }`}
           >
             Target 순서
           </button>
           <button
-            onClick={() => setActiveTab("workout")}
+            onClick={() => setActiveTab("metric_type")}
             className={`px-3 py-1 rounded ${
-              activeTab === "workout" ? "bg-indigo-500 text-white" : "bg-gray-100 text-gray-700"
+              activeTab === "metric_type" ? "bg-indigo-500 text-white" : "bg-gray-100 text-gray-700"
             }`}
           >
-            Workout 순서
+            Health Metric 순서
           </button>
         </div>
 
-        {/* Workout 선택 */}
-        {activeTab === "workout" && (
+        {/* metric_type 선택 */}
+        {activeTab === "metric_type" && (
           <select
             value={selectedTarget || ""}
             onChange={(e) => setSelectedTarget(e.target.value)}
@@ -210,11 +210,11 @@ export default function OrderManagementModal({ allTypes, isOpen, onClose, onRefr
         
         <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={handleDragEnd}>
           <SortableContext
-            items={activeTab === "target" ? targetOrder : workoutOrder}
+            items={activeTab === "metric_target" ? targetOrder : workoutOrder}
             strategy={verticalListSortingStrategy}
           >
             <ul className="space-y-2 max-h-64 overflow-y-auto border p-2 rounded bg-gray-50">
-              {(activeTab === "target" ? targetOrder : workoutOrder).map((item) => (
+              {(activeTab === "metric_target" ? targetOrder : workoutOrder).map((item) => (
                 <SortableItem key={item} id={item} />
               ))}
             </ul>

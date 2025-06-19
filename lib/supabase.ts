@@ -1,6 +1,6 @@
 // lib/supabase.ts
 import { createClient } from '@supabase/supabase-js'
-import { NewWorkoutRecord, NewHealthMetric, WorkoutType } from '../app/members/types'
+import { NewWorkoutRecord, NewHealthMetric, WorkoutType, HealthMetricType } from '../app/members/types'
 
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL
 const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
@@ -85,6 +85,20 @@ export async function getWorkoutTypes(): Promise<WorkoutType[]> {
   const supabase = getSupabaseClient();
   const { data, error } = await supabase
     .from('workout_types')
+    .select('*');
+
+  if (error) {
+    console.error('❗ Supabase 오류 (getWorkoutTypes):', error.message);
+    throw error;
+  }
+
+  return data ?? [];
+}
+
+export async function getHealthMetricTypes(): Promise<HealthMetricType[]> {
+  const supabase = getSupabaseClient();
+  const { data, error } = await supabase
+    .from('health_metric_types')
     .select('*');
 
   if (error) {

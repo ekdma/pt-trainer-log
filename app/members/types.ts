@@ -6,6 +6,8 @@ export type Member = {
   creation_dt: string
   birth_date: string | null
   sex: string
+  before_level: string
+  modified_dt: string
 }
 
 // 사용자가 입력할 때 사용하는 타입
@@ -46,4 +48,12 @@ export type WorkoutType = {
   order_target?: number;
   order_workout?: number;
   level?: string;
+};
+
+export type HealthMetricType = {
+  health_metric_type_id: number;
+  metric_target: string;
+  metric_type: string;
+  order_target?: number;
+  order_type?: number;
 };

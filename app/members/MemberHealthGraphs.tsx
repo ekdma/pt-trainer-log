@@ -1,15 +1,18 @@
 'use client';
 
 import React, { useEffect, useState } from 'react';
+import dayjs from 'dayjs';
 import {
   LineChart, Line, XAxis, YAxis, CartesianGrid, ResponsiveContainer
 } from 'recharts';
-import { HealthMetric, Member, NewHealthMetric } from './types';
-import AddHealthMetricOpen from './AddHealthMetricOpen';
+import { HealthMetric, Member, HealthMetricType } from './types';
+// import AddHealthMetricOpen from './AddHealthMetricOpen';
 import HealthMetricManager from './HealthMetricManager' 
-import { Plus, ArrowLeft, Minus } from 'lucide-react';
-import { addHealthMetricsToDB, getHealthMetrics, deleteHealthMetricById } from '@/lib/supabase';
+import OrderHealthMetricModal from './OrderHealthMetricModal'
+import { Plus, ArrowLeft } from 'lucide-react';
+// import { addHealthMetricsToDB, getHealthMetrics, deleteHealthMetricById } from '@/lib/supabase';
 import { Button } from '@/components/ui/button';
+import { getHealthMetricTypes } from '../../lib/supabase' // 실제 경로에 맞춰 수정 필요
 
 interface Props {
   healthLogs: HealthMetric[];
@@ -64,14 +67,36 @@ const colorMap: { [key: string]: string } = {
 const MemberHealthGraphsClient: React.FC<Props> = ({ healthLogs, member, onBack }) => {
   const [logs, setLogs] = useState<HealthMetric[]>([]);
   const [selectedTarget, setSelectedTarget] = useState<string | null>(null);
-  const [isAddOpen, setIsAddOpen] = useState(false);
-  const [isListOpen, setIsListOpen] = useState(false);
+  // const [isAddOpen, setIsAddOpen] = useState(false);
+  // const [isListOpen, setIsListOpen] = useState(false);
   const [isHealthMetricManagerOpen, setIsHealthMetricManagerOpen] = useState(false)
+  const [isOrderModalOpen, setIsOrderModalOpen] = useState(false)
+  const [allTypes, setAllTypes] = useState<HealthMetricType[]>([]);
 
   useEffect(() => {
     setLogs(healthLogs);
   }, [healthLogs]);
 
+  useEffect(() => {
+    getHealthMetricTypes()
+      .then(types => {
+        setAllTypes(types)
+      })
+      .catch(console.error)
+  }, [])
+
+  function fetchHealthMetricTypes() {
+    getHealthMetricTypes()
+      .then(types => setAllTypes(types))
+      .catch(console.error);
+  }
+
+  useEffect(() => {
+    if (isOrderModalOpen) {
+      fetchHealthMetricTypes();
+    }
+  }, [isOrderModalOpen]);
+  
   if (!member || !member.name) {
     return <p className="text-center text-gray-500 mt-8">회원 정보가 없습니다.</p>;
   }
@@ -85,8 +110,11 @@ const MemberHealthGraphsClient: React.FC<Props> = ({ healthLogs, member, onBack 
   });
 
   const targets = Object.keys(targetGroups);
-  const targetOrder = ['Body Composition', 'HP&BP', 'Overall Fitness'];
-  const targetsSorted = targetOrder.filter(t => targets.includes(t));
+  const targetsSorted = [...targets].sort((a, b) => {
+    const aOrder = allTypes.find(t => t.metric_target === a)?.order_target ?? 999;
+    const bOrder = allTypes.find(t => t.metric_target === b)?.order_target ?? 999;
+    return aOrder - bOrder;
+  });
 
   const metricOrderMap: { [key: string]: string[] } = {
     'Body Composition': ['Weight', 'Skeletal Muscle Mass', 'Body Fat Mass', 'Body Fat Percentage'],
@@ -94,51 +122,51 @@ const MemberHealthGraphsClient: React.FC<Props> = ({ healthLogs, member, onBack 
     'Overall Fitness': ['Cardiopulmonary Endurance', 'Upper Body Strength', 'Lower Body Strength'],
   };
 
-  function sortMetricsByTarget(target: string, metrics: string[]) {
-    const order = metricOrderMap[target] || [];
-    const orderLower = order.map(m => m.toLowerCase());
+  // function sortMetricsByTarget(target: string, metrics: string[]) {
+  //   const order = metricOrderMap[target] || [];
+  //   const orderLower = order.map(m => m.toLowerCase());
   
-    return metrics
-      .slice()
-      .sort((a, b) => {
-        const aIndex = orderLower.indexOf(a.toLowerCase());
-        const bIndex = orderLower.indexOf(b.toLowerCase());
-        if (aIndex === -1 && bIndex === -1) return a.localeCompare(b);
-        if (aIndex === -1) return 1;
-        if (bIndex === -1) return -1;
-        return aIndex - bIndex;
-      });
-  }
+  //   return metrics
+  //     .slice()
+  //     .sort((a, b) => {
+  //       const aIndex = orderLower.indexOf(a.toLowerCase());
+  //       const bIndex = orderLower.indexOf(b.toLowerCase());
+  //       if (aIndex === -1 && bIndex === -1) return a.localeCompare(b);
+  //       if (aIndex === -1) return 1;
+  //       if (bIndex === -1) return -1;
+  //       return aIndex - bIndex;
+  //     });
+  // }
   
-  const getMetricTypes = (logs: HealthMetric[]) =>
-    Array.from(new Set(logs.map(log => log.metric_type)));
+  // const getMetricTypes = (logs: HealthMetric[]) =>
+  //   Array.from(new Set(logs.map(log => log.metric_type)));
 
-  // 기록 추가 처리 함수
-  const handleAddRecord = async (newRecord: NewHealthMetric): Promise<void> => {
-    try {
-      await addHealthMetricsToDB(newRecord);
-      const updatedLogs = await getHealthMetrics(member.member_id.toString());
-      setLogs(updatedLogs);
-      setIsAddOpen(false);
-      alert('기록 저장을 완료하였습니다 😊');
-    } catch (error) {
-      console.error('기록 저장 실패:', error);
-      alert('기록 저장 중 문제가 발생했어요 😥');
-    }
-  };
+  // // 기록 추가 처리 함수
+  // const handleAddRecord = async (newRecord: NewHealthMetric): Promise<void> => {
+  //   try {
+  //     await addHealthMetricsToDB(newRecord);
+  //     const updatedLogs = await getHealthMetrics(member.member_id.toString());
+  //     setLogs(updatedLogs);
+  //     setIsAddOpen(false);
+  //     alert('기록 저장을 완료하였습니다 😊');
+  //   } catch (error) {
+  //     console.error('기록 저장 실패:', error);
+  //     alert('기록 저장 중 문제가 발생했어요 😥');
+  //   }
+  // };
 
-  const handleDelete = async (id: number) => {
-    if (!confirm('해당 기록을 삭제하시겠습니까?')) return;
-    try {
-      await deleteHealthMetricById(id);
-      const updated = await getHealthMetrics(member.member_id.toString());
-      setLogs(updated);
-      alert('기록 삭제를 완료하였습니다 😊');
-    } catch (e) {
-      console.error('삭제 중 오류:', e);
-      alert('기록 삭제 중 문제가 발생했어요 😥');
-    }
-  };
+  // const handleDelete = async (id: number) => {
+  //   if (!confirm('해당 기록을 삭제하시겠습니까?')) return;
+  //   try {
+  //     await deleteHealthMetricById(id);
+  //     const updated = await getHealthMetrics(member.member_id.toString());
+  //     setLogs(updated);
+  //     alert('기록 삭제를 완료하였습니다 😊');
+  //   } catch (e) {
+  //     console.error('삭제 중 오류:', e);
+  //     alert('기록 삭제 중 문제가 발생했어요 😥');
+  //   }
+  // };
 
   // 표시할 타겟 선택 (통합이면 전체, 아니면 선택 타겟만)
   // const currentTargets = selectedTarget === null ? targets : [selectedTarget];
@@ -153,12 +181,19 @@ const MemberHealthGraphsClient: React.FC<Props> = ({ healthLogs, member, onBack 
           <h2 className="text-xl text-black font-semibold">{member.name} 님의 건강 기록</h2>
           <div className="flex flex-col sm:flex-row sm:space-x-2 space-y-2 sm:space-y-0">
             <Button 
+              className="w-full sm:w-auto flex items-center gap-1 text-sm text-yellow-600 border border-yellow-600 px-3 py-1.5 rounded-lg hover:bg-yellow-100 transition duration-200"
+              onClick={() => setIsOrderModalOpen(true)}
+            >
+              순서관리
+            </Button>
+            <Button 
               onClick={() => setIsHealthMetricManagerOpen(true)}
               className="w-full sm:w-auto flex items-center gap-1 text-sm text-purple-600 border border-purple-600 px-3 py-1.5 rounded-lg hover:bg-purple-100 transition duration-200"
             >
+              <Plus size={16} />
               기록관리
             </Button>
-            <Button
+            {/* <Button
               onClick={() => setIsAddOpen(true)}
               className="w-full sm:w-auto flex items-center gap-1 text-sm text-green-600 border border-green-600 px-3 py-1.5 rounded-lg hover:bg-green-100 transition duration-200"
             >
@@ -171,7 +206,7 @@ const MemberHealthGraphsClient: React.FC<Props> = ({ healthLogs, member, onBack 
             >
               <Minus size={16} />
               기록 삭제
-            </Button>
+            </Button> */}
             <Button
               onClick={onBack}
               className="w-full sm:w-auto flex items-center gap-1 text-sm text-indigo-600 border border-indigo-600 px-3 py-1.5 rounded-lg hover:bg-indigo-100 transition duration-200"
@@ -195,7 +230,7 @@ const MemberHealthGraphsClient: React.FC<Props> = ({ healthLogs, member, onBack 
           >
             통합
           </button>
-          {targets.map(target => (
+          {targetsSorted.map(target => (
             <button
               key={target}
               onClick={() => setSelectedTarget(target)}
@@ -220,29 +255,41 @@ const MemberHealthGraphsClient: React.FC<Props> = ({ healthLogs, member, onBack 
             const groupLogs = targetGroups[target];
             if (!groupLogs || groupLogs.length === 0) return null;
 
-            // const metricTypes = getMetricTypes(groupLogs);
-            let metricTypes = getMetricTypes(groupLogs);
-            metricTypes = sortMetricsByTarget(target, metricTypes);
+            // 날짜별 운동별 값 변환
+            const metricTypesMap: Record<string, Record<string, number>> = {};
+            groupLogs.forEach((log) => {
+              if (!metricTypesMap[log.measure_date]) metricTypesMap[log.measure_date] = {};
+              metricTypesMap[log.measure_date][log.metric_type] = log.metric_value;
+            });
+            const valueData = Object.entries(metricTypesMap).map(([date, metric_types]) => ({ date, ...metric_types }));
+
+            // 운동 종류 추출 및 정렬
+            const typesInGroup = Array.from(new Set(groupLogs.map((log) => log.metric_type)));
+            const sortedWorkouts = typesInGroup.sort((a, b) => {
+              const aOrder = allTypes.find(w => w.metric_type === a && w.metric_target === target)?.order_type ?? 999;
+              const bOrder = allTypes.find(w => w.metric_type === b && w.metric_target === target)?.order_type ?? 999;
+              return aOrder - bOrder;
+            });
 
             return (
               <section key={target}>
-                <h3 className="text-lg font-bold text-indigo-600 mb-6">{target} 종합 그래프</h3>
+                <h3 className="text-l font-semibold text-indigo-500 mb-4">{target} 종합 그래프</h3>
 
                 <div className="space-y-0">
-                  {metricTypes.map((metric, index) => {
+                  {sortedWorkouts.map((metric, index) => {
                     const data = createChartDataForMetric(groupLogs, metric);
                     const maxVal = Math.max(...data.map(d => d.value ?? 0));
-                    const isLast = index === metricTypes.length - 1;
+                    const isLast = index === sortedWorkouts.length - 1;
 
                     return (
                       <div
                         key={metric}
                         className="flex items-center space-x-4 w-full"
-                        style={{ height: 110, marginBottom: 0, paddingBottom: 0 }}  // 높이 약간 키움
+                        style={{ height: 110, marginBottom: 0, paddingBottom: 0 }}
                       >
                         <div
-                          className="w-[15%] text-right pr-2 font-semibold text-gray-700"
-                          style={{ whiteSpace: 'normal', wordBreak: 'break-word' }}  // 줄바꿈 가능하게
+                          className="w-[15%] text-right pr-2 font-semibold text-gray-700 text-sm"
+                          style={{ whiteSpace: 'normal', wordBreak: 'break-word' }}
                         >
                           {metric}
                         </div>
@@ -252,9 +299,10 @@ const MemberHealthGraphsClient: React.FC<Props> = ({ healthLogs, member, onBack 
                               <CartesianGrid strokeDasharray="3 3" vertical={false} />
                               <XAxis
                                 dataKey="date"
-                                tick={isLast ? { fontSize: 11 } : false}
+                                tick={isLast ? { fontSize: 13, fontWeight: 'bold' } : false}
                                 axisLine={true}
                                 tickLine={true}
+                                tickFormatter={(date: string) => dayjs(date).format('YY.MM.DD')}
                               />
                               <YAxis
                                 tick={false}
@@ -269,11 +317,18 @@ const MemberHealthGraphsClient: React.FC<Props> = ({ healthLogs, member, onBack 
                                 dot={{ r: 3 }}
                                 name={metric}
                                 isAnimationActive={false}
-                                label={{
-                                  position: 'top',
-                                  fontSize: 10,
-                                  fill: '#555',
-                                }}
+                                label={({ x, y, value }) => (
+                                  <text
+                                    x={x}
+                                    y={y - 6}
+                                    fill="#555"
+                                    fontSize={13}
+                                    fontWeight="bold"
+                                    textAnchor="middle"
+                                  >
+                                    {Number(value).toFixed(1)}
+                                  </text>
+                                )}
                               />
                             </LineChart>
                           </ResponsiveContainer>
@@ -283,11 +338,19 @@ const MemberHealthGraphsClient: React.FC<Props> = ({ healthLogs, member, onBack 
                   })}
                 </div>
               </section>
-
             );
           })
         )}
 
+
+        {isOrderModalOpen && (
+          <OrderHealthMetricModal
+            isOpen={isOrderModalOpen}
+            onClose={() => setIsOrderModalOpen(false)}
+            allTypes={allTypes}
+            onRefreshAllTypes={fetchHealthMetricTypes}  // ✅ 여기 추가
+          />
+        )}
 
         {isHealthMetricManagerOpen && (
           <HealthMetricManager
@@ -296,57 +359,6 @@ const MemberHealthGraphsClient: React.FC<Props> = ({ healthLogs, member, onBack 
             onClose={() => setIsHealthMetricManagerOpen(false)}
             onUpdateLogs={(updatedLogs) => setLogs(updatedLogs)}
           />
-        )}
-
-        {/* 기록 추가 모달 */}
-        {isAddOpen && (
-          <AddHealthMetricOpen
-            isOpen={isAddOpen}
-            member={member}
-            onSave={handleAddRecord}
-            onCancel={() => setIsAddOpen(false)}
-          />
-        )}
-
-        {/* 기록 삭제 모달 */}
-        {isListOpen && (
-          <div className="fixed inset-0 bg-black/50 flex justify-center items-center z-50">
-            <div className="bg-white rounded-2xl shadow-xl w-full max-w-md p-6 space-y-5 border border-gray-100 max-h-[80vh] overflow-y-auto">
-              <h3 className="text-xl font-bold text-red-600 border-b pb-2">건강 기록 삭제</h3>
-
-              {logs.length === 0 ? (
-                <p className="text-sm text-gray-500">삭제할 건강 기록이 없습니다.</p>
-              ) : (
-                <ul className="space-y-3">
-                  {logs.map(log => (
-                    <li
-                      key={log.health_id}
-                      className="flex justify-between items-center border rounded-lg px-3 py-2 bg-gray-50 hover:bg-gray-100 transition"
-                    >
-                      <div className="text-sm text-gray-700">
-                        <strong className="text-gray-900">{log.metric_type}</strong> | {log.metric_value} |{' '}
-                        <span className="text-gray-500">{log.measure_date.slice(0, 10)}</span>
-                      </div>
-                      <Button
-                        size="sm"
-                        variant="destructive"
-                        onClick={() => handleDelete(log.health_id)}
-                        className="text-xs"
-                      >
-                        삭제
-                      </Button>
-                    </li>
-                  ))}
-                </ul>
-              )}
-
-              <div className="flex justify-end pt-4">
-                <Button onClick={() => setIsListOpen(false)} className="text-gray-700 text-sm" variant="outline">
-                  닫기
-                </Button>
-              </div>
-            </div>
-          </div>
         )}
       </div>
     </div>
