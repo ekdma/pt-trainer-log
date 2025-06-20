@@ -678,8 +678,9 @@ export default function WorkoutLogManager({
                       placeholderText="yy.mm.dd"
                       open={false}
                       ref={(dp) => {
-                        if (dp) {
-                          const inputEl = (dp as any).input; // DatePicker 내부 input 엘리먼트
+                        if (dp && 'input' in dp) {
+                          const picker = dp as DatePicker;
+                          const inputEl = picker.input as HTMLInputElement;
                           if (inputEl && typeof inputEl.focus === 'function') {
                             dateInputRef.current = inputEl;
                           }
