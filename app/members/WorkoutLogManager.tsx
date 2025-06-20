@@ -651,10 +651,6 @@ export default function WorkoutLogManager({
                       onChange={(date: Date | null) => {
                         setAddingDate(formatDate(date));
                       }}
-                      onChangeRaw={(e) => {
-                        // 사용자가 입력하는 문자열을 상태로 저장 (선택사항)
-                        // ex) setRawInput(e.target.value);
-                      }}
                       onKeyDown={(e) => {
                         if (e.key === 'Enter') {
                           const input = e.target as HTMLInputElement;
