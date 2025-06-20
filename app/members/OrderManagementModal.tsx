@@ -3,6 +3,7 @@ import { DndContext, closestCenter } from "@dnd-kit/core";
 import { WorkoutType } from './types'
 import type { DragEndEvent } from "@dnd-kit/core";
 import { useSensors, useSensor, TouchSensor, MouseSensor } from "@dnd-kit/core";
+import { Button } from '@/components/ui/button'
 
 import {
   arrayMove,
@@ -168,13 +169,13 @@ export default function OrderManagementModal({ allTypes, isOpen, onClose, onRefr
   return (
     <div className="fixed inset-0 z-50 bg-black/30 flex items-center justify-center">
       <div className="bg-white w-full max-w-lg rounded-lg shadow-lg p-6 space-y-4">
-        <h2 className="text-lg font-semibold text-gray-800">순서 관리</h2>
+        <h2 className="text-xl font-semibold text-gray-800">순서 관리</h2>
 
         {/* 탭 */}
         <div className="flex space-x-4">
           <button
             onClick={() => setActiveTab("target")}
-            className={`px-3 py-1 rounded ${
+            className={`px-3 py-2 rounded text-sm ${
               activeTab === "target" ? "bg-indigo-500 text-white" : "bg-gray-100 text-gray-700"
             }`}
           >
@@ -182,7 +183,7 @@ export default function OrderManagementModal({ allTypes, isOpen, onClose, onRefr
           </button>
           <button
             onClick={() => setActiveTab("workout")}
-            className={`px-3 py-1 rounded ${
+            className={`px-3 py-2 rounded text-sm ${
               activeTab === "workout" ? "bg-indigo-500 text-white" : "bg-gray-100 text-gray-700"
             }`}
           >
@@ -195,7 +196,7 @@ export default function OrderManagementModal({ allTypes, isOpen, onClose, onRefr
           <select
             value={selectedTarget || ""}
             onChange={(e) => setSelectedTarget(e.target.value)}
-            className="w-full border px-3 py-2 rounded text-gray-800"
+            className="w-full border px-3 py-2 rounded text-gray-800 text-sm"
           >
             <option value="">-- Target 선택 --</option>
             {targetOrder.map((t) => (
@@ -213,7 +214,7 @@ export default function OrderManagementModal({ allTypes, isOpen, onClose, onRefr
             items={activeTab === "target" ? targetOrder : workoutOrder}
             strategy={verticalListSortingStrategy}
           >
-            <ul className="space-y-2 max-h-64 overflow-y-auto border p-2 rounded bg-gray-50">
+            <ul className="space-y-2 max-h-64 overflow-y-auto border p-2 rounded bg-gray-50 text-sm">
               {(activeTab === "target" ? targetOrder : workoutOrder).map((item) => (
                 <SortableItem key={item} id={item} />
               ))}
@@ -222,19 +223,23 @@ export default function OrderManagementModal({ allTypes, isOpen, onClose, onRefr
         </DndContext>
 
         <div className="flex justify-end space-x-2 pt-2">
-          <button
-            onClick={onClose}
-            className="px-4 py-2 rounded border text-gray-600 hover:bg-gray-100"
-          >
-            취소
-          </button>
-          <button
+          
+          <Button
             onClick={handleSave}
             disabled={loading}
-            className="px-4 py-2 rounded bg-indigo-500 text-white hover:bg-indigo-600"
+            variant="outline"
+            className="px-4 py-2 rounded bg-indigo-600 text-white hover:bg-indigo-700 text-sm"
           >
             {loading ? "저장 중..." : "저장"}
-          </button>
+          </Button>
+          <Button
+            onClick={onClose}
+            type="button"
+            variant="outline"
+            className="px-4 py-2 text-sm"
+          >
+            닫기
+          </Button>
         </div>
       </div>
     </div>

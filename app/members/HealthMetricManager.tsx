@@ -1,11 +1,12 @@
 'use client'
 
 import { Plus} from 'lucide-react'
-import { useEffect, useState } from 'react'
+import { useEffect, useState, useRef } from 'react'
 import { getSupabaseClient } from '@/lib/supabase'
 import { Button } from '@/components/ui/button'
 import { Disclosure } from '@headlessui/react'
 import { ChevronUpIcon } from '@heroicons/react/20/solid'
+import dayjs from 'dayjs';
 
 type Member = {
   member_id: number
@@ -39,6 +40,55 @@ type InsertLog = {
 type UpdateLog = {
   id: string | number;
   metric_value: number;
+}
+
+// table 드래그 스크롤을 위한 훅
+function useHorizontalDragScroll(containerRef: React.RefObject<HTMLElement | null>) {
+  useEffect(() => {
+    const el = containerRef.current;
+    if (!el) return;
+
+    let isDown = false;
+    let startX = 0;
+    let scrollLeft = 0;
+
+    const handleMouseDown = (e: MouseEvent) => {
+      isDown = true;
+      el.classList.add('cursor-grabbing');
+      startX = e.pageX - el.offsetLeft;
+      scrollLeft = el.scrollLeft;
+    };
+
+    const handleMouseLeave = () => {
+      isDown = false;
+      el.classList.remove('cursor-grabbing');
+    };
+
+    const handleMouseUp = () => {
+      isDown = false;
+      el.classList.remove('cursor-grabbing');
+    };
+
+    const handleMouseMove = (e: MouseEvent) => {
+      if (!isDown) return;
+      e.preventDefault();
+      const x = e.pageX - el.offsetLeft;
+      const walk = (x - startX) * 1; // 스크롤 속도
+      el.scrollLeft = scrollLeft - walk;
+    };
+
+    el.addEventListener('mousedown', handleMouseDown);
+    el.addEventListener('mouseleave', handleMouseLeave);
+    el.addEventListener('mouseup', handleMouseUp);
+    el.addEventListener('mousemove', handleMouseMove);
+
+    return () => {
+      el.removeEventListener('mousedown', handleMouseDown);
+      el.removeEventListener('mouseleave', handleMouseLeave);
+      el.removeEventListener('mouseup', handleMouseUp);
+      el.removeEventListener('mousemove', handleMouseMove);
+    };
+  }, [containerRef]);
 }
 
 export default function HealthMetricManager({
@@ -135,7 +185,6 @@ export default function HealthMetricManager({
       return orderA.order_type - orderB.order_type
     })
   
-    // Create logMap
     const newLogMap: typeof logMap = {}
     for (const l of logs ?? []) {
       const rowKey = `${l.metric_target}||${l.metric_type}`
@@ -146,7 +195,6 @@ export default function HealthMetricManager({
       }
     }
   
-    // ✅ 최종 상태 업데이트
     setDates(uniqueDates)
     setRows(sortedRows.map(r => ({
       metric_target: r.metric_target,
@@ -206,6 +254,12 @@ export default function HealthMetricManager({
   const saveAllChanges = async () => {
     const inserts: InsertLog[] = []
     const updates: UpdateLog[] = []
+      
+    // ✅ 날짜 중복 검사
+    if (addingDate && dates.includes(addingDate)) {
+      alert(`이미 존재하는 날짜입니다: ${dayjs(addingDate).format('YYYY-MM-DD')} ☹`)
+      return
+    }
   
     // 1. 기존 수정된 셀
     for (const entry of modifiedCells) {
@@ -326,6 +380,7 @@ export default function HealthMetricManager({
     if (error) {
       alert('추가 중 오류 발생: ' + error.message)
     } else {
+      alert('건강지표 추가를 완료하였습니다 😊')
       setNewTarget('')
       setNewWorkout('')
       // setNewLevel('')
@@ -345,8 +400,24 @@ export default function HealthMetricManager({
       .eq('health_metric_type_id', id)
 
     if (error) alert('삭제 실패: ' + error.message)
-    else fetchLogs()
+    else {
+      alert('건강지표 삭제를 완료하였습니다 😊')
+      fetchLogs()
+    }
   }
+    
+  const scrollRef = useRef<HTMLDivElement>(null);
+  useHorizontalDragScroll(scrollRef);
+
+  // 열 추가시 오른쪽 끝으로 자동 스크롤
+  useEffect(() => {
+    if (addingDate && scrollRef.current) {
+      scrollRef.current.scrollTo({
+        left: scrollRef.current.scrollWidth,
+        behavior: 'smooth',
+      });
+    }
+  }, [addingDate]);
   
 
   return (
@@ -358,116 +429,105 @@ export default function HealthMetricManager({
       >
         <div className="mb-6">
           <div className="flex items-center gap-3 mb-2">
-            <div className="w-1 h-6 bg-blue-500 rounded" />
-            <h2 className="text-2xl font-bold text-gray-800">건강 지표 관리</h2>
+            <h2 className="text-xl font-semibold text-gray-800">건강 지표 관리</h2>
           </div>
         </div>
 
 
         {/* overflow-x-auto로 좌우 스크롤 가능하게 래핑 */}
-        <div className="overflow-x-auto">
-          <div className="overflow-x-auto w-full touch-pan-x scrollbar-thin">
-            <table className="min-w-max text-sm border border-gray-300 table-auto">
-              <thead className="bg-gray-100 text-gray-700 select-none">
-                <tr>
-                  {/* TARGET */}
-                  <th className="border px-2 py-2 text-left font-bold min-w-[80px] sticky left-0 bg-gray-200 z-40 whitespace-normal">
-                    TARGET
+        <div ref = {scrollRef} className="overflow-auto bg-white border border-white">
+          <table className="table-fixed min-w-max text-sm border-collapse border border-gray-300 bg-white">
+            <thead className="bg-gray-100 text-gray-700 select-none">
+              <tr>
+                <th className="border px-2 py-2 text-center font-semibold w-[120px] md:sticky top-0 md:left-0 bg-gray-200 md:z-40">
+                  TARGET
+                </th>
+                <th className="border px-2 py-2 text-center text-sm font-semibold w-[150px] md:sticky top-0 md:left-[120px] bg-gray-200 md:z-30">
+                  HEALTH METRIC
+                </th>
+
+                {/* 날짜 열 */}
+                {dates.map((date) => (
+                  <th
+                    key={date}
+                    className="border px-1 py-1 text-center text-xs font-semibold md:sticky top-0 bg-gray-100 z-10 w-[80px] whitespace-nowrap overflow-hidden text-ellipsis"
+                  >
+                    {dayjs(date).format('YY.MM.DD')}
                   </th>
+                ))}
 
-                  {/* HEALTH METRIC */}
-                  <th className="border px-2 py-2 text-left font-bold min-w-[120px] sticky left-[130px] bg-gray-200 z-30 whitespace-normal">
-                    HEALTH METRIC
+                {/* 추가 날짜 입력 열 */}
+                {addingDate && (
+                  <th className="border px-1 py-1 text-center text-xs font-semibold md:sticky top-0 bg-yellow-50 z-10 w-[80px]">
+                    <input
+                      type="date"
+                      className="text-[10px] w-full text-center border border-gray-300 rounded"
+                      value={addingDate}
+                      onChange={(e) => setAddingDate(e.target.value)}
+                    />
                   </th>
+                )}
+              </tr>
+            </thead>
 
-                  {/* 날짜 열 */}
-                  {dates.map((date) => {
-                    const [year, ...rest] = date.split('-');
-                    return (
-                      <th
-                        key={date}
-                        className="border px-2 py-1 text-center font-semibold bg-gray-100 z-10 min-w-[80px] whitespace-normal"
-                      >
-                        {year}
-                        <br />
-                        {rest.join('-')}
-                      </th>
-                    );
-                  })}
+            <tbody className="bg-white">
+              {rows.map(({ metric_target, metric_type }) => {
+                const rowKey = `${metric_target}||${metric_type}`;
 
-                  {/* 추가 날짜 입력 열 */}
-                  {addingDate && (
-                    <th className="border px-2 py-1 text-center font-semibold bg-yellow-50 z-10 min-w-[90px]">
-                      <input
-                        type="date"
-                        className="text-xs w-full text-center border border-gray-300 rounded"
-                        value={addingDate}
-                        onChange={(e) => setAddingDate(e.target.value)}
-                      />
-                    </th>
-                  )}
-                </tr>
-              </thead>
+                return (
+                  <tr key={rowKey} className="hover:bg-blue-50 text-sm">
+                    {/* TARGET */}
+                    <td className="border px-2 py-1 md:sticky left-0 z-30 font-semibold relative whitespace-normal bg-gray-50">
+                      {metric_target}
+                    </td>
 
-              <tbody className="bg-white">
-                {rows.map(({ metric_target, metric_type }) => {
-                  const rowKey = `${metric_target}||${metric_type}`;
+                    {/* TYPE */}
+                    <td className="border px-2 py-1 md:sticky left-[120px] bg-gray-50 z-20 font-semibold whitespace-normal">
+                      {metric_type}
+                    </td>
 
-                  return (
-                    <tr key={rowKey} className="hover:bg-blue-50 text-sm">
-                      {/* TARGET */}
-                      <td className="border px-2 py-1 sticky left-0 z-30 font-semibold whitespace-normal bg-gray-50">
-                        {metric_target}
-                      </td>
+                    {/* 날짜별 셀 */}
+                    {dates.map((date) => {
+                      return (
+                        <td key={date} className="border px-1 py-1 text-center w-[80px]">
+                          <input
+                            type="number"
+                            className={`
+                              w-full text-center border rounded text-sm border-gray-200
+                            `}
+                            value={logMap[rowKey]?.[date]?.metric_value || ''}
+                            onChange={(e) =>
+                              handleCellChange(rowKey, date, Number(e.target.value))
+                            }
+                          />
+                        </td>
+                      );
+                    })}
 
-                      {/* TYPE */}
-                      <td className="border px-2 py-1 sticky left-[130px] bg-gray-50 z-20 font-semibold whitespace-normal">
-                        {metric_type}
-                      </td>
-
-                      {/* 날짜별 셀 */}
-                      {dates.map((date) => {
-                        return (
-                          <td key={date} className="border px-2 py-1 text-center min-w-[80px]">
-                            <input
-                              type="number"
-                              className={`
-                                w-full text-center border rounded text-sm border-gray-200
-                              `}
-                              value={logMap[rowKey]?.[date]?.metric_value || ''}
-                              onChange={(e) =>
-                                handleCellChange(rowKey, date, Number(e.target.value))
-                              }
-                            />
-                          </td>
-                        );
-                      })}
-
-                      {/* 추가 날짜 셀 */}
-                      {addingDate && (() => {
-                        return (
-                          <td className="border px-2 py-1 text-center bg-yellow-50 min-w-[90px]">
-                            <input
-                              type="number"
-                              min={0}
-                              value={newLogInputs[rowKey]?.metric_value || ''}
-                              onChange={(e) =>
-                                handleNewLogInputChange(rowKey, e.target.value)
-                              }
-                              className={`
-                                w-full text-center rounded border text-sm bg-white border-yellow-400 focus:ring-1 focus:ring-yellow-500
-                              `}
-                              placeholder="-"
-                            />
-                          </td>
-                        );
-                      })()}
-                    </tr>
-                  );
-                })}
-              </tbody>
-            </table>
-          </div>
+                    {/* 추가 날짜 셀 */}
+                    {addingDate && (() => {
+                      return (
+                        <td className="border px-1 py-1 text-center bg-yellow-50 w-[80px]">
+                          <input
+                            type="number"
+                            min={0}
+                            value={newLogInputs[rowKey]?.metric_value || ''}
+                            onChange={(e) =>
+                              handleNewLogInputChange(rowKey, e.target.value)
+                            }
+                            className={`
+                              w-full text-center rounded border text-sm bg-white border-yellow-400 focus:ring-1 focus:ring-yellow-500
+                            `}
+                            placeholder="-"
+                          />
+                        </td>
+                      );
+                    })()}
+                  </tr>
+                );
+              })}
+            </tbody>
+          </table>
         </div>
 
 
@@ -546,7 +606,7 @@ export default function HealthMetricManager({
                     type="text"
                     value={newTarget}
                     onChange={(e) => setNewTarget(e.target.value)}
-                    placeholder="예: Leg"
+                    placeholder="예: Body Composition"
                     className="w-full border rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-300"
                   />
                 </div>
@@ -558,7 +618,7 @@ export default function HealthMetricManager({
                     type="text"
                     value={newWorkout}
                     onChange={(e) => setNewWorkout(e.target.value)}
-                    placeholder="예: Squat"
+                    placeholder="예: Weight"
                     className="w-full border rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-300"
                   />
                 </div>

@@ -1,11 +1,12 @@
 'use client'
 
 import { Plus} from 'lucide-react'
-import { useEffect, useState } from 'react'
+import { useEffect, useState, useRef } from 'react'
 import { getSupabaseClient } from '@/lib/supabase'
 import { Button } from '@/components/ui/button'
 import { Disclosure } from '@headlessui/react'
 import { ChevronUpIcon } from '@heroicons/react/20/solid'
+import dayjs from 'dayjs';
 
 type Member = {
   member_id: number
@@ -44,6 +45,55 @@ type InsertLog = {
 type UpdateLog = {
   id: string | number;
   weight: number;
+}
+
+// table 드래그 스크롤을 위한 훅
+function useHorizontalDragScroll(containerRef: React.RefObject<HTMLElement | null>) {
+  useEffect(() => {
+    const el = containerRef.current;
+    if (!el) return;
+
+    let isDown = false;
+    let startX = 0;
+    let scrollLeft = 0;
+
+    const handleMouseDown = (e: MouseEvent) => {
+      isDown = true;
+      el.classList.add('cursor-grabbing');
+      startX = e.pageX - el.offsetLeft;
+      scrollLeft = el.scrollLeft;
+    };
+
+    const handleMouseLeave = () => {
+      isDown = false;
+      el.classList.remove('cursor-grabbing');
+    };
+
+    const handleMouseUp = () => {
+      isDown = false;
+      el.classList.remove('cursor-grabbing');
+    };
+
+    const handleMouseMove = (e: MouseEvent) => {
+      if (!isDown) return;
+      e.preventDefault();
+      const x = e.pageX - el.offsetLeft;
+      const walk = (x - startX) * 1; // 스크롤 속도
+      el.scrollLeft = scrollLeft - walk;
+    };
+
+    el.addEventListener('mousedown', handleMouseDown);
+    el.addEventListener('mouseleave', handleMouseLeave);
+    el.addEventListener('mouseup', handleMouseUp);
+    el.addEventListener('mousemove', handleMouseMove);
+
+    return () => {
+      el.removeEventListener('mousedown', handleMouseDown);
+      el.removeEventListener('mouseleave', handleMouseLeave);
+      el.removeEventListener('mouseup', handleMouseUp);
+      el.removeEventListener('mousemove', handleMouseMove);
+    };
+  }, [containerRef]);
 }
 
 export default function WorkoutLogManager({
@@ -275,6 +325,12 @@ export default function WorkoutLogManager({
     const inserts: InsertLog[] = []
     const updates: UpdateLog[] = []
   
+    // ✅ 날짜 중복 검사
+    if (addingDate && dates.includes(addingDate)) {
+      alert(`이미 존재하는 날짜입니다: ${dayjs(addingDate).format('YYYY-MM-DD')} ☹`)
+      return
+    }
+
     // 1. 기존 수정된 셀
     for (const entry of modifiedCells) {
       const [target, workout] = entry.rowKey.split('||')
@@ -294,7 +350,7 @@ export default function WorkoutLogManager({
         })
       }
     }
-  
+    
     // 2. 신규 날짜 추가된 셀 입력 (addingDate + newLogInputs)
     if (addingDate) {
       for (const key of Object.keys(newLogInputs)) {
@@ -414,6 +470,7 @@ export default function WorkoutLogManager({
     if (error) {
       alert('추가 중 오류 발생: ' + error.message)
     } else {
+      alert('운동 추가를 완료하였습니다 😊')
       setNewTarget('')
       setNewWorkout('')
       setNewLevel('')
@@ -433,10 +490,26 @@ export default function WorkoutLogManager({
       .eq('workout_type_id', id)
 
     if (error) alert('삭제 실패: ' + error.message)
-    else fetchLogs()
+    else {
+      alert('운동 삭제를 완료하였습니다 😊')
+      fetchLogs()
+    }
   }
   
+  const scrollRef = useRef<HTMLDivElement>(null);
+  useHorizontalDragScroll(scrollRef);
 
+  // 열 추가시 오른쪽 끝으로 자동 스크롤
+  useEffect(() => {
+    if (addingDate && scrollRef.current) {
+      scrollRef.current.scrollTo({
+        left: scrollRef.current.scrollWidth,
+        behavior: 'smooth',
+      });
+    }
+  }, [addingDate]);
+
+  
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50">
       <div className="absolute inset-0" onClick={onClose}></div>
@@ -446,8 +519,7 @@ export default function WorkoutLogManager({
       >
         <div className="mb-6">
           <div className="flex items-center gap-3 mb-2">
-            <div className="w-1 h-6 bg-blue-500 rounded" />
-            <h2 className="text-2xl font-bold text-gray-800">운동 기록 관리</h2>
+            <h2 className="text-xl font-semibold text-gray-800">운동 기록 관리</h2>
             <div
               className={`ml-2 px-3 py-1 rounded-md text-white font-semibold shadow-sm text-xs ${
                 member.level === 'Level 1' ? 'bg-yellow-500' :
@@ -465,158 +537,146 @@ export default function WorkoutLogManager({
 
 
         {/* overflow-x-auto로 좌우 스크롤 가능하게 래핑 */}
-        <div className="overflow-x-auto">
-          <div className="overflow-x-auto w-full touch-pan-x scrollbar-thin">
-            <table className="min-w-max text-sm border border-gray-300 table-auto">
-              <thead className="bg-gray-100 text-gray-700 select-none">
-                <tr>
-                  {/* LEVEL */}
-                  <th className="border px-2 py-2 text-center font-bold min-w-[70px] sticky left-0 bg-gray-200 z-40 whitespace-normal">
-                    LEVEL
+        <div ref = {scrollRef} className="overflow-auto bg-white border border-white">
+          <table className="table-fixed min-w-max text-sm border-collapse border border-gray-300 bg-white">
+            <thead className="bg-gray-100 text-gray-700 select-none">
+              <tr>
+                <th className="border px-2 py-2 text-center font-semibold w-[90px] md:sticky top-0 md:left-0 bg-gray-200 md:z-40">
+                  LEVEL
+                </th>
+                <th className="border px-2 py-2 text-center font-semibold w-[90px] md:sticky top-0 md:left-[90px] bg-gray-200 md:z-30">
+                  TARGET
+                </th>
+                <th className="border px-2 py-2 text-center font-semibold w-[120px] md:sticky top-0 md:left-[180px] bg-gray-200 md:z-20">
+                  WORKOUT
+                </th>
+
+                {/* 날짜 열 */}
+                {dates.map((date) => (
+                  <th
+                    key={date}
+                    className="border px-1 py-1 text-center text-xs font-semibold md:sticky top-0 bg-gray-100 z-10 w-[40px] whitespace-nowrap overflow-hidden text-ellipsis"
+                  >
+                    {dayjs(date).format('YY.MM.DD')}
                   </th>
+                ))}
 
-                  {/* TARGET */}
-                  <th className="border px-2 py-2 text-center font-bold min-w-[100px] sticky left-[70px] bg-gray-200 z-30 whitespace-normal">
-                    TARGET
+                {/* 추가 날짜 입력 열 */}
+                {addingDate && (
+                  <th className="border px-1 py-1 text-center text-xs font-semibold md:sticky top-0 bg-yellow-50 z-10 w-[40px]">
+                    <input
+                      type="date"
+                      className="text-[10px] w-full text-center border border-gray-300 rounded"
+                      value={addingDate}
+                      onChange={(e) => setAddingDate(e.target.value)}
+                    />
                   </th>
+                )}
+              </tr>
+            </thead>
 
-                  {/* WORKOUT */}
-                  <th className="border px-2 py-2 text-center font-bold min-w-[120px] sticky left-[170px] bg-gray-200 z-20 whitespace-normal">
-                    WORKOUT
-                  </th>
+            <tbody className="bg-white">
+              {rows.map(({ target, workout, level }) => {
+                const rowKey = `${target}||${workout}`;
+                const levelColor = {
+                  'Level 1': 'bg-yellow-400',
+                  'Level 2': 'bg-green-400',
+                  'Level 3': 'bg-blue-400',
+                  'Level 4': 'bg-red-400',
+                  'Level 5': 'bg-gray-800',
+                }[level] || 'bg-gray-400';
 
-                  {/* 날짜 열 */}
-                  {dates.map((date) => {
-                    const [year, ...rest] = date.split('-');
-                    return (
-                      <th
-                        key={date}
-                        className="border px-2 py-1 text-center font-semibold bg-gray-100 z-10 min-w-[80px] whitespace-normal"
-                      >
-                        {year}
-                        <br />
-                        {rest.join('-')}
-                      </th>
-                    );
-                  })}
+                return (
+                  <tr key={rowKey} className="hover:bg-blue-50 text-sm">
+                    {/* LEVEL */}
+                    <td className="border px-2 py-1 md:sticky left-0 z-30 font-semibold relative pl-6 whitespace-normal bg-gray-50">
+                      <span className={`absolute left-1 top-1/2 -translate-y-1/2 w-3 h-3 rounded-full ${levelColor}`} />
+                      {level}
+                    </td>
 
-                  {/* 추가 날짜 입력 열 */}
-                  {addingDate && (
-                    <th className="border px-2 py-1 text-center font-semibold bg-yellow-50 z-10 min-w-[90px]">
-                      <input
-                        type="date"
-                        className="text-xs w-full text-center border border-gray-300 rounded"
-                        value={addingDate}
-                        onChange={(e) => setAddingDate(e.target.value)}
-                      />
-                    </th>
-                  )}
-                </tr>
-              </thead>
+                    {/* TARGET */}
+                    <td className="border px-2 py-1 md:sticky left-[90px] bg-gray-50 z-20 font-semibold whitespace-normal">
+                      {target}
+                    </td>
 
-              <tbody className="bg-white">
-                {rows.map(({ target, workout, level }) => {
-                  const rowKey = `${target}||${workout}`;
-                  const levelColor = {
-                    'Level 1': 'bg-yellow-400',
-                    'Level 2': 'bg-green-400',
-                    'Level 3': 'bg-blue-400',
-                    'Level 4': 'bg-red-400',
-                    'Level 5': 'bg-gray-800',
-                  }[level] || 'bg-gray-400';
+                    {/* WORKOUT */}
+                    <td className="border px-2 py-1 md:sticky left-[180px] bg-gray-50 z-10 font-semibold text-sm whitespace-normal">
+                      {workout}
+                    </td>
 
-                  return (
-                    <tr key={rowKey} className="hover:bg-blue-50 text-sm">
-                      {/* LEVEL */}
-                      <td className="border px-2 py-1 sticky left-0 z-30 font-semibold relative pl-6 whitespace-normal bg-gray-50">
-                        <span className={`absolute left-1 top-1/2 -translate-y-1/2 w-3 h-3 rounded-full ${levelColor}`} />
-                        {level}
-                      </td>
+                    {/* 날짜별 셀 */}
+                    {dates.map((date) => {
+                      const isBeforeModified = new Date(date) < new Date(member.modified_dt ?? '9999-12-31');
+                      const isAfterModified = new Date(date) >= new Date(member.modified_dt ?? '0000-01-01');
 
-                      {/* TARGET */}
-                      <td className="border px-2 py-1 sticky left-[70px] bg-gray-50 z-20 font-semibold whitespace-normal">
-                        {target}
-                      </td>
+                      const isCommonWorkout = commonWorkouts.includes(rowKey);
+                      const isBeforeLevelWorkout = level === member.before_level;
+                      const isAfterLevelWorkout = level === member.level;
 
-                      {/* WORKOUT */}
-                      <td className="border px-2 py-1 sticky left-[170px] bg-gray-50 z-10 font-semibold whitespace-normal">
-                        {workout}
-                      </td>
+                      const isDisabled =
+                        !isCommonWorkout &&
+                        ((isBeforeLevelWorkout && !isBeforeModified) ||
+                          (isAfterLevelWorkout && !isAfterModified));
 
-                      {/* 날짜별 셀 */}
-                      {dates.map((date) => {
-                        const isBeforeModified = new Date(date) < new Date(member.modified_dt ?? '9999-12-31');
-                        const isAfterModified = new Date(date) >= new Date(member.modified_dt ?? '0000-01-01');
+                      return (
+                        <td key={date} className="border px-1 py-1 text-center w-[40px]">
+                          <input
+                            type="number"
+                            className={`
+                              w-full text-center border rounded text-sm
+                              ${isDisabled
+                                ? 'bg-gray-200 text-gray-600 border-gray-300 cursor-not-allowed'
+                                : 'border-gray-200'}
+                            `}
+                            value={logMap[rowKey]?.[date]?.weight || ''}
+                            onChange={(e) =>
+                              handleCellChange(rowKey, date, Number(e.target.value))
+                            }
+                            disabled={isDisabled}
+                          />
+                        </td>
+                      );
+                    })}
 
-                        const isCommonWorkout = commonWorkouts.includes(rowKey);
-                        const isBeforeLevelWorkout = level === member.before_level;
-                        const isAfterLevelWorkout = level === member.level;
+                    {/* 추가 날짜 셀 */}
+                    {addingDate && (() => {
+                      const isBeforeModified = new Date(addingDate) < new Date(member.modified_dt ?? '9999-12-31');
+                      const isAfterModified = new Date(addingDate) >= new Date(member.modified_dt ?? '0000-01-01');
+                      const isCommonWorkout = commonWorkouts.includes(rowKey);
+                      const isBeforeLevelWorkout = level === member.before_level;
+                      const isAfterLevelWorkout = level === member.level;
 
-                        const isDisabled =
-                          !isCommonWorkout &&
-                          ((isBeforeLevelWorkout && !isBeforeModified) ||
-                            (isAfterLevelWorkout && !isAfterModified));
+                      const isDisabled =
+                        !isCommonWorkout &&
+                        ((isBeforeLevelWorkout && !isBeforeModified) ||
+                          (isAfterLevelWorkout && !isAfterModified));
 
-                        return (
-                          <td key={date} className="border px-2 py-1 text-center min-w-[80px]">
-                            <input
-                              type="number"
-                              className={`
-                                w-full text-center border rounded text-sm
-                                ${isDisabled
-                                  ? 'bg-gray-200 text-gray-600 border-gray-300 cursor-not-allowed'
-                                  : 'border-gray-200'}
-                              `}
-                              value={logMap[rowKey]?.[date]?.weight || ''}
-                              onChange={(e) =>
-                                handleCellChange(rowKey, date, Number(e.target.value))
-                              }
-                              disabled={isDisabled}
-                            />
-                          </td>
-                        );
-                      })}
-
-                      {/* 추가 날짜 셀 */}
-                      {addingDate && (() => {
-                        const isBeforeModified = new Date(addingDate) < new Date(member.modified_dt ?? '9999-12-31');
-                        const isAfterModified = new Date(addingDate) >= new Date(member.modified_dt ?? '0000-01-01');
-                        const isCommonWorkout = commonWorkouts.includes(rowKey);
-                        const isBeforeLevelWorkout = level === member.before_level;
-                        const isAfterLevelWorkout = level === member.level;
-
-                        const isDisabled =
-                          !isCommonWorkout &&
-                          ((isBeforeLevelWorkout && !isBeforeModified) ||
-                            (isAfterLevelWorkout && !isAfterModified));
-
-                        return (
-                          <td className="border px-2 py-1 text-center bg-yellow-50 min-w-[90px]">
-                            <input
-                              type="number"
-                              min={0}
-                              value={newLogInputs[rowKey]?.weight || ''}
-                              onChange={(e) =>
-                                handleNewLogInputChange(rowKey, e.target.value)
-                              }
-                              className={`
-                                w-full text-center rounded border text-sm
-                                ${isDisabled
-                                  ? 'bg-gray-200 text-gray-600 border-gray-300 cursor-not-allowed'
-                                  : 'bg-white border-yellow-400 focus:ring-1 focus:ring-yellow-500'}
-                              `}
-                              placeholder="-"
-                              disabled={isDisabled}
-                            />
-                          </td>
-                        );
-                      })()}
-                    </tr>
-                  );
-                })}
-              </tbody>
-            </table>
-          </div>
+                      return (
+                        <td className="border px-1 py-1 text-center bg-yellow-50 w-[40px]">
+                          <input
+                            type="number"
+                            min={0}
+                            value={newLogInputs[rowKey]?.weight || ''}
+                            onChange={(e) =>
+                              handleNewLogInputChange(rowKey, e.target.value)
+                            }
+                            className={`
+                              w-full text-center rounded border text-sm
+                              ${isDisabled
+                                ? 'bg-gray-200 text-gray-600 border-gray-300 cursor-not-allowed'
+                                : 'bg-white border-yellow-400 focus:ring-1 focus:ring-yellow-500'}
+                            `}
+                            placeholder="-"
+                            disabled={isDisabled}
+                          />
+                        </td>
+                      );
+                    })()}
+                  </tr>
+                );
+              })}
+            </tbody>
+          </table>
         </div>
 
 
@@ -679,7 +739,6 @@ export default function WorkoutLogManager({
             </Button>
           )} */}
 
-          {/* 저장/닫기 버튼 */}
           <Button 
             onClick={saveAllChanges} 
             disabled={!canSave}

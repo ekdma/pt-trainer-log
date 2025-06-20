@@ -6,6 +6,8 @@ import { Member, WorkoutRecord, HealthMetric } from './types'
 import AddMemberOpen from './AddMemberOpen'
 import { SupabaseClient } from '@supabase/supabase-js'
 import EditMemberModal from './EditMemberModal'
+import { UserRoundPen, UserRoundMinus, UserRoundPlus, UserRoundSearch } from 'lucide-react';
+
 
 export default function MemberSearch({
   onSelectMember,
@@ -152,14 +154,16 @@ export default function MemberSearch({
           onClick={handleSearch}
           className="w-full sm:w-auto bg-indigo-500 hover:bg-indigo-600 text-white px-4 py-2 rounded-full shadow-md transition"
         >
-          검색
+          <UserRoundSearch size={20} /> 
+          {/* 검색 */}
         </button>
 
         <button
           onClick={() => setIsAddMemberOpen(true)}
           className="w-full sm:w-auto bg-green-500 hover:bg-green-600 text-white px-4 py-2 rounded-full shadow-md transition"
         >
-          신규회원 등록
+          <UserRoundPlus size={20} />
+          {/* 신규회원 등록 */}
         </button>
       </div>
 
@@ -222,17 +226,17 @@ export default function MemberSearch({
               <div className="flex items-center gap-2 ml-4">
                 <button
                   onClick={() => setEditingMember(member)}
-                  className="text-blue-500 text-xs hover:text-blue-700 transition"
+                  className="text-indigo-500 hover:text-indigo-700 transition text-sm"
                   title="회원 정보 수정"
                 >
-                  ✏️
+                  <UserRoundPen size={16} />
                 </button>
                 <button
                   onClick={() => handleDelete(member.member_id)}
-                  className="text-red-500 text-xs hover:text-red-700 transition"
+                  className="text-red-500 text-xs hover:text-red-700 transition text-sm"
                   title="회원 삭제"
                 >
-                  ❌
+                  <UserRoundMinus size={16} />
                 </button>
               </div>
             </li>

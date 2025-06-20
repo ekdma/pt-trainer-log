@@ -1,5 +1,6 @@
 'use client'
 
+import { Dumbbell, Salad } from 'lucide-react'
 import { useState, useEffect } from 'react'
 import MemberSearch from './MemberSearch'
 import MemberGraphs from './MemberGraphs'
@@ -51,7 +52,7 @@ export default function MembersPage() {
                 }`}
                 onClick={() => setActiveTab('workout')}
               >
-                🏋 운동기록
+                <Dumbbell size={16} /> 운동기록
               </button>
               <button
                 className={`flex items-center gap-1 text-sm px-4 py-2 rounded-lg border transition duration-200 ${
@@ -61,7 +62,7 @@ export default function MembersPage() {
                 }`}
                 onClick={() => setActiveTab('health')}
               >
-                ❤️ 건강지표
+                <Salad size={16} /> 건강지표
               </button>
             </div>
 

@@ -9,7 +9,7 @@ import { HealthMetric, Member, HealthMetricType } from './types';
 // import AddHealthMetricOpen from './AddHealthMetricOpen';
 import HealthMetricManager from './HealthMetricManager' 
 import OrderHealthMetricModal from './OrderHealthMetricModal'
-import { Plus, ArrowLeft } from 'lucide-react';
+import { NotebookPen, ArrowLeft } from 'lucide-react';
 // import { addHealthMetricsToDB, getHealthMetrics, deleteHealthMetricById } from '@/lib/supabase';
 import { Button } from '@/components/ui/button';
 import { getHealthMetricTypes } from '../../lib/supabase' // 실제 경로에 맞춰 수정 필요
@@ -72,6 +72,7 @@ const MemberHealthGraphsClient: React.FC<Props> = ({ healthLogs, member, onBack 
   const [isHealthMetricManagerOpen, setIsHealthMetricManagerOpen] = useState(false)
   const [isOrderModalOpen, setIsOrderModalOpen] = useState(false)
   const [allTypes, setAllTypes] = useState<HealthMetricType[]>([]);
+  const [viewMode, setViewMode] = useState<'daily' | 'monthly'>('daily');
 
   useEffect(() => {
     setLogs(healthLogs);
@@ -115,62 +116,19 @@ const MemberHealthGraphsClient: React.FC<Props> = ({ healthLogs, member, onBack 
     const bOrder = allTypes.find(t => t.metric_target === b)?.order_target ?? 999;
     return aOrder - bOrder;
   });
-
-  // const metricOrderMap: { [key: string]: string[] } = {
-  //   'Body Composition': ['Weight', 'Skeletal Muscle Mass', 'Body Fat Mass', 'Body Fat Percentage'],
-  //   'HP&BP': ['Resting Heart Rate', 'Systolic BP', 'Diastolic BP'],
-  //   'Overall Fitness': ['Cardiopulmonary Endurance', 'Upper Body Strength', 'Lower Body Strength'],
-  // };
-
-  // function sortMetricsByTarget(target: string, metrics: string[]) {
-  //   const order = metricOrderMap[target] || [];
-  //   const orderLower = order.map(m => m.toLowerCase());
-  
-  //   return metrics
-  //     .slice()
-  //     .sort((a, b) => {
-  //       const aIndex = orderLower.indexOf(a.toLowerCase());
-  //       const bIndex = orderLower.indexOf(b.toLowerCase());
-  //       if (aIndex === -1 && bIndex === -1) return a.localeCompare(b);
-  //       if (aIndex === -1) return 1;
-  //       if (bIndex === -1) return -1;
-  //       return aIndex - bIndex;
-  //     });
-  // }
-  
-  // const getMetricTypes = (logs: HealthMetric[]) =>
-  //   Array.from(new Set(logs.map(log => log.metric_type)));
-
-  // // 기록 추가 처리 함수
-  // const handleAddRecord = async (newRecord: NewHealthMetric): Promise<void> => {
-  //   try {
-  //     await addHealthMetricsToDB(newRecord);
-  //     const updatedLogs = await getHealthMetrics(member.member_id.toString());
-  //     setLogs(updatedLogs);
-  //     setIsAddOpen(false);
-  //     alert('기록 저장을 완료하였습니다 😊');
-  //   } catch (error) {
-  //     console.error('기록 저장 실패:', error);
-  //     alert('기록 저장 중 문제가 발생했어요 😥');
-  //   }
-  // };
-
-  // const handleDelete = async (id: number) => {
-  //   if (!confirm('해당 기록을 삭제하시겠습니까?')) return;
-  //   try {
-  //     await deleteHealthMetricById(id);
-  //     const updated = await getHealthMetrics(member.member_id.toString());
-  //     setLogs(updated);
-  //     alert('기록 삭제를 완료하였습니다 😊');
-  //   } catch (e) {
-  //     console.error('삭제 중 오류:', e);
-  //     alert('기록 삭제 중 문제가 발생했어요 😥');
-  //   }
-  // };
-
-  // 표시할 타겟 선택 (통합이면 전체, 아니면 선택 타겟만)
-  // const currentTargets = selectedTarget === null ? targets : [selectedTarget];
   const currentTargets = selectedTarget === null ? targetsSorted : [selectedTarget];
+
+  // ✅ 월 단위 첫 데이터만 추출하는 함수
+  const getMonthlyFirstData = <T extends { date: string }>(data: T[]): T[] => {
+    const monthMap = new Map<string, T>();
+    data.forEach((item) => {
+      const monthKey = item.date.slice(0, 7); // "YYYY-MM"
+      if (!monthMap.has(monthKey) || new Date(item.date) < new Date(monthMap.get(monthKey)!.date)) {
+        monthMap.set(monthKey, item);
+      }
+    });
+    return Array.from(monthMap.values());
+  };  
 
 
   return (
@@ -190,23 +148,9 @@ const MemberHealthGraphsClient: React.FC<Props> = ({ healthLogs, member, onBack 
               onClick={() => setIsHealthMetricManagerOpen(true)}
               className="w-full sm:w-auto flex items-center gap-1 text-sm text-purple-600 border border-purple-600 px-3 py-1.5 rounded-lg hover:bg-purple-100 transition duration-200"
             >
-              <Plus size={16} />
+              <NotebookPen size={16} />
               기록관리
             </Button>
-            {/* <Button
-              onClick={() => setIsAddOpen(true)}
-              className="w-full sm:w-auto flex items-center gap-1 text-sm text-green-600 border border-green-600 px-3 py-1.5 rounded-lg hover:bg-green-100 transition duration-200"
-            >
-              <Plus size={16} />
-              기록 추가
-            </Button>
-            <Button 
-              onClick={() => setIsListOpen(true)} 
-              className="w-full sm:w-auto flex items-center gap-1 text-sm text-red-600 border border-red-600 px-3 py-1.5 rounded-lg hover:bg-red-100 transition duration-200"
-            >
-              <Minus size={16} />
-              기록 삭제
-            </Button> */}
             <Button
               onClick={onBack}
               className="w-full sm:w-auto flex items-center gap-1 text-sm text-indigo-600 border border-indigo-600 px-3 py-1.5 rounded-lg hover:bg-indigo-100 transition duration-200"
@@ -220,30 +164,56 @@ const MemberHealthGraphsClient: React.FC<Props> = ({ healthLogs, member, onBack 
         {/* 타겟 선택 필터 */}
         {targets.length > 0 && (
           <div className="mb-6 flex flex-wrap gap-2">
-          <button
-            onClick={() => setSelectedTarget(null)}
-            className={`px-3 py-1.5 rounded-full text-sm font-medium transition duration-150 border ${
-              selectedTarget === null
-                ? 'bg-blue-600 text-white shadow-md border-transparent'
-                : 'bg-white text-gray-700 hover:bg-blue-50 border-gray-300'
-            }`}
-          >
-            통합
-          </button>
-          {targetsSorted.map(target => (
             <button
-              key={target}
-              onClick={() => setSelectedTarget(target)}
-              className={`px-3 py-1.5 rounded-full text-sm font-medium transition duration-150 border ${
-                selectedTarget === target
-                  ? 'bg-blue-600 text-white shadow-md border-transparent'
-                  : 'bg-white text-gray-700 hover:bg-blue-50 border-gray-300'
+              onClick={() => setSelectedTarget(null)}
+              className={`px-4 py-1.5 rounded-full text-sm font-medium border transition-all duration-200 shadow-sm ${
+                selectedTarget === null
+                  ? 'bg-blue-600 text-white border-blue-600 shadow-md'
+                  : 'bg-white text-gray-700 hover:bg-blue-100 border-gray-300'
               }`}
             >
-              {target}
+              통합
             </button>
-          ))}
-        </div> 
+            {targetsSorted.map((target) => (
+              <button
+                key={target}
+                onClick={() => setSelectedTarget(target)}
+                className={`px-4 py-1.5 rounded-full text-sm font-medium border transition-all duration-200 shadow-sm ${
+                  selectedTarget === target
+                    ? 'bg-blue-600 text-white border-blue-600 shadow-md'
+                    : 'bg-white text-gray-700 hover:bg-blue-100 border-gray-300'
+                }`}
+              >
+                {target}
+              </button>
+            ))}
+          </div>
+        )}
+        {targets.length > 0 && (
+          <div className="flex justify-end mb-4">
+            <div className="inline-flex rounded-md shadow-sm border border-gray-300 overflow-hidden">
+              <button
+                onClick={() => setViewMode('daily')}
+                className={`px-4 py-1.5 text-sm font-medium transition-all duration-200 ${
+                  viewMode === 'daily'
+                    ? 'bg-indigo-500 text-white'
+                    : 'bg-white text-gray-700 hover:bg-gray-100'
+                }`}
+              >
+                일 단위
+              </button>
+              <button
+                onClick={() => setViewMode('monthly')}
+                className={`px-4 py-1.5 text-sm font-medium transition-all duration-200 ${
+                  viewMode === 'monthly'
+                    ? 'bg-indigo-500 text-white'
+                    : 'bg-white text-gray-700 hover:bg-gray-100'
+                }`}
+              >
+                월 단위
+              </button>
+            </div>
+          </div>
         )}
 
 
@@ -277,7 +247,10 @@ const MemberHealthGraphsClient: React.FC<Props> = ({ healthLogs, member, onBack 
 
                 <div className="space-y-0">
                   {sortedWorkouts.map((metric, index) => {
-                    const data = createChartDataForMetric(groupLogs, metric);
+                    let data = createChartDataForMetric(groupLogs, metric);
+                    if (viewMode === 'monthly') {
+                      data = getMonthlyFirstData(data);
+                    }
                     const maxVal = Math.max(...data.map(d => d.value ?? 0));
                     const isLast = index === sortedWorkouts.length - 1;
 

@@ -1,6 +1,6 @@
 'use client'
 
-import { Plus, ArrowLeft } from 'lucide-react'
+import { ArrowLeft, NotebookPen } from 'lucide-react'
 import { useEffect, useState } from 'react'
 // import { NewWorkoutRecord, WorkoutRecord, Member, WorkoutType } from './types'
 import { WorkoutRecord, Member, WorkoutType } from './types'
@@ -126,6 +126,7 @@ export default function MemberGraphs({ member, logs: initialLogs, onBack }: Prop
   // const [isListOpen, setIsListOpen] = useState(false)
   const [isWorkoutManagerOpen, setIsWorkoutManagerOpen] = useState(false)
   const [selectedTarget, setSelectedTarget] = useState<string | null>(null)
+  const [viewMode, setViewMode] = useState<'daily' | 'monthly'>('daily');
 
   useEffect(() => {
     setLogs(initialLogs)
@@ -170,50 +171,20 @@ export default function MemberGraphs({ member, logs: initialLogs, onBack }: Prop
     targetGroups[log.target].push(log)
   })
 
-  // // 기록 추가 완료 콜백 예시 (부모 컴포넌트에서 실제 저장 처리할 수도 있음)
-  // const handleAddRecord = async (newRecord: NewWorkoutRecord): Promise<void> => {
-  //   try {
-  //     await addWorkoutRecordToDB(newRecord)
-  //     const updatedLogs = await getWorkoutRecords(member.member_id.toString())
-  
-  //     // [1] 정렬된 상태로 업데이트
-  //     const sortedLogs = updatedLogs.sort(
-  //       (a, b) => new Date(a.workout_date).getTime() - new Date(b.workout_date).getTime()
-  //     )
-  //     setLogs(sortedLogs)
-  
-  //     // [2] 해당 운동의 타겟 탭 자동 선택
-  //     setSelectedTarget(newRecord.target)
-  
-  //     // [3] 모달 닫기
-  //     setIsAddRecordOpen(false)
-  //     alert('기록 저장을 완료하였습니다 😊')
-  //   } catch (error) {
-  //     console.error('기록 저장 실패:', error)
-  //     alert('기록 저장 중 문제가 발생했어요 😥')
-  //   }
-  // }
-  
-
-  // const handleDelete = async (id: number) => {
-  //   if (!confirm('해당 기록을 삭제하시겠습니까?')) return;
-  //   try {
-  //     await deleteWorkoutRecordById(id);
-  //     const updated = await getWorkoutRecords(member.member_id.toString());
-  
-  //     // 정렬된 상태로 설정
-  //     const sorted = updated.sort(
-  //       (a, b) => new Date(a.workout_date).getTime() - new Date(b.workout_date).getTime()
-  //     )
-  //     setLogs(sorted);
-  
-  //     alert('기록 삭제를 완료하였습니다 😊');
-  //   } catch (e) {
-  //     console.error('삭제 중 오류:', e);
-  //     alert('삭제 중 문제가 발생했어요 😥');
-  //   }
-  // };
-  
+  // ✅ 월 단위 데이터 필터링 함수
+  function getMonthlyFirstData<T extends { workout_date: string }>(data: T[]): T[] {
+    const monthMap = new Map<string, T>();
+    data.forEach((item) => {
+      const monthKey = item.workout_date.slice(0, 7); // YYYY-MM
+      if (
+        !monthMap.has(monthKey) ||
+        new Date(item.workout_date) < new Date(monthMap.get(monthKey)!.workout_date)
+      ) {
+        monthMap.set(monthKey, item);
+      }
+    });
+    return Array.from(monthMap.values());
+  }
 
   return (
     <div className="p-4 max-w-screen-lg mx-auto">
@@ -232,23 +203,9 @@ export default function MemberGraphs({ member, logs: initialLogs, onBack }: Prop
               onClick={() => setIsWorkoutManagerOpen(true)}
               className="w-full sm:w-auto flex items-center gap-1 text-sm text-purple-600 border border-purple-600 px-3 py-1.5 rounded-lg hover:bg-purple-100 transition duration-200"
             > 
-              <Plus size={16} />
+              <NotebookPen size={16} />
               기록관리
             </Button>
-            {/* <Button 
-              onClick={() => setIsAddRecordOpen(true)}
-              className="w-full sm:w-auto flex items-center gap-1 text-sm text-green-600 border border-green-600 px-3 py-1.5 rounded-lg hover:bg-green-100 transition duration-200"
-            >
-              <Plus size={16} />
-              기록 추가
-            </Button>
-            <Button 
-              onClick={() => setIsListOpen(true)} 
-              className="w-full sm:w-auto flex items-center gap-1 text-sm text-red-600 border border-red-600 px-3 py-1.5 rounded-lg hover:bg-red-100 transition duration-200"
-            >
-              <Minus size={16} />
-              기록 삭제
-            </Button> */}
             <Button
               onClick={onBack}
               className="w-full sm:w-auto flex items-center gap-1 text-sm text-indigo-600 border border-indigo-600 px-3 py-1.5 rounded-lg hover:bg-indigo-100 transition duration-200"
@@ -264,10 +221,10 @@ export default function MemberGraphs({ member, logs: initialLogs, onBack }: Prop
           <div className="mb-6 flex flex-wrap gap-2">
             <button
               onClick={() => setSelectedTarget(null)}
-              className={`px-3 py-1.5 rounded-full text-sm font-medium transition duration-150 border ${
+              className={`px-4 py-1.5 rounded-full text-sm font-medium border transition-all duration-200 shadow-sm ${
                 selectedTarget === null
-                  ? 'bg-blue-600 text-white shadow-md border-transparent'
-                  : 'bg-white text-gray-700 hover:bg-blue-50 border-gray-300'
+                  ? 'bg-blue-600 text-white border-blue-600 shadow-md'
+                  : 'bg-white text-gray-700 hover:bg-blue-100 border-gray-300'
               }`}
             >
               통합
@@ -276,15 +233,41 @@ export default function MemberGraphs({ member, logs: initialLogs, onBack }: Prop
               <button
                 key={target}
                 onClick={() => setSelectedTarget(target)}
-                className={`px-3 py-1.5 rounded-full text-sm font-medium transition duration-150 border ${
+                className={`px-4 py-1.5 rounded-full text-sm font-medium border transition-all duration-200 shadow-sm ${
                   selectedTarget === target
-                    ? 'bg-blue-600 text-white shadow-md border-transparent'
-                    : 'bg-white text-gray-700 hover:bg-blue-50 border-gray-300'
+                    ? 'bg-blue-600 text-white border-blue-600 shadow-md'
+                    : 'bg-white text-gray-700 hover:bg-blue-100 border-gray-300'
                 }`}
               >
                 {target}
               </button>
             ))}
+          </div>
+        )}
+        {targets.length > 0 && (
+          <div className="flex justify-end mb-4">
+            <div className="inline-flex rounded-md shadow-sm border border-gray-300 overflow-hidden">
+              <button
+                onClick={() => setViewMode('daily')}
+                className={`px-4 py-1.5 text-sm font-medium transition-all duration-200 ${
+                  viewMode === 'daily'
+                    ? 'bg-indigo-500 text-white'
+                    : 'bg-white text-gray-700 hover:bg-gray-100'
+                }`}
+              >
+                일 단위
+              </button>
+              <button
+                onClick={() => setViewMode('monthly')}
+                className={`px-4 py-1.5 text-sm font-medium transition-all duration-200 ${
+                  viewMode === 'monthly'
+                    ? 'bg-indigo-500 text-white'
+                    : 'bg-white text-gray-700 hover:bg-gray-100'
+                }`}
+              >
+                월 단위
+              </button>
+            </div>
           </div>
         )}
 
@@ -297,23 +280,22 @@ export default function MemberGraphs({ member, logs: initialLogs, onBack }: Prop
             targets.map((target) => {
               const groupLogs = targetGroups[target]
               if (!groupLogs || groupLogs.length === 0) return null
-
-              // // 날짜별 Workout별 Reps 집계
-              // const repsDateGrouped: Record<string, Record<string, number>> = {}
-              // groupLogs.forEach((log) => {
-              //   if (!repsDateGrouped[log.workout_date]) repsDateGrouped[log.workout_date] = {}
-              //   repsDateGrouped[log.workout_date][log.workout] = log.reps
-              // })
-              // const repsData = Object.entries(repsDateGrouped).map(([date, workouts]) => ({ date, ...workouts }))
-
-              // 날짜별 Workout별 Weight 집계
+              
               const weightDateGrouped: Record<string, Record<string, number>> = {}
               groupLogs.forEach((log) => {
                 if (!weightDateGrouped[log.workout_date]) weightDateGrouped[log.workout_date] = {}
                 weightDateGrouped[log.workout_date][log.workout] = log.weight
               })
-              const weightData = Object.entries(weightDateGrouped).map(([date, workouts]) => ({ date, ...workouts }))
 
+              let weightData = Object.entries(weightDateGrouped).map(([date, workouts]) => ({ date, ...workouts }));
+              if (viewMode === 'monthly') {
+                weightData = getMonthlyFirstData(
+                  weightData.map((d) => {
+                    const { date, ...rest } = d;
+                    return { workout_date: date, ...rest };
+                  })
+                ).map(({ workout_date, ...rest }) => ({ date: workout_date, ...rest }));
+              }
               const workoutsInGroup = Array.from(new Set(groupLogs.map((log) => log.workout)))
               
               // ⬇️ order_workout 순서로 정렬
@@ -327,30 +309,6 @@ export default function MemberGraphs({ member, logs: initialLogs, onBack }: Prop
                 <div key={target} className="mb-10">
                   <h3 className="text-l font-semibold text-indigo-500 mb-4">{target} 부위별 그래프</h3>
                   <div className="flex flex-col lg:flex-row gap-6 w-full">
-                    {/* Reps 그래프 */}
-                    {/* <div className="flex-1">
-                      <h4 className="text-sm text-black font-medium mb-2">Reps</h4>
-                      <ResponsiveContainer width="100%" height={400}>
-                        <LineChart data={repsData}>
-                          <CartesianGrid strokeDasharray="3 3" />
-                          <XAxis dataKey="date" tick={{ fontSize: 12 }} />
-                          <YAxis tick={{ fontSize: 12 }} />
-                          <Tooltip wrapperStyle={{ fontSize: 12 }} labelStyle={{ color: 'black' }} />
-                          <Legend wrapperStyle={{ fontSize: 12 }} />
-                          {workoutsInGroup.map((workout) => (
-                            <Line
-                              key={workout}
-                              type="monotone"
-                              dataKey={workout}
-                              name={workout}
-                              stroke={getColorForWorkout(target, workout)}
-                            />
-                          ))}
-                        </LineChart>
-                      </ResponsiveContainer>
-                    </div> */}
-
-                    {/* Weight 그래프 */}
                     <div className="flex-1">
                       <h4 className="text-sm text-black font-medium mb-2">Weight (kg)</h4>
                       <ResponsiveContainer width="100%" height={400}>
@@ -390,30 +348,18 @@ export default function MemberGraphs({ member, logs: initialLogs, onBack }: Prop
                 return aOrder - bOrder
               })
               .map((workout) => {
-                const filtered = chartData.filter((d) => d.workout === workout && d.target === selectedTarget)
+                let filtered = chartData.filter((d) => d.workout === workout && d.target === selectedTarget);
+                if (viewMode === 'monthly') {
+                  filtered = getMonthlyFirstData(filtered);
+                }
                 if (filtered.length === 0) return null
+
                 const color = getColorForWorkout(selectedTarget, workout)
 
                 return (
                   <div key={workout} className="mb-8">
                     <p className="text-l font-semibold text-indigo-500 mb-4">{workout}</p>
                     <div className="flex flex-col lg:flex-row gap-6 w-full">
-                      {/* Reps 그래프 */}
-                      {/* <div className="flex-1">
-                        <h4 className="text-sm text-black font-medium mb-2">Reps</h4>
-                        <ResponsiveContainer width="100%" height={400}>
-                          <LineChart data={filtered}>
-                            <CartesianGrid strokeDasharray="3 3" />
-                            <XAxis dataKey="workout_date" tick={{ fontSize: 12 }} />
-                            <YAxis tick={{ fontSize: 12 }} />
-                            <Tooltip wrapperStyle={{ fontSize: 12 }} labelStyle={{ color: 'black' }} />
-                            <Legend wrapperStyle={{ fontSize: 12 }} />
-                            <Line type="monotone" dataKey="reps" name="Reps" stroke={color} />
-                          </LineChart>
-                        </ResponsiveContainer>
-                      </div> */}
-
-                      {/* Weight 그래프 */}
                       <div className="flex-1">
                         <h4 className="text-sm text-black font-medium mb-2">Weight (kg)</h4>
                         <ResponsiveContainer width="100%" height={400}>
@@ -452,56 +398,6 @@ export default function MemberGraphs({ member, logs: initialLogs, onBack }: Prop
             onUpdateLogs={(updatedLogs) => setLogs(updatedLogs)}
           />
         )}
-
-        {/* 기록 추가 모달 */}
-        {/* {isAddRecordOpen && (
-          <AddRecordForm
-            member={member}
-            onCancel={() => setIsAddRecordOpen(false)}
-            onSave={handleAddRecord}
-          />
-        )} */}
-
-        {/* 기록 리스트 + 삭제 */}
-        {/* {isListOpen && (
-          <div className="fixed inset-0 bg-black/50 flex justify-center items-center z-50">
-            <div className="bg-white rounded-2xl shadow-xl w-full max-w-md p-6 space-y-5 border border-gray-100 max-h-[80vh] overflow-y-auto">
-              <h3 className="text-xl font-bold text-red-600 border-b pb-2">운동 기록 삭제</h3>
-              {logs.length === 0 ? (
-                <p className="text-sm text-gray-500">삭제할 운동 기록이 없습니다.</p>
-              ) : (
-                <ul className="space-y-3">
-                  {logs.map(log => (
-                    <li
-                      key={log.workout_id}
-                      className="flex justify-between items-center border rounded-lg px-3 py-2 bg-gray-50 hover:bg-gray-100 transition"
-                    >
-                      <div className="text-sm text-gray-700">
-                        <strong className="text-gray-900">{log.workout}</strong> | {log.weight} / {' '} {log.reps} | {' '}
-                        <span className="text-gray-500">{log.workout_date.slice(0, 10)}</span>
-                      </div>
-                      <Button
-                        size="sm"
-                        variant="destructive"
-                        onClick={() => handleDelete(log.workout_id)}
-                        className="text-xs"
-                      >
-                        삭제
-                      </Button>
-                    </li>
-                  ))}
-                </ul>
-              )}
-              <div className="flex justify-end pt-4">
-                <Button onClick={() => setIsListOpen(false)} className="text-gray-700 text-sm" variant="outline">
-                  닫기
-                </Button>
-              </div>
-            </div>
-          </div>
-        )} */}
-
-
       </div>
     </div>
   )
