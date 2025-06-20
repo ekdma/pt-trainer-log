@@ -1,12 +1,15 @@
 'use client'
 
-import { Plus} from 'lucide-react'
+import { CalendarPlus} from 'lucide-react'
 import { useEffect, useState, useRef } from 'react'
 import { getSupabaseClient } from '@/lib/supabase'
 import { Button } from '@/components/ui/button'
 import { Disclosure } from '@headlessui/react'
 import { ChevronUpIcon } from '@heroicons/react/20/solid'
+import DatePicker from 'react-datepicker';
+import 'react-datepicker/dist/react-datepicker.css';
 import dayjs from 'dayjs';
+
 
 type Member = {
   member_id: number
@@ -419,6 +422,18 @@ export default function HealthMetricManager({
     }
   }, [addingDate]);
   
+  // string -> Date 변환 함수
+  const parseDate = (dateStr: string | null): Date | null => {
+    if (!dateStr) return null;
+    const parsed = dayjs(dateStr, 'YYYY-MM-DD');
+    return parsed.isValid() ? parsed.toDate() : null;
+  };
+
+  // Date -> string 변환 함수
+  const formatDate = (date: Date | null): string | null => {
+    if (!date) return null;
+    return dayjs(date).format('YYYY-MM-DD'); // react-datepicker는 ISO 포맷 권장
+  };
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50">
@@ -429,7 +444,7 @@ export default function HealthMetricManager({
       >
         <div className="mb-6">
           <div className="flex items-center gap-3 mb-2">
-            <h2 className="text-xl font-semibold text-gray-800">건강 지표 관리</h2>
+            <h2 className="text-xl font-semibold text-gray-800">건강지표 관리</h2>
           </div>
         </div>
 
@@ -457,13 +472,17 @@ export default function HealthMetricManager({
                 ))}
 
                 {/* 추가 날짜 입력 열 */}
-                {addingDate && (
+                {addingDate !== null && (
                   <th className="border px-1 py-1 text-center text-xs font-semibold md:sticky top-0 bg-yellow-50 z-10 w-[80px]">
-                    <input
-                      type="date"
-                      className="text-[10px] w-full text-center border border-gray-300 rounded"
-                      value={addingDate}
-                      onChange={(e) => setAddingDate(e.target.value)}
+                    <DatePicker
+                      selected={parseDate(addingDate)}
+                      onChange={(date: Date | null) => {
+                        setAddingDate(formatDate(date));
+                      }}
+                      dateFormat="yy.MM.dd" // 화면 표시 포맷: 25.06.13
+                      className="text-[12px] w-full text-center border border-gray-300 rounded"
+                      placeholderText="yy.mm.dd"
+                      // optional: 한국어 로케일 적용하려면 import 및 locale 설정 추가 필요
                     />
                   </th>
                 )}
@@ -544,10 +563,9 @@ export default function HealthMetricManager({
               variant="outline"
               // size="sm"
               onClick={startAddingDate}
-              className="h-9 min-w-[100px] px-4 text-sm flex items-center gap-1.5 text-yellow-600 border-yellow-500 hover:bg-yellow-50"
+              className="h-9 px-4 text-sm flex items-center gap-1.5 text-yellow-600 border-yellow-500 hover:bg-yellow-50"
             >
-              <Plus size={16} />
-              날짜 추가
+              <CalendarPlus size={16} />
             </Button>
           )}
 

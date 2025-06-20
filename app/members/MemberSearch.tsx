@@ -1,12 +1,13 @@
 'use client'
 
+import dayjs from 'dayjs';
 import { useState, useEffect } from 'react'
 import { getSupabaseClient } from '@/lib/supabase'
 import { Member, WorkoutRecord, HealthMetric } from './types'
 import AddMemberOpen from './AddMemberOpen'
 import { SupabaseClient } from '@supabase/supabase-js'
 import EditMemberModal from './EditMemberModal'
-import { UserRoundPen, UserRoundMinus, UserRoundPlus, UserRoundSearch } from 'lucide-react';
+import { UserRoundPen, UserRoundMinus, UserRoundPlus, UserRoundSearch, Calendar } from 'lucide-react';
 
 
 export default function MemberSearch({
@@ -152,28 +153,26 @@ export default function MemberSearch({
 
         <button
           onClick={handleSearch}
-          className="w-full sm:w-auto bg-indigo-500 hover:bg-indigo-600 text-white px-4 py-2 rounded-full shadow-md transition"
+          className="w-full sm:w-auto bg-indigo-600 hover:bg-indigo-700 text-white px-3 py-2 rounded-full shadow-md transition flex justify-center items-center gap-1 text-sm"
         >
-          <UserRoundSearch size={20} /> 
-          {/* 검색 */}
+          <UserRoundSearch size={20} /> 검색
         </button>
-
         <button
           onClick={() => setIsAddMemberOpen(true)}
-          className="w-full sm:w-auto bg-green-500 hover:bg-green-600 text-white px-4 py-2 rounded-full shadow-md transition"
+          className="w-full sm:w-auto bg-teal-600 hover:bg-teal-700 text-white px-3 py-2 rounded-full shadow-md transition flex justify-center items-center gap-1 text-sm"
         >
-          <UserRoundPlus size={20} />
-          {/* 신규회원 등록 */}
+          <UserRoundPlus size={20} /> 회원 추가
         </button>
       </div>
 
       <ul className="space-y-3 w-full max-w-md">
         {sortedMembers.map((member) => {
-          const formattedJoinDate = new Date(member.join_date).toLocaleDateString('ko-KR', {
-            year: 'numeric',
-            month: 'long',
-            day: 'numeric',
-          })
+          const formattedJoinDate = dayjs(member.join_date).format('YY.MM.DD');
+          // const formattedJoinDate = new Date(member.join_date).toLocaleDateString('ko-KR', {
+          //   year: 'numeric',
+          //   month: 'long',
+          //   day: 'numeric',
+          // })
           return (
             <li
               key={member.member_id}
@@ -182,11 +181,11 @@ export default function MemberSearch({
               {/* 왼쪽 정보 클릭 영역 */}
               <div
                 onClick={() => handleSelect(member)}
-                className="flex items-center gap-4 cursor-pointer hover:bg-indigo-50 rounded-md px-3 py-2 transition flex-1"
+                className="flex cursor-pointer hover:bg-indigo-50 rounded-md px-3 py-2 transition flex-1 items-center gap-6"
               >
                 {/* 역할 뱃지 */}
                 <span
-                  className={`text-xs font-bold text-white rounded-full px-2 py-0.5 ${
+                  className={`text-xs font-bold text-white rounded-full px-2 py-0.5 flex-shrink-0 ${
                     member.level === 'Level 1'
                       ? 'bg-yellow-500'
                       : member.level === 'Level 2'
@@ -204,11 +203,11 @@ export default function MemberSearch({
                 </span>
 
                 {/* 이름 + 정보 */}
-                <div className="flex flex-col">
+                <div className="flex flex-col items-center flex-grow">
                   <span className="text-indigo-800 font-semibold text-lg leading-tight">
                     {member.name}
                   </span>
-                  <div className="flex gap-2 text-indigo-900 text-sm mt-1 flex-wrap">
+                  <div className="flex gap-2 text-indigo-900 text-sm mt-1 flex-wrap items-center justify-center">
                     <span className="flex items-center gap-1 bg-gray-100 text-gray-900 px-2 py-1 rounded-full shadow-sm">
                       {member.sex}
                     </span>
@@ -216,7 +215,7 @@ export default function MemberSearch({
                       {calculateAge(member.birth_date)}세
                     </span>
                     <span className="flex items-center gap-1 bg-gray-100 text-gray-900 px-2 py-1 rounded-full shadow-sm">
-                      📅 {formattedJoinDate}
+                      <Calendar size={13} />{formattedJoinDate}
                     </span>
                   </div>
                 </div>
@@ -229,14 +228,14 @@ export default function MemberSearch({
                   className="text-indigo-500 hover:text-indigo-700 transition text-sm"
                   title="회원 정보 수정"
                 >
-                  <UserRoundPen size={16} />
+                  <UserRoundPen size={18} />
                 </button>
                 <button
                   onClick={() => handleDelete(member.member_id)}
                   className="text-red-500 text-xs hover:text-red-700 transition text-sm"
                   title="회원 삭제"
                 >
-                  <UserRoundMinus size={16} />
+                  <UserRoundMinus size={18} />
                 </button>
               </div>
             </li>

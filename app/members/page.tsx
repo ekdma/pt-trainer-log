@@ -47,7 +47,7 @@ export default function MembersPage() {
               <button
                 className={`flex items-center gap-1 text-sm px-4 py-2 rounded-lg border transition duration-200 ${
                   activeTab === 'workout'
-                    ? 'bg-green-100 border-green-600 text-green-700 font-semibold'
+                    ? 'bg-blue-100 border-blue-600 text-blue-700 font-semibold'
                     : 'bg-white border-gray-300 text-gray-600 hover:bg-gray-100'
                 }`}
                 onClick={() => setActiveTab('workout')}
@@ -57,7 +57,7 @@ export default function MembersPage() {
               <button
                 className={`flex items-center gap-1 text-sm px-4 py-2 rounded-lg border transition duration-200 ${
                   activeTab === 'health'
-                    ? 'bg-blue-100 border-blue-600 text-blue-700 font-semibold'
+                    ? 'bg-pink-100 border-pink-600 text-pink-700 font-semibold'
                     : 'bg-white border-gray-300 text-gray-600 hover:bg-gray-100'
                 }`}
                 onClick={() => setActiveTab('health')}

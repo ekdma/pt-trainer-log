@@ -1,6 +1,6 @@
 'use client'
 
-import { ArrowLeft, NotebookPen } from 'lucide-react'
+import { ArrowLeft, NotebookPen, ArrowUpDown } from 'lucide-react'
 import { useEffect, useState } from 'react'
 // import { NewWorkoutRecord, WorkoutRecord, Member, WorkoutType } from './types'
 import { WorkoutRecord, Member, WorkoutType } from './types'
@@ -194,14 +194,15 @@ export default function MemberGraphs({ member, logs: initialLogs, onBack }: Prop
           <h2 className="text-xl text-black font-semibold">{member.name} 님의 운동 기록</h2>
           <div className="flex flex-col sm:flex-row sm:space-x-2 space-y-2 sm:space-y-0">
             <Button 
-              className="w-full sm:w-auto flex items-center gap-1 text-sm text-yellow-600 border border-yellow-600 px-3 py-1.5 rounded-lg hover:bg-yellow-100 transition duration-200"
+              className="w-full sm:w-auto flex items-center gap-1 text-sm text-gray-600 border border-gray-400 px-3 py-1.5 rounded-lg hover:bg-gray-100 transition duration-200"
               onClick={() => setIsOrderModalOpen(true)}
             >
+              <ArrowUpDown size={16} />
               순서관리
             </Button>
             <Button 
               onClick={() => setIsWorkoutManagerOpen(true)}
-              className="w-full sm:w-auto flex items-center gap-1 text-sm text-purple-600 border border-purple-600 px-3 py-1.5 rounded-lg hover:bg-purple-100 transition duration-200"
+              className="w-full sm:w-auto flex items-center gap-1 text-sm text-violet-600 border border-violet-600 px-3 py-1.5 rounded-lg hover:bg-violet-100 transition duration-200"
             > 
               <NotebookPen size={16} />
               기록관리
@@ -224,8 +225,8 @@ export default function MemberGraphs({ member, logs: initialLogs, onBack }: Prop
                 onClick={() => setSelectedTarget(null)}
                 className={`px-4 py-1.5 rounded-full text-sm font-medium border transition-all duration-200 shadow-sm ${
                   selectedTarget === null
-                    ? 'bg-blue-600 text-white border-blue-600 shadow-md'
-                    : 'bg-white text-gray-700 hover:bg-blue-100 border-gray-300'
+                    ? 'bg-indigo-600 text-white border-indigo-600 shadow-md'
+                    : 'bg-white text-gray-700 hover:bg-indigo-50 border-gray-300'
                 }`}
               >
                 통합
@@ -236,8 +237,8 @@ export default function MemberGraphs({ member, logs: initialLogs, onBack }: Prop
                   onClick={() => setSelectedTarget(target)}
                   className={`px-4 py-1.5 rounded-full text-sm font-medium border transition-all duration-200 shadow-sm ${
                     selectedTarget === target
-                      ? 'bg-blue-600 text-white border-blue-600 shadow-md'
-                      : 'bg-white text-gray-700 hover:bg-blue-100 border-gray-300'
+                      ? 'bg-indigo-600 text-white border-indigo-600 shadow-md'
+                      : 'bg-white text-gray-700 hover:bg-indigo-50 border-gray-300'
                   }`}
                 >
                   {target}

@@ -1,8 +1,10 @@
 'use client'
 
+import { UserRoundPen } from 'lucide-react'
 import { useState } from 'react'
 import { SupabaseClient } from '@supabase/supabase-js'
 import { Member } from './types'
+import { Button } from '@/components/ui/button'
 
 export default function EditMemberModal({
   member,
@@ -69,7 +71,10 @@ export default function EditMemberModal({
   return (
     <div className="fixed inset-0 bg-black bg-opacity-40 backdrop-blur-sm flex items-center justify-center z-50">
       <div className="bg-white p-8 rounded-xl shadow-lg w-full max-w-md max-h-screen overflow-auto">
-        <h2 className="text-xl font-semibold text-gray-800 mb-6">✏️ 회원 정보 수정</h2>
+        <h2 className="flex justify-center items-center gap-2 text-xl font-semibold text-gray-800 mb-6 w-full">
+          <UserRoundPen size={20} />
+          회원 정보 수정
+        </h2>
 
         {errorMsg && <p className="text-red-500 text-sm mb-4">{errorMsg}</p>}
 
@@ -140,20 +145,23 @@ export default function EditMemberModal({
         </div>
 
         <div className="flex justify-end space-x-3">
-          <button
-            onClick={onClose}
-            disabled={loading}
-            className="px-4 py-2 border border-gray-300 rounded hover:bg-gray-100 text-gray-700 transition"
-          >
-            취소
-          </button>
-          <button
+          <Button
             onClick={handleSubmit}
             disabled={loading}
-            className="px-4 py-2 bg-indigo-500 hover:bg-indigo-600 text-white rounded transition"
+            variant="outline"
+            className="px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white text-sm rounded transition"
           >
             {loading ? '수정 중...' : '수정'}
-          </button>
+          </Button>
+          <Button
+            onClick={onClose}
+            disabled={loading}
+            variant="outline"
+            type='button'
+            className="px-4 py-2 text-sm"
+          >
+            취소
+          </Button>
         </div>
       </div>
     </div>

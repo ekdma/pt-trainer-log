@@ -1,11 +1,13 @@
 'use client'
 
-import { Plus} from 'lucide-react'
-import { useEffect, useState, useRef } from 'react'
+import { CalendarPlus} from 'lucide-react'
+import React, { useEffect, useState, useRef } from 'react'
 import { getSupabaseClient } from '@/lib/supabase'
 import { Button } from '@/components/ui/button'
 import { Disclosure } from '@headlessui/react'
 import { ChevronUpIcon } from '@heroicons/react/20/solid'
+import DatePicker from 'react-datepicker';
+import 'react-datepicker/dist/react-datepicker.css';
 import dayjs from 'dayjs';
 
 type Member = {
@@ -509,7 +511,19 @@ export default function WorkoutLogManager({
     }
   }, [addingDate]);
 
-  
+  // string -> Date 변환 함수
+  const parseDate = (dateStr: string | null): Date | null => {
+    if (!dateStr) return null;
+    const parsed = dayjs(dateStr, 'YYYY-MM-DD');
+    return parsed.isValid() ? parsed.toDate() : null;
+  };
+
+  // Date -> string 변환 함수
+  const formatDate = (date: Date | null): string | null => {
+    if (!date) return null;
+    return dayjs(date).format('YYYY-MM-DD'); // react-datepicker는 ISO 포맷 권장
+  };
+
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50">
       <div className="absolute inset-0" onClick={onClose}></div>
@@ -519,7 +533,7 @@ export default function WorkoutLogManager({
       >
         <div className="mb-6">
           <div className="flex items-center gap-3 mb-2">
-            <h2 className="text-xl font-semibold text-gray-800">운동 기록 관리</h2>
+            <h2 className="text-xl font-semibold text-gray-800">운동기록 관리</h2>
             <div
               className={`ml-2 px-3 py-1 rounded-md text-white font-semibold shadow-sm text-xs ${
                 member.level === 'Level 1' ? 'bg-yellow-500' :
@@ -555,20 +569,24 @@ export default function WorkoutLogManager({
                 {dates.map((date) => (
                   <th
                     key={date}
-                    className="border px-1 py-1 text-center text-xs font-semibold md:sticky top-0 bg-gray-100 z-10 w-[40px] whitespace-nowrap overflow-hidden text-ellipsis"
+                    className="border px-1 py-1 text-center text-xs font-semibold md:sticky top-0 bg-gray-100 z-10 w-[80px] whitespace-nowrap overflow-hidden text-ellipsis"
                   >
                     {dayjs(date).format('YY.MM.DD')}
                   </th>
                 ))}
 
                 {/* 추가 날짜 입력 열 */}
-                {addingDate && (
-                  <th className="border px-1 py-1 text-center text-xs font-semibold md:sticky top-0 bg-yellow-50 z-10 w-[40px]">
-                    <input
-                      type="date"
-                      className="text-[10px] w-full text-center border border-gray-300 rounded"
-                      value={addingDate}
-                      onChange={(e) => setAddingDate(e.target.value)}
+                {addingDate !== null && (
+                  <th className="border px-1 py-1 text-center text-xs font-semibold md:sticky top-0 bg-yellow-50 z-10 w-[80px]">
+                    <DatePicker
+                      selected={parseDate(addingDate)}
+                      onChange={(date: Date | null) => {
+                        setAddingDate(formatDate(date));
+                      }}
+                      dateFormat="yy.MM.dd" // 화면 표시 포맷: 25.06.13
+                      className="text-[12px] w-full text-center border border-gray-300 rounded"
+                      placeholderText="yy.mm.dd"
+                      // optional: 한국어 로케일 적용하려면 import 및 locale 설정 추가 필요
                     />
                   </th>
                 )}
@@ -588,18 +606,13 @@ export default function WorkoutLogManager({
 
                 return (
                   <tr key={rowKey} className="hover:bg-blue-50 text-sm">
-                    {/* LEVEL */}
                     <td className="border px-2 py-1 md:sticky left-0 z-30 font-semibold relative pl-6 whitespace-normal bg-gray-50">
                       <span className={`absolute left-1 top-1/2 -translate-y-1/2 w-3 h-3 rounded-full ${levelColor}`} />
                       {level}
                     </td>
-
-                    {/* TARGET */}
                     <td className="border px-2 py-1 md:sticky left-[90px] bg-gray-50 z-20 font-semibold whitespace-normal">
                       {target}
                     </td>
-
-                    {/* WORKOUT */}
                     <td className="border px-2 py-1 md:sticky left-[180px] bg-gray-50 z-10 font-semibold text-sm whitespace-normal">
                       {workout}
                     </td>
@@ -619,7 +632,7 @@ export default function WorkoutLogManager({
                           (isAfterLevelWorkout && !isAfterModified));
 
                       return (
-                        <td key={date} className="border px-1 py-1 text-center w-[40px]">
+                        <td key={date} className="border px-1 py-1 text-center w-[80px]">
                           <input
                             type="number"
                             className={`
@@ -652,7 +665,7 @@ export default function WorkoutLogManager({
                           (isAfterLevelWorkout && !isAfterModified));
 
                       return (
-                        <td className="border px-1 py-1 text-center bg-yellow-50 w-[40px]">
+                        <td className="border px-1 py-1 text-center bg-yellow-50 w-[80px]">
                           <input
                             type="number"
                             min={0}
@@ -693,10 +706,9 @@ export default function WorkoutLogManager({
               variant="outline"
               // size="sm"
               onClick={startAddingDate}
-              className="h-9 min-w-[100px] px-4 text-sm flex items-center gap-1.5 text-yellow-600 border-yellow-500 hover:bg-yellow-50"
+              className="h-9 px-4 text-sm flex items-center gap-1.5 text-yellow-600 border-yellow-500 hover:bg-yellow-50"
             >
-              <Plus size={16} />
-              날짜 추가
+              <CalendarPlus size={16} />
             </Button>
           )}
 
