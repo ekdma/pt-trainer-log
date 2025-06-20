@@ -1,7 +1,7 @@
 'use client'
 
 import { CalendarPlus} from 'lucide-react'
-import { useEffect, useState, useRef } from 'react'
+import React, { useEffect, useState, useRef } from 'react'
 import { getSupabaseClient } from '@/lib/supabase'
 import { Button } from '@/components/ui/button'
 import { Disclosure } from '@headlessui/react'
@@ -124,6 +124,8 @@ export default function HealthMetricManager({
   const [allTypes, setAllTypes] = useState<
     { health_metric_type_id: number; metric_target: string; metric_type: string; order_target: number; order_type: number }[]
   >([])
+  const inputRefs = useRef<Record<string, HTMLInputElement | null>>({}); 
+  const dateInputRef = useRef<HTMLInputElement | null>(null);
 
   useEffect(() => {
     fetchLogs()
@@ -212,6 +214,10 @@ export default function HealthMetricManager({
     if (addingDate !== null) return;
     setAddingDate(today); // 또는 null로 설정
     setNewLogInputs({});
+
+    setTimeout(() => {
+      dateInputRef.current?.focus();
+    }, 0);
   };
 
   const cancelAddingDate = () => {
@@ -337,7 +343,7 @@ export default function HealthMetricManager({
 
   const handleAddType = async () => {
     if (!newTarget || !newWorkout) {
-      alert('모든 필드를 입력해주세요.')
+      alert('모든 필드를 입력해주세요 😎')
       return
     }
   
@@ -432,7 +438,114 @@ export default function HealthMetricManager({
   // Date -> string 변환 함수
   const formatDate = (date: Date | null): string | null => {
     if (!date) return null;
-    return dayjs(date).format('YYYY-MM-DD'); // react-datepicker는 ISO 포맷 권장
+    return dayjs(date).format('YYYY-MM-DD'); 
+  };
+  
+  const handleKeyNavigation = (
+    e: React.KeyboardEvent<HTMLInputElement>,
+    rowIndex: number,
+    colIndex: number,
+    totalRows: number,
+    totalCols: number
+  ) => {
+    const getRef = (r: number, c: number) => inputRefs.current[`${r}-${c}`];
+    const isValid = (r: number, c: number) => {
+      const input = getRef(r, c);
+      return input && !input.disabled;
+    };
+  
+    const move = (rDelta: number, cDelta: number) => {
+      let r = rowIndex + rDelta;
+      let c = colIndex + cDelta;
+  
+      while (r >= 0 && r < totalRows && c >= 0 && c < totalCols) {
+        if (isValid(r, c)) {
+          getRef(r, c)?.focus();
+          break;
+        }
+        r += rDelta;
+        c += cDelta;
+      }
+    };
+  
+    switch (e.key) {
+      case 'ArrowRight':
+        e.preventDefault();
+        move(0, 1);
+        break;
+      case 'ArrowLeft':
+        e.preventDefault();
+        move(0, -1);
+        break;
+      case 'Tab':  
+      case 'ArrowDown':
+      case 'Enter':
+        e.preventDefault();
+        move(1, 0);
+        break;
+      case 'ArrowUp':
+        e.preventDefault();
+        move(-1, 0);
+        break;
+      default:
+        return;
+    }
+  };
+
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      // 저장: Ctrl + S
+      if (e.ctrlKey && e.key.toLowerCase() === 's') {
+        e.preventDefault(); // 브라우저 기본 저장 방지
+        if (canSave) {
+          saveAllChanges();
+        }
+      }
+  
+      // 날짜 추가: Ctrl + A
+      if (e.ctrlKey && e.key.toLowerCase() === 'a') {
+        e.preventDefault();
+        if (addingDate === null && !addingRow) {
+          startAddingDate();
+        }
+      }
+    };
+
+    // 날짜 추가 취소: ESC
+    const handleEscKey = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') {
+        if (addingDate) {
+          cancelAddingDate(); // 날짜 추가 중이면 취소
+        }
+      }
+    };
+  
+    window.addEventListener('keydown', handleKeyDown);
+    window.addEventListener('keydown', handleEscKey);
+    return () => {
+      window.removeEventListener('keydown', handleKeyDown);
+      window.removeEventListener('keydown', handleEscKey);
+    };
+  }, [canSave, addingDate, addingRow, saveAllChanges, startAddingDate, cancelAddingDate]);
+
+  const normalizeDateInput = (input: string): string | null => {
+    const digits = input.replace(/[^\d]/g, ''); // 숫자만 추출
+  
+    if (digits.length === 6) {
+      // 250624 → 2025-06-24
+      const year = '20' + digits.slice(0, 2);
+      const month = digits.slice(2, 4);
+      const day = digits.slice(4, 6);
+      const formatted = `${year}-${month}-${day}`;
+  
+      const isValid = dayjs(formatted, 'YYYY-MM-DD', true).isValid();
+      return isValid ? formatted : null;
+    }
+  
+    // 이미 YYYY-MM-DD 형태이면 그대로
+    if (dayjs(input, 'YYYY-MM-DD', true).isValid()) return input;
+  
+    return null;
   };
 
   return (
@@ -479,10 +592,44 @@ export default function HealthMetricManager({
                       onChange={(date: Date | null) => {
                         setAddingDate(formatDate(date));
                       }}
-                      dateFormat="yy.MM.dd" // 화면 표시 포맷: 25.06.13
+                      onChangeRaw={(e) => {
+                        // 사용자가 입력하는 문자열을 상태로 저장 (선택사항)
+                        // ex) setRawInput(e.target.value);
+                      }}
+                      onKeyDown={(e) => {
+                        if (e.key === 'Enter') {
+                          const input = e.target as HTMLInputElement;
+                          const inputValue = input.value;
+                          const normalized = normalizeDateInput(inputValue);
+                      
+                          if (normalized) {
+                            const targetCol = dates.length; // setAddingDate로 인해 증가하기 전 인덱스를 미리 저장
+                            setAddingDate(normalized);
+                            setTimeout(() => {
+                              // 다음으로 내려갈 셀 중, 비활성화된 셀은 건너뜀
+                              for (let row = 0; row < rows.length; row++) {
+                                const nextInput = inputRefs.current[`${row}-${targetCol}`];
+                                if (nextInput && !nextInput.disabled) {
+                                  nextInput.focus();
+                                  break;
+                                }
+                              }
+                            }, 50);
+                          }
+                        }
+                      }}
+                      dateFormat="yy.MM.dd"
                       className="text-[12px] w-full text-center border border-gray-300 rounded"
                       placeholderText="yy.mm.dd"
-                      // optional: 한국어 로케일 적용하려면 import 및 locale 설정 추가 필요
+                      open={false}
+                      ref={(dp) => {
+                        if (dp) {
+                          const inputEl = (dp as any).input; // DatePicker 내부 input 엘리먼트
+                          if (inputEl && typeof inputEl.focus === 'function') {
+                            dateInputRef.current = inputEl;
+                          }
+                        }
+                      }}
                     />
                   </th>
                 )}
@@ -490,7 +637,7 @@ export default function HealthMetricManager({
             </thead>
 
             <tbody className="bg-white">
-              {rows.map(({ metric_target, metric_type }) => {
+              {rows.map(({ metric_target, metric_type }, rowIndex) => {
                 const rowKey = `${metric_target}||${metric_type}`;
 
                 return (
@@ -506,7 +653,9 @@ export default function HealthMetricManager({
                     </td>
 
                     {/* 날짜별 셀 */}
-                    {dates.map((date) => {
+                    {dates.map((date, colIndex) => {
+                      const totalRows = rows.length;
+                      const totalCols = dates.length + (addingDate ? 1 : 0);
                       return (
                         <td key={date} className="border px-1 py-1 text-center w-[80px]">
                           <input
@@ -518,6 +667,10 @@ export default function HealthMetricManager({
                             onChange={(e) =>
                               handleCellChange(rowKey, date, Number(e.target.value))
                             }
+                            onKeyDown={(e) => handleKeyNavigation(e, rowIndex, colIndex, totalRows, totalCols)}
+                            ref={(el) => {
+                              inputRefs.current[`${rowIndex}-${colIndex}`] = el;
+                            }}
                           />
                         </td>
                       );
@@ -525,6 +678,9 @@ export default function HealthMetricManager({
 
                     {/* 추가 날짜 셀 */}
                     {addingDate && (() => {
+                      const totalRows = rows.length;
+                      const totalCols = dates.length + (addingDate ? 1 : 0);
+                      const colIndex = dates.length; // 기존 날짜 열 개수 = 이게 새로운 열의 index
                       return (
                         <td className="border px-1 py-1 text-center bg-yellow-50 w-[80px]">
                           <input
@@ -538,6 +694,10 @@ export default function HealthMetricManager({
                               w-full text-center rounded border text-sm bg-white border-yellow-400 focus:ring-1 focus:ring-yellow-500
                             `}
                             placeholder="-"
+                            onKeyDown={(e) => handleKeyNavigation(e, rowIndex, colIndex, totalRows, totalCols)}
+                            ref={(el) => {
+                              inputRefs.current[`${rowIndex}-${colIndex}`] = el;
+                            }}
                           />
                         </td>
                       );
