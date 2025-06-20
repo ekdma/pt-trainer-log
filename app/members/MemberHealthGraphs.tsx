@@ -161,61 +161,62 @@ const MemberHealthGraphsClient: React.FC<Props> = ({ healthLogs, member, onBack 
           </div>
         </div>
 
-        {/* 타겟 선택 필터 */}
         {targets.length > 0 && (
-          <div className="mb-6 flex flex-wrap gap-2">
-            <button
-              onClick={() => setSelectedTarget(null)}
-              className={`px-4 py-1.5 rounded-full text-sm font-medium border transition-all duration-200 shadow-sm ${
-                selectedTarget === null
-                  ? 'bg-blue-600 text-white border-blue-600 shadow-md'
-                  : 'bg-white text-gray-700 hover:bg-blue-100 border-gray-300'
-              }`}
-            >
-              통합
-            </button>
-            {targetsSorted.map((target) => (
+          <div className="mb-6 flex flex-wrap items-center justify-between gap-4">
+            {/* Target 선택 버튼들 */}
+            <div className="flex flex-wrap gap-2">
               <button
-                key={target}
-                onClick={() => setSelectedTarget(target)}
+                onClick={() => setSelectedTarget(null)}
                 className={`px-4 py-1.5 rounded-full text-sm font-medium border transition-all duration-200 shadow-sm ${
-                  selectedTarget === target
+                  selectedTarget === null
                     ? 'bg-blue-600 text-white border-blue-600 shadow-md'
                     : 'bg-white text-gray-700 hover:bg-blue-100 border-gray-300'
                 }`}
               >
-                {target}
+                통합
               </button>
-            ))}
-          </div>
-        )}
-        {targets.length > 0 && (
-          <div className="flex justify-end mb-4">
-            <div className="inline-flex rounded-md shadow-sm border border-gray-300 overflow-hidden">
-              <button
-                onClick={() => setViewMode('daily')}
-                className={`px-4 py-1.5 text-sm font-medium transition-all duration-200 ${
-                  viewMode === 'daily'
-                    ? 'bg-indigo-500 text-white'
-                    : 'bg-white text-gray-700 hover:bg-gray-100'
-                }`}
-              >
-                일 단위
-              </button>
-              <button
-                onClick={() => setViewMode('monthly')}
-                className={`px-4 py-1.5 text-sm font-medium transition-all duration-200 ${
-                  viewMode === 'monthly'
-                    ? 'bg-indigo-500 text-white'
-                    : 'bg-white text-gray-700 hover:bg-gray-100'
-                }`}
-              >
-                월 단위
-              </button>
+              {targets.map((target) => (
+                <button
+                  key={target}
+                  onClick={() => setSelectedTarget(target)}
+                  className={`px-4 py-1.5 rounded-full text-sm font-medium border transition-all duration-200 shadow-sm ${
+                    selectedTarget === target
+                      ? 'bg-blue-600 text-white border-blue-600 shadow-md'
+                      : 'bg-white text-gray-700 hover:bg-blue-100 border-gray-300'
+                  }`}
+                >
+                  {target}
+                </button>
+              ))}
+            </div>
+
+            {/* 일/월 단위 버튼 */}
+            <div className="flex">
+              <div className="inline-flex rounded-md shadow-sm border border-gray-300 overflow-hidden">
+                <button
+                  onClick={() => setViewMode('daily')}
+                  className={`px-4 py-1.5 text-sm font-medium transition-all duration-200 ${
+                    viewMode === 'daily'
+                      ? 'bg-indigo-500 text-white'
+                      : 'bg-white text-gray-700 hover:bg-gray-100'
+                  }`}
+                >
+                  일 단위
+                </button>
+                <button
+                  onClick={() => setViewMode('monthly')}
+                  className={`px-4 py-1.5 text-sm font-medium transition-all duration-200 ${
+                    viewMode === 'monthly'
+                      ? 'bg-indigo-500 text-white'
+                      : 'bg-white text-gray-700 hover:bg-gray-100'
+                  }`}
+                >
+                  월 단위
+                </button>
+              </div>
             </div>
           </div>
         )}
-
 
         {/* 그래프 영역 */}
         {currentTargets.length === 0 || currentTargets.every(target => !targetGroups[target] || targetGroups[target].length === 0) ? (
