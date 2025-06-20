@@ -173,19 +173,40 @@ export default function MemberGraphs({ member, logs: initialLogs, onBack }: Prop
 
   // ✅ 월 단위 데이터 필터링 함수
   function getMonthlyFirstData<T extends { workout_date: string }>(data: T[]): T[] {
-    const monthMap = new Map<string, T>();
+    const workoutMonthMap = new Map<string, T>();
+  
     data.forEach((item) => {
-      const monthKey = item.workout_date.slice(0, 7); // YYYY-MM
-      if (
-        !monthMap.has(monthKey) ||
-        new Date(item.workout_date) < new Date(monthMap.get(monthKey)!.workout_date)
-      ) {
-        monthMap.set(monthKey, item);
+      const date = item.workout_date;
+      const month = date.slice(0, 7); // YYYY-MM
+      const workouts = Object.keys(item).filter((key) => key !== 'workout_date');
+  
+      workouts.forEach((workout) => {
+        const key = `${month}_${workout}`;
+        const existing = workoutMonthMap.get(key);
+        if (!existing || new Date(date) < new Date(existing.workout_date)) {
+          workoutMonthMap.set(key, item);
+        }
+      });
+    });
+  
+    // Map → 날짜별 그룹핑 (중복 제거)
+    const uniqueMap = new Map<string, T>();
+    workoutMonthMap.forEach((item) => {
+      if (!uniqueMap.has(item.workout_date)) {
+        uniqueMap.set(item.workout_date, item);
+      } else {
+        // 날짜가 같다면 key들을 병합 (workout별 weight 정보)
+        const existing = uniqueMap.get(item.workout_date)!;
+        const merged = { ...existing, ...item };
+        uniqueMap.set(item.workout_date, merged);
       }
     });
-    return Array.from(monthMap.values());
+  
+    return Array.from(uniqueMap.values()).sort(
+      (a, b) => new Date(a.workout_date).getTime() - new Date(b.workout_date).getTime()
+    );
   }
-
+  
   return (
     <div className="p-4 max-w-screen-lg mx-auto">
       <div className="space-y-6">
@@ -257,7 +278,7 @@ export default function MemberGraphs({ member, logs: initialLogs, onBack }: Prop
                       : 'bg-white text-gray-700 hover:bg-gray-100'
                   }`}
                 >
-                  일 단위
+                  Daily
                 </button>
                 <button
                   onClick={() => setViewMode('monthly')}
@@ -267,7 +288,7 @@ export default function MemberGraphs({ member, logs: initialLogs, onBack }: Prop
                       : 'bg-white text-gray-700 hover:bg-gray-100'
                   }`}
                 >
-                  월 단위
+                  Monthly
                 </button>
               </div>
             </div>

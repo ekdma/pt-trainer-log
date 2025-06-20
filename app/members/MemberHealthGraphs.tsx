@@ -202,7 +202,7 @@ const MemberHealthGraphsClient: React.FC<Props> = ({ healthLogs, member, onBack 
                       : 'bg-white text-gray-700 hover:bg-gray-100'
                   }`}
                 >
-                  일 단위
+                  Daily
                 </button>
                 <button
                   onClick={() => setViewMode('monthly')}
@@ -212,7 +212,7 @@ const MemberHealthGraphsClient: React.FC<Props> = ({ healthLogs, member, onBack 
                       : 'bg-white text-gray-700 hover:bg-gray-100'
                   }`}
                 >
-                  월 단위
+                  Monthly
                 </button>
               </div>
             </div>
@@ -270,7 +270,7 @@ const MemberHealthGraphsClient: React.FC<Props> = ({ healthLogs, member, onBack 
                         </div>
                         <div className="w-[85%] h-full">
                           <ResponsiveContainer width="100%" height="100%">
-                            <LineChart data={data} margin={{ top: 0, right: 20, left: 0, bottom: 0 }}>
+                            <LineChart data={data} margin={{ top: 20, right: 20, left: 0, bottom: 0 }}>
                               <CartesianGrid strokeDasharray="3 3" vertical={false} />
                               <XAxis
                                 dataKey="date"
