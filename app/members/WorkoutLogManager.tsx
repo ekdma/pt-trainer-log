@@ -6,9 +6,9 @@ import { getSupabaseClient } from '@/lib/supabase'
 import { Button } from '@/components/ui/button'
 import { Disclosure } from '@headlessui/react'
 import { ChevronUpIcon } from '@heroicons/react/20/solid'
-import DatePicker from 'react-datepicker';
-import 'react-datepicker/dist/react-datepicker.css';
 import dayjs from 'dayjs';
+import { normalizeDateInput, handleKeyNavigation } from '@/utils/inputUtils';
+import { useHorizontalDragScroll } from '@/utils/useHorizontalDragScroll';
 
 type Member = {
   member_id: number
@@ -49,76 +49,23 @@ type UpdateLog = {
   weight: number;
 }
 
-// table 드래그 스크롤을 위한 훅
-function useHorizontalDragScroll(containerRef: React.RefObject<HTMLElement | null>) {
-  useEffect(() => {
-    const el = containerRef.current;
-    if (!el) return;
-
-    let isDown = false;
-    let startX = 0;
-    let scrollLeft = 0;
-
-    const handleMouseDown = (e: MouseEvent) => {
-      isDown = true;
-      el.classList.add('cursor-grabbing');
-      startX = e.pageX - el.offsetLeft;
-      scrollLeft = el.scrollLeft;
-    };
-
-    const handleMouseLeave = () => {
-      isDown = false;
-      el.classList.remove('cursor-grabbing');
-    };
-
-    const handleMouseUp = () => {
-      isDown = false;
-      el.classList.remove('cursor-grabbing');
-    };
-
-    const handleMouseMove = (e: MouseEvent) => {
-      if (!isDown) return;
-      e.preventDefault();
-      const x = e.pageX - el.offsetLeft;
-      const walk = (x - startX) * 1; // 스크롤 속도
-      el.scrollLeft = scrollLeft - walk;
-    };
-
-    el.addEventListener('mousedown', handleMouseDown);
-    el.addEventListener('mouseleave', handleMouseLeave);
-    el.addEventListener('mouseup', handleMouseUp);
-    el.addEventListener('mousemove', handleMouseMove);
-
-    return () => {
-      el.removeEventListener('mousedown', handleMouseDown);
-      el.removeEventListener('mouseleave', handleMouseLeave);
-      el.removeEventListener('mouseup', handleMouseUp);
-      el.removeEventListener('mousemove', handleMouseMove);
-    };
-  }, [containerRef]);
-}
-
 export default function WorkoutLogManager({
   member,
   onClose,
   onUpdateLogs,
 }: WorkoutLogManagerProps) {
-  // const [workoutLogs, setWorkoutLogs] = useState<WorkoutRecord[]>([])
   const [dates, setDates] = useState<string[]>([])
   const [rows, setRows] = useState<{ target: string; workout: string; level: string }[]>([])
   const [logMap, setLogMap] = useState<Record<string, Record<string, { weight: number; id?: number }>>>({})
   const today = new Date().toISOString().split('T')[0];
   const [addingDate, setAddingDate] = useState<string | null>(null);
-  // const [addingDate, setAddingDate] = useState<string | null>(null)
   const [newLogInputs, setNewLogInputs] = useState<Record<string, { weight: string }>>({})
   const [addingRow, setAddingRow] = useState(false)
   const [newTarget, setNewTarget] = useState('')
   const [newWorkout, setNewWorkout] = useState('')
-  // const [newWorkoutInputs, setNewWorkoutInputs] = useState<Record<string, { weight: string }>>({})
   const [modifiedCells, setModifiedCells] = useState<{ rowKey: string; date: string; weight: number; id?: number }[]>([])
   const hasModifiedCells = modifiedCells.length > 0
   const hasNewLogInputs = addingDate !== null && Object.values(newLogInputs).some(input => Number(input.weight) > 0)
-  // const hasNewWorkoutInputs = addingRow && Object.values(newWorkoutInputs).some(input => Number(input.weight) > 0)
   const canSave = hasModifiedCells || hasNewLogInputs //|| hasNewWorkoutInputs
   const supabase = getSupabaseClient()
   const [isEmptyLog, setIsEmptyLog] = useState(false) // 로그 비었는지 여부
@@ -129,6 +76,16 @@ export default function WorkoutLogManager({
     { workout_type_id: number; target: string; workout: string; level: string; order_target: number; order_workout: number }[]
   >([])
   const inputRefs = useRef<Record<string, HTMLInputElement | null>>({}); 
+
+  const [yy, mm, dd] = today.split('-'); // year = "2025", month = "06", day = "20"
+
+  const [year, setYear] = useState(yy.slice(2)); // "25"
+  const [month, setMonth] = useState(mm);        // "06"
+  const [day, setDay] = useState(dd);            // "20"
+  const yearRef = useRef<HTMLInputElement>(null);
+  const monthRef = useRef<HTMLInputElement>(null);
+  const dayRef = useRef<HTMLInputElement>(null);
+
 
   const levelWorkoutsMap = rows.reduce((acc, { level, target, workout }) => {
     if (!acc[level]) acc[level] = new Set()
@@ -472,69 +429,6 @@ export default function WorkoutLogManager({
     }
   }, [addingDate]);
 
-  // string -> Date 변환 함수
-  const parseDate = (dateStr: string | null): Date | null => {
-    if (!dateStr) return null;
-    const parsed = dayjs(dateStr, 'YYYY-MM-DD');
-    return parsed.isValid() ? parsed.toDate() : null;
-  };
-
-  // Date -> string 변환 함수
-  const formatDate = (date: Date | null): string | null => {
-    if (!date) return null;
-    return dayjs(date).format('YYYY-MM-DD');
-  };
-
-  const handleKeyNavigation = (
-    e: React.KeyboardEvent<HTMLInputElement>,
-    rowIndex: number,
-    colIndex: number,
-    totalRows: number,
-    totalCols: number
-  ) => {
-    const getRef = (r: number, c: number) => inputRefs.current[`${r}-${c}`];
-    const isValid = (r: number, c: number) => {
-      const input = getRef(r, c);
-      return input && !input.disabled;
-    };
-  
-    const move = (rDelta: number, cDelta: number) => {
-      let r = rowIndex + rDelta;
-      let c = colIndex + cDelta;
-  
-      while (r >= 0 && r < totalRows && c >= 0 && c < totalCols) {
-        if (isValid(r, c)) {
-          getRef(r, c)?.focus();
-          break;
-        }
-        r += rDelta;
-        c += cDelta;
-      }
-    };
-  
-    switch (e.key) {
-      case 'ArrowRight':
-        e.preventDefault();
-        move(0, 1);
-        break;
-      case 'ArrowLeft':
-        e.preventDefault();
-        move(0, -1);
-        break;
-      case 'Tab':  
-      case 'ArrowDown':
-      case 'Enter':
-        e.preventDefault();
-        move(1, 0);
-        break;
-      case 'ArrowUp':
-        e.preventDefault();
-        move(-1, 0);
-        break;
-      default:
-        return;
-    }
-  };
 
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
@@ -545,7 +439,6 @@ export default function WorkoutLogManager({
           saveAllChanges();
         }
       }
-  
       // 날짜 추가: Ctrl + A
       if (e.ctrlKey && e.key.toLowerCase() === 'a') {
         e.preventDefault();
@@ -553,10 +446,7 @@ export default function WorkoutLogManager({
           startAddingDate();
         }
       }
-    };
-
-    // 날짜 추가 취소: ESC
-    const handleEscKey = (e: KeyboardEvent) => {
+      // 날짜 추가 취소: ESC
       if (e.key === 'Escape') {
         if (addingDate) {
           cancelAddingDate(); // 날짜 추가 중이면 취소
@@ -565,32 +455,18 @@ export default function WorkoutLogManager({
     };
   
     window.addEventListener('keydown', handleKeyDown);
-    window.addEventListener('keydown', handleEscKey);
     return () => {
       window.removeEventListener('keydown', handleKeyDown);
-      window.removeEventListener('keydown', handleEscKey);
     };
   }, [canSave, addingDate, addingRow, saveAllChanges, startAddingDate, cancelAddingDate]);
 
-  const normalizeDateInput = (input: string): string | null => {
-    const digits = input.replace(/[^\d]/g, ''); // 숫자만 추출
-  
-    if (digits.length === 6) {
-      // 250624 → 2025-06-24
-      const year = '20' + digits.slice(0, 2);
-      const month = digits.slice(2, 4);
-      const day = digits.slice(4, 6);
-      const formatted = `${year}-${month}-${day}`;
-  
-      const isValid = dayjs(formatted, 'YYYY-MM-DD', true).isValid();
-      return isValid ? formatted : null;
+  useEffect(() => {
+    if (addingDate !== null && yearRef.current) {
+      // 날짜 추가되면 '년도'에 자동 포커스 및 전체 선택
+      yearRef.current.focus();
+      yearRef.current.select();
     }
-  
-    // 이미 YYYY-MM-DD 형태이면 그대로
-    if (dayjs(input, 'YYYY-MM-DD', true).isValid()) return input;
-  
-    return null;
-  };
+  }, [addingDate]);
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50">
@@ -645,48 +521,82 @@ export default function WorkoutLogManager({
 
                 {/* 추가 날짜 입력 열 */}
                 {addingDate !== null && (
-                  <th className="border px-1 py-1 text-center text-xs font-semibold md:sticky top-0 bg-yellow-50 z-10 w-[80px]">
-                    <DatePicker
-                      selected={parseDate(addingDate)}
-                      onChange={(date: Date | null) => {
-                        setAddingDate(formatDate(date));
-                      }}
-                      onKeyDown={(e) => {
-                        if (e.key === 'Enter') {
-                          const input = e.target as HTMLInputElement;
-                          const inputValue = input.value;
-                          const normalized = normalizeDateInput(inputValue);
-                      
-                          if (normalized) {
-                            const targetCol = dates.length; // setAddingDate로 인해 증가하기 전 인덱스를 미리 저장
-                            setAddingDate(normalized);
-                            setTimeout(() => {
-                              // 다음으로 내려갈 셀 중, 비활성화된 셀은 건너뜀
-                              for (let row = 0; row < rows.length; row++) {
-                                const nextInput = inputRefs.current[`${row}-${targetCol}`];
+                  <th className="border px-1 py-1 text-center text-xs font-semibold md:sticky top-0 bg-yellow-50 z-10 w-[100px]">
+                    <div className="flex gap-[2px]">
+                      <input
+                        ref={yearRef}
+                        type="text"
+                        value={year}
+                        onChange={(e) => setYear(e.target.value)}
+                        onKeyDown={(e) => {
+                          if (e.key === 'Tab' && !e.shiftKey) {
+                            e.preventDefault();
+                            monthRef.current?.focus();
+                            monthRef.current?.select();
+                          }
+                        }}
+                        className="w-[20px] text-center border rounded text-[12px]"
+                        placeholder="yy"
+                        maxLength={2}
+                      />
+                      .
+                      <input
+                        ref={monthRef}
+                        type="text"
+                        value={month}
+                        onChange={(e) => setMonth(e.target.value)}
+                        onKeyDown={(e) => {
+                          if (e.key === 'Tab' && !e.shiftKey) {
+                            e.preventDefault();
+                            dayRef.current?.focus();
+                            dayRef.current?.select();
+                          }
+                        }}
+                        className="w-[20px] text-center border rounded text-[12px]"
+                        placeholder="mm"
+                        maxLength={2}
+                      />
+                      .
+                      <input
+                        ref={dayRef}
+                        type="text"
+                        value={day}
+                        onChange={(e) => setDay(e.target.value)}
+                        onKeyDown={(e) => {
+                          if (e.key === 'Enter' || e.key === 'Tab') {
+                            e.preventDefault();
+                            const fullDate = `${year}.${month}.${day}`;
+                            const normalized = normalizeDateInput(fullDate);
+                            if (normalized) {
+                              setAddingDate(normalized);
+                        
+                              // focus 다음 weight 입력칸으로 이동
+                              setTimeout(() => {
+                                const colIndex = dates.length; // 신규 열은 마지막 index
+                                let targetRow = 0;
+                        
+                                while (
+                                  targetRow < rows.length &&
+                                  inputRefs.current[`${targetRow}-${colIndex}`]?.disabled
+                                ) {
+                                  targetRow += 1;
+                                }
+                        
+                                const nextInput = inputRefs.current[`${targetRow}-${colIndex}`];
                                 if (nextInput && !nextInput.disabled) {
                                   nextInput.focus();
-                                  break;
+                                  nextInput.select?.();
                                 }
-                              }
-                            }, 50);
+                              }, 50);
+                            }
                           }
-                        }
-                      }}
-                      dateFormat="yy.MM.dd"
-                      className="text-[12px] w-full text-center border border-gray-300 rounded"
-                      placeholderText="yy.mm.dd"
-                      open={false}
-                      ref={(dp) => {
-                        if (dp && 'input' in dp) {
-                          const picker = dp as DatePicker;
-                          const inputEl = picker.input as HTMLInputElement;
-                          if (inputEl && typeof inputEl.focus === 'function') {
-                            dateInputRef.current = inputEl;
-                          }
-                        }
-                      }}
-                    />
+                        }}
+                        
+                        className="w-[20px] text-center border rounded text-[12px]"
+                        placeholder="dd"
+                        maxLength={2}
+                      />
+                    </div>
                   </th>
                 )}
               </tr>
@@ -741,14 +651,21 @@ export default function WorkoutLogManager({
                               w-full text-center border rounded text-sm
                               ${isDisabled
                                 ? 'bg-gray-200 text-gray-600 border-gray-300 cursor-not-allowed'
-                                : 'border-gray-200'}
+                                : logMap[rowKey]?.[date]?.weight == null
+                                  ? 'bg-sky-50 border-sky-100'
+                                  : 'border-gray-200'
+                              }
                             `}
-                            value={logMap[rowKey]?.[date]?.weight || ''}
+                            value={
+                              logMap[rowKey]?.[date]?.weight != null
+                                ? logMap[rowKey][date].weight
+                                : ''
+                            }
                             onChange={(e) =>
                               handleCellChange(rowKey, date, Number(e.target.value))
                             }
                             disabled={isDisabled}
-                            onKeyDown={(e) => handleKeyNavigation(e, rowIndex, colIndex, totalRows, totalCols)}
+                            onKeyDown={(e) => handleKeyNavigation(e, rowIndex, colIndex, totalRows, totalCols, inputRefs)}
                             ref={(el) => {
                               inputRefs.current[`${rowIndex}-${colIndex}`] = el;
                             }}
@@ -790,7 +707,7 @@ export default function WorkoutLogManager({
                             `}
                             placeholder="-"
                             disabled={isDisabled}
-                            onKeyDown={(e) => handleKeyNavigation(e, rowIndex, colIndex, totalRows, totalCols)}
+                            onKeyDown={(e) => handleKeyNavigation(e, rowIndex, colIndex, totalRows, totalCols, inputRefs)}
                             ref={(el) => {
                               inputRefs.current[`${rowIndex}-${colIndex}`] = el;
                             }}
