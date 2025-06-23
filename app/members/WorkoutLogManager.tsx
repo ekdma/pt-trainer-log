@@ -11,13 +11,6 @@ import { normalizeDateInput, handleKeyNavigation } from '@/utils/inputUtils';
 import { useHorizontalDragScroll } from '@/utils/useHorizontalDragScroll';
 import { FaStar, FaRegStar } from 'react-icons/fa';
 
-type ExerciseLog = {
-  id: string;
-  name: string;
-  sets: number;
-  reps: number;
-};
-
 type Member = {
   member_id: number
   name: string
