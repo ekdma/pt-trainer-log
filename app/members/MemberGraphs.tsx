@@ -311,23 +311,32 @@ export default function MemberGraphs({ member, logs: initialLogs, onBack }: Prop
                 weightDateGrouped[log.workout_date][log.workout] = log.weight
               })
 
-              let weightData = Object.entries(weightDateGrouped).map(([date, workouts]) => ({ date, ...workouts }));
-              if (viewMode === 'monthly') {
-                weightData = getMonthlyFirstData(
-                  weightData.map((d) => {
-                    const { date, ...rest } = d;
-                    return { workout_date: date, ...rest };
-                  })
-                ).map(({ workout_date, ...rest }) => ({ date: workout_date, ...rest }));
-              }
               const workoutsInGroup = Array.from(new Set(groupLogs.map((log) => log.workout)))
-              
+              const allDates = Array.from(new Set(groupLogs.map((log) => log.workout_date))).sort();
+
               // ⬇️ order_workout 순서로 정렬
               const sortedWorkouts = workoutsInGroup.sort((a, b) => {
                 const aOrder = allTypes.find(w => w.workout === a && w.target === target)?.order_workout ?? 999
                 const bOrder = allTypes.find(w => w.workout === b && w.target === target)?.order_workout ?? 999
                 return aOrder - bOrder
               })
+
+              // 날짜별로 모든 운동 키를 포함한 weightData 생성 (null로 채우기)
+              let weightData = allDates.map((date) => {
+                const dataForDate = weightDateGrouped[date] || {};
+                const filled: Record<string, number | null> = {};
+                sortedWorkouts.forEach((workout) => {
+                  filled[workout] = dataForDate[workout] ?? null;
+                });
+                return { date, ...filled };
+              });
+
+              // 월별 요약 모드일 경우
+              if (viewMode === 'monthly') {
+                weightData = getMonthlyFirstData(
+                  weightData.map(({ date, ...rest }) => ({ workout_date: date, ...rest }))
+                ).map(({ workout_date, ...rest }) => ({ date: workout_date, ...rest }));
+              }
 
               return (
                 <div key={target} className="mb-10">
@@ -349,6 +358,7 @@ export default function MemberGraphs({ member, logs: initialLogs, onBack }: Prop
                               dataKey={workout}
                               name={workout}
                               stroke={getColorForWorkout(target, workout)}
+                              connectNulls={true}
                             />
                           ))}
                         </LineChart>
