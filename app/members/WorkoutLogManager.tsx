@@ -9,6 +9,14 @@ import { ChevronUpIcon } from '@heroicons/react/20/solid'
 import dayjs from 'dayjs';
 import { normalizeDateInput, handleKeyNavigation } from '@/utils/inputUtils';
 import { useHorizontalDragScroll } from '@/utils/useHorizontalDragScroll';
+import { FaStar, FaRegStar } from 'react-icons/fa';
+
+type ExerciseLog = {
+  id: string;
+  name: string;
+  sets: number;
+  reps: number;
+};
 
 type Member = {
   member_id: number
@@ -86,7 +94,41 @@ export default function WorkoutLogManager({
   const monthRef = useRef<HTMLInputElement>(null);
   const dayRef = useRef<HTMLInputElement>(null);
 
+  const [showFavoritesOnly, setShowFavoritesOnly] = useState(false);
+  const [favorites, setFavorites] = useState<Set<string>>(() => {
+    // 초기 로딩 시 localStorage에서 가져오기
+    try {
+      const stored = localStorage.getItem('favorites');
+      if (stored) {
+        // JSON.parse는 배열로 파싱됨 -> Set으로 변환
+        return new Set(JSON.parse(stored));
+      }
+    } catch (e) {
+      console.error('Error parsing favorites from localStorage', e);
+    }
+    return new Set();
+  });
 
+  const displayedRows = showFavoritesOnly
+    ? rows.filter(({ target, workout }) =>
+        favorites.has(`${target}||${workout}`)
+      )
+    : rows;  
+
+  const toggleFavorite = (rowKey: string) => {
+    setFavorites((prev) => {
+      const newFavorites = new Set(prev);
+      if (newFavorites.has(rowKey)) {
+        newFavorites.delete(rowKey);
+      } else {
+        newFavorites.add(rowKey);
+      }
+      // localStorage 저장
+      localStorage.setItem('favorites', JSON.stringify(Array.from(newFavorites)));
+      return newFavorites;
+    });
+  };
+    
   const levelWorkoutsMap = rows.reduce((acc, { level, target, workout }) => {
     if (!acc[level]) acc[level] = new Set()
     acc[level].add(`${target}||${workout}`)
@@ -490,22 +532,42 @@ export default function WorkoutLogManager({
             >
               {member.level}
             </div>
+            <button
+              onClick={() => setShowFavoritesOnly((prev) => !prev)}
+              className={`
+                flex items-center gap-2 px-3 py-1.5 rounded-full text-sm font-medium transition
+                ${showFavoritesOnly
+                  ? 'bg-yellow-500 text-white hover:bg-yellow-600'
+                  : 'bg-gray-200 text-gray-800 hover:bg-gray-300'}
+              `}
+            >
+              {showFavoritesOnly ? (
+                <>
+                  <FaStar className="text-yellow-300" />
+                  즐겨찾기
+                </>
+              ) : (
+                <>
+                  <FaRegStar className="text-gray-500" />
+                  전체운동
+                </>
+              )}
+            </button>
           </div>
-        </div>
-
-
+        </div> 
+        
         {/* overflow-x-auto로 좌우 스크롤 가능하게 래핑 */}
         <div ref = {scrollRef} className="overflow-auto bg-white border border-white">
           <table className="table-fixed min-w-max text-sm border-collapse border border-gray-300 bg-white">
             <thead className="bg-gray-100 text-gray-700 select-none">
               <tr>
-                <th className="border px-2 py-2 text-center font-semibold w-[90px] md:sticky top-0 md:left-0 bg-gray-200 md:z-40">
+                <th className="border px-2 py-2 text-center font-semibold w-[100px] md:sticky top-0 md:left-0 bg-gray-200 md:z-40">
                   LEVEL
                 </th>
-                <th className="border px-2 py-2 text-center font-semibold w-[90px] md:sticky top-0 md:left-[90px] bg-gray-200 md:z-30">
+                <th className="border px-2 py-2 text-center font-semibold w-[90px] md:sticky top-0 md:left-[100px] bg-gray-200 md:z-30">
                   TARGET
                 </th>
-                <th className="border px-2 py-2 text-center font-semibold w-[120px] md:sticky top-0 md:left-[180px] bg-gray-200 md:z-20">
+                <th className="border px-2 py-2 text-center font-semibold w-[120px] md:sticky top-0 md:left-[190px] bg-gray-200 md:z-20">
                   WORKOUT
                 </th>
 
@@ -603,7 +665,8 @@ export default function WorkoutLogManager({
             </thead>
 
             <tbody className="bg-white">
-              {rows.map(({ target, workout, level }, rowIndex) => {
+              {/* {rows.map(({ target, workout, level }, rowIndex) => { */}
+              {displayedRows.map(({ target, workout, level }, rowIndex) => {
                 const rowKey = `${target}||${workout}`;
                 const levelColor = {
                   'Level 1': 'bg-yellow-400',
@@ -616,16 +679,32 @@ export default function WorkoutLogManager({
                 return (
                   <tr key={rowKey} className="hover:bg-blue-50 text-sm">
                     <td className="border px-2 py-1 md:sticky left-0 z-30 font-semibold relative pl-6 whitespace-normal bg-gray-50">
-                      <span className={`absolute left-1 top-1/2 -translate-y-1/2 w-3 h-3 rounded-full ${levelColor}`} />
-                      {level}
+                      {/* 즐겨찾기 버튼 (⭐) */}
+                      <button
+                        onClick={() => toggleFavorite(rowKey)}
+                        className="absolute left-1 top-1/2 -translate-y-1/2 px-1"
+                        title={favorites.has(rowKey) ? "즐겨찾기 제거" : "즐겨찾기 추가"}
+                      >
+                        {favorites.has(rowKey) ? (
+                          <FaStar className="text-yellow-400 hover:text-yellow-500 transition transform scale-110" />
+                        ) : (
+                          <FaRegStar className="text-gray-300 hover:text-yellow-400 transition transform hover:scale-110" />
+                        )}
+                      </button>
+
+                      {/* 난이도 색깔 점 */}
+                      <span className={`absolute left-7 top-1/2 -translate-y-1/2 w-3 h-3 rounded-full ${levelColor}`} />
+                      
+                      {/* 난이도 텍스트 */}
+                      <span className="pl-5">{level}</span>
                     </td>
-                    <td className="border px-2 py-1 md:sticky left-[90px] bg-gray-50 z-20 font-semibold whitespace-normal">
+                    <td className="border px-2 py-1 md:sticky left-[100px] bg-gray-50 z-20 font-semibold whitespace-normal">
                       {target}
                     </td>
-                    <td className="border px-2 py-1 md:sticky left-[180px] bg-gray-50 z-10 font-semibold text-sm whitespace-normal">
+                    <td className="border px-2 py-1 md:sticky left-[190px] bg-gray-50 z-10 font-semibold text-sm whitespace-normal">
                       {workout}
                     </td>
-
+                    
                     {/* 날짜별 셀 */}
                     {dates.map((date, colIndex) => {
                       const totalRows = rows.length;
