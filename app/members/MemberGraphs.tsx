@@ -1,17 +1,15 @@
 'use client'
 
+import dayjs from 'dayjs';
 import { ArrowLeft, NotebookPen, ArrowUpDown } from 'lucide-react'
 import { useEffect, useState } from 'react'
-// import { NewWorkoutRecord, WorkoutRecord, Member, WorkoutType } from './types'
 import { WorkoutRecord, Member, WorkoutType } from './types'
 import {
   LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer,
 } from 'recharts'
 import { Button } from '@/components/ui/button'
-// import AddRecordForm from "./AddRecordOpen"
 import WorkoutLogManager from './WorkoutLogManager' 
 import OrderManagementModal from './OrderManagementModal'
-// import { addWorkoutRecordToDB, getWorkoutRecords, deleteWorkoutRecordById, getWorkoutTypes } from '../../lib/supabase' // 실제 경로에 맞춰 수정 필요
 import { getWorkoutTypes } from '../../lib/supabase' // 실제 경로에 맞춰 수정 필요
 
 type Props = {
@@ -345,12 +343,16 @@ export default function MemberGraphs({ member, logs: initialLogs, onBack }: Prop
                     <div className="flex-1">
                       <h4 className="text-sm text-black font-medium mb-2">Weight (kg)</h4>
                       <ResponsiveContainer width="100%" height={400}>
-                        <LineChart data={weightData}>
+                        <LineChart data={weightData} margin={{ top: 30, right: 20, bottom: 5, left: 0 }}>
                           <CartesianGrid strokeDasharray="3 3" />
-                          <XAxis dataKey="date" tick={{ fontSize: 12 }} />
-                          <YAxis tick={{ fontSize: 12 }} />
+                          <XAxis 
+                            dataKey="date" 
+                            tick={{ fontSize: 12, fontWeight: 600 }}
+                            tickFormatter={(date: string) => dayjs(date).format('YY.MM.DD')}
+                           />
+                          <YAxis tick={{ fontSize: 12, fontWeight: 600 }} />
                           <Tooltip wrapperStyle={{ fontSize: 12 }} labelStyle={{ color: 'black' }} />
-                          <Legend wrapperStyle={{ fontSize: 12 }} />
+                          <Legend wrapperStyle={{ fontSize: 12, fontWeight: 600 }} />
                           {sortedWorkouts.map((workout) => (
                             <Line
                               key={workout}
@@ -358,7 +360,25 @@ export default function MemberGraphs({ member, logs: initialLogs, onBack }: Prop
                               dataKey={workout}
                               name={workout}
                               stroke={getColorForWorkout(target, workout)}
+                              strokeWidth={2}
+                              dot={{ r: 3 }}
                               connectNulls={true}
+                              label={
+                                viewMode === 'monthly'
+                                  ? (props) => (
+                                      <text
+                                        x={props.x}
+                                        y={props.y - 10} // dot보다 위쪽에 표시
+                                        fill="#555"
+                                        fontSize={12}  
+                                        fontWeight="bold" 
+                                        textAnchor="middle"
+                                      >
+                                        {props.value}
+                                      </text>
+                                    )
+                                  : false
+                              }
                             />
                           ))}
                         </LineChart>
@@ -397,13 +417,41 @@ export default function MemberGraphs({ member, logs: initialLogs, onBack }: Prop
                       <div className="flex-1">
                         <h4 className="text-sm text-black font-medium mb-2">Weight (kg)</h4>
                         <ResponsiveContainer width="100%" height={400}>
-                          <LineChart data={filtered}>
+                          <LineChart data={filtered} margin={{ top: 30, right: 20, bottom: 5, left: 0 }}>
                             <CartesianGrid strokeDasharray="3 3" />
-                            <XAxis dataKey="workout_date" tick={{ fontSize: 12 }} />
-                            <YAxis tick={{ fontSize: 12 }} />
+                            <XAxis 
+                              dataKey="workout_date" 
+                              tick={{ fontSize: 12, fontWeight: 600 }} 
+                              tickFormatter={(date: string) => dayjs(date).format('YY.MM.DD')}
+                            />
+                            <YAxis tick={{ fontSize: 12, fontWeight: 600 }} />
                             <Tooltip wrapperStyle={{ fontSize: 12 }} labelStyle={{ color: 'black' }} />
-                            <Legend wrapperStyle={{ fontSize: 12 }} />
-                            <Line type="monotone" dataKey="weight" name="Weight" stroke={color} />
+                            <Legend wrapperStyle={{ fontSize: 12, fontWeight: 600 }} />
+                            <Line 
+                              type="monotone" 
+                              dataKey="weight" 
+                              name="Weight" 
+                              stroke={color} 
+                              strokeWidth={2}
+                              dot={{ r: 3 }}
+                              connectNulls={true}
+                              label={
+                                viewMode === 'monthly'
+                                    ? (props) => (
+                                        <text
+                                        x={props.x}
+                                        y={props.y - 10} // dot보다 위쪽에 표시
+                                        fill="#555"
+                                        fontSize={12}  
+                                        fontWeight="bold" 
+                                        textAnchor="middle"
+                                        >
+                                        {props.value}
+                                        </text>
+                                    )
+                                    : false
+                                }
+                            />
                           </LineChart>
                         </ResponsiveContainer>
                       </div>

@@ -87,13 +87,12 @@ export default function WorkoutLogManager({
   const monthRef = useRef<HTMLInputElement>(null);
   const dayRef = useRef<HTMLInputElement>(null);
 
+  const FAVORITE_KEY = `favorites_${member.member_id}`;
   const [showFavoritesOnly, setShowFavoritesOnly] = useState(false);
   const [favorites, setFavorites] = useState<Set<string>>(() => {
-    // 초기 로딩 시 localStorage에서 가져오기
     try {
-      const stored = localStorage.getItem('favorites');
+      const stored = localStorage.getItem(`favorites_${member.member_id}`);
       if (stored) {
-        // JSON.parse는 배열로 파싱됨 -> Set으로 변환
         return new Set(JSON.parse(stored));
       }
     } catch (e) {
@@ -116,8 +115,7 @@ export default function WorkoutLogManager({
       } else {
         newFavorites.add(rowKey);
       }
-      // localStorage 저장
-      localStorage.setItem('favorites', JSON.stringify(Array.from(newFavorites)));
+      localStorage.setItem(FAVORITE_KEY, JSON.stringify(Array.from(newFavorites)));
       return newFavorites;
     });
   };

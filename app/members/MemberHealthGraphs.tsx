@@ -6,11 +6,9 @@ import {
   LineChart, Line, XAxis, YAxis, CartesianGrid, ResponsiveContainer
 } from 'recharts';
 import { HealthMetric, Member, HealthMetricType } from './types';
-// import AddHealthMetricOpen from './AddHealthMetricOpen';
 import HealthMetricManager from './HealthMetricManager' 
 import OrderHealthMetricModal from './OrderHealthMetricModal'
 import { NotebookPen, ArrowLeft, ArrowUpDown } from 'lucide-react';
-// import { addHealthMetricsToDB, getHealthMetrics, deleteHealthMetricById } from '@/lib/supabase';
 import { Button } from '@/components/ui/button';
 import { getHealthMetricTypes } from '../../lib/supabase' // 실제 경로에 맞춰 수정 필요
 
@@ -19,9 +17,6 @@ interface Props {
   member: Member;
   onBack: () => void;
 }
-
-// const normalizeMetricKey = (label: string): string =>
-//   label.toLowerCase().replace(/\s+/g, '_');
 
 // metric 별로 날짜별 값만 뽑아서 배열로 리턴
 function createChartDataForMetric(logs: HealthMetric[], metricType: string) {
