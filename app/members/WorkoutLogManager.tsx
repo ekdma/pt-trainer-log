@@ -87,37 +87,100 @@ export default function WorkoutLogManager({
   const monthRef = useRef<HTMLInputElement>(null);
   const dayRef = useRef<HTMLInputElement>(null);
 
-  const FAVORITE_KEY = `favorites_${member.member_id}`;
   const [showFavoritesOnly, setShowFavoritesOnly] = useState(false);
-  const [favorites, setFavorites] = useState<Set<string>>(() => {
-    try {
-      const stored = localStorage.getItem(`favorites_${member.member_id}`);
-      if (stored) {
-        return new Set(JSON.parse(stored));
-      }
-    } catch (e) {
-      console.error('Error parsing favorites from localStorage', e);
+  const [favorites, setFavorites] = useState<Set<string>>(new Set());
+  
+  useEffect(() => {
+    fetchLastViewMode(); // 마지막 보기 상태 불러오기
+    fetchFavorites();    // 즐겨찾기 불러오기
+  }, [member.member_id]);
+  
+  const fetchLastViewMode = async () => {
+    const { data, error } = await supabase
+      .from('members')
+      .select('last_view_mode')
+      .eq('member_id', member.member_id)
+      .single();
+  
+    if (error) {
+      console.error('보기 상태 불러오기 오류:', error.message);
+      return;
     }
-    return new Set();
-  });
+  
+    setShowFavoritesOnly(data?.last_view_mode === 'favorites');
+  };
 
+  const fetchFavorites = async () => {
+    const { data, error } = await supabase
+      .from('favorites')
+      .select('target, workout')
+      .eq('member_id', member.member_id);
+  
+    if (error) {
+      console.error('즐겨찾기 불러오기 오류:', error.message);
+      return;
+    }
+  
+    const favSet = new Set(data.map(fav => `${fav.target}||${fav.workout}`));
+    setFavorites(favSet);
+  };
+
+  const toggleViewMode = async () => {
+    const newMode = !showFavoritesOnly;
+    setShowFavoritesOnly(newMode);
+  
+    const { error } = await supabase
+      .from('members')
+      .update({ last_view_mode: newMode ? 'favorites' : 'all' })
+      .eq('member_id', member.member_id);
+  
+    if (error) {
+      console.error('보기 상태 저장 실패:', error.message);
+    }
+  };
+  
   const displayedRows = showFavoritesOnly
     ? rows.filter(({ target, workout }) =>
         favorites.has(`${target}||${workout}`)
       )
     : rows;  
 
-  const toggleFavorite = (rowKey: string) => {
-    setFavorites((prev) => {
-      const newFavorites = new Set(prev);
-      if (newFavorites.has(rowKey)) {
-        newFavorites.delete(rowKey);
-      } else {
-        newFavorites.add(rowKey);
+  const toggleFavorite = async (rowKey: string) => {
+    const [target, workout] = rowKey.split('||');
+    const isFav = favorites.has(rowKey);
+  
+    if (isFav) {
+      // Supabase에서 삭제
+      const { error } = await supabase
+        .from('favorites')
+        .delete()
+        .eq('member_id', member.member_id)
+        .eq('target', target)
+        .eq('workout', workout);
+  
+      if (error) {
+        console.error('즐겨찾기 삭제 실패:', error.message);
+        return;
       }
-      localStorage.setItem(FAVORITE_KEY, JSON.stringify(Array.from(newFavorites)));
-      return newFavorites;
-    });
+  
+      setFavorites(prev => {
+        const newSet = new Set(prev);
+        newSet.delete(rowKey);
+        return newSet;
+      });
+    } else {
+      // Supabase에 추가
+      const { error } = await supabase
+        .from('favorites')
+        .insert({ member_id: member.member_id, target, workout });
+  
+      if (error) {
+        console.error('즐겨찾기 추가 실패:', error.message);
+        return;
+      }
+  
+      setFavorites(prev => new Set(prev).add(rowKey));
+    }
   };
     
   const levelWorkoutsMap = rows.reduce((acc, { level, target, workout }) => {
@@ -524,7 +587,7 @@ export default function WorkoutLogManager({
               {member.level}
             </div>
             <button
-              onClick={() => setShowFavoritesOnly((prev) => !prev)}
+              onClick={toggleViewMode}
               className={`
                 flex items-center gap-2 px-3 py-1.5 rounded-full text-sm font-medium transition
                 ${showFavoritesOnly
