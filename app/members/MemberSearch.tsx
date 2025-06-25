@@ -211,9 +211,9 @@ export default function MemberSearch({
                     <span className="flex items-center gap-1 bg-gray-100 text-gray-900 px-2 py-1 rounded-full shadow-sm">
                       {member.sex}
                     </span>
-                    <span className="flex items-center gap-1 bg-gray-100 text-gray-900 px-2 py-1 rounded-full shadow-sm">
+                    {/* <span className="flex items-center gap-1 bg-gray-100 text-gray-900 px-2 py-1 rounded-full shadow-sm">
                       {calculateAge(member.birth_date)}세
-                    </span>
+                    </span> */}
                     <span className="flex items-center gap-1 bg-gray-100 text-gray-900 px-2 py-1 rounded-full shadow-sm">
                       <Calendar size={13} />{formattedJoinDate}
                     </span>
