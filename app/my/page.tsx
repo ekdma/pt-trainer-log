@@ -2,43 +2,42 @@
 
 import { Dumbbell, Salad } from 'lucide-react'
 import { useState, useEffect } from 'react'
-import { useRouter } from 'next/navigation'
-import MemberSearch from './MemberSearch'
-import MemberGraphs from './MemberGraphs'
-import MemberHealthGraphs from './MemberHealthGraphs'
-import type { Member, WorkoutRecord, HealthMetric } from './types'
-import { fetchWorkoutLogs, fetchHealthLogs } from '../../utils/fetchLogs' // ✅ 따로 fetch 함수 만든다고 가정
 import { getSupabaseClient } from '@/lib/supabase'
+import MemberSearch from '@/app/members/MemberSearch'
+import MemberGraphs from '@/app/members/MemberGraphs'
+import MemberHealthGraphs from '@/app/members/MemberHealthGraphs'
+import type { Member, WorkoutRecord, HealthMetric } from '@/app/members/types'
+import { fetchWorkoutLogs, fetchHealthLogs } from '../../utils/fetchLogs'
 
 export default function MembersPage() {
   const [selectedMember, setSelectedMember] = useState<Member | null>(null)
   const [workoutLogs, setWorkoutLogs] = useState<WorkoutRecord[]>([])
   const [healthLogs, setHealthLogs] = useState<HealthMetric[]>([])
   const [activeTab, setActiveTab] = useState<'workout' | 'health'>('workout')
-  // const [workoutTypes, setWorkoutTypes] = useState<WorkoutType[]>([]);
+  const [isTrainer, setIsTrainer] = useState<boolean>(true)
 
-  const router = useRouter()
   const supabase = getSupabaseClient()
 
+  // 🔐 로그인한 사용자 정보에서 member 설정
   useEffect(() => {
-    const checkRole = () => {
+    const initializeMember = async () => {
       try {
         const raw = localStorage.getItem('litpt_member')
         const member = raw ? JSON.parse(raw) : null
-  
-        if (!member || member.role !== 'trainer') {
-          router.replace('/not-authorized')
+
+        if (member) {
+          setSelectedMember(member)
+          setIsTrainer(member.role === 'trainer')
         }
       } catch (e) {
-        router.replace('/not-authorized')
+        console.error('회원 정보 파싱 오류:', e)
       }
     }
-  
-    checkRole()
-  }, [router])
-  
 
-  // ✅ 탭 전환 시 자동 새로고침
+    initializeMember()
+  }, [])
+
+  // ✅ 탭 전환 또는 member 변경 시 로그 가져오기
   useEffect(() => {
     const fetchLogs = async () => {
       if (!selectedMember) return
@@ -92,29 +91,38 @@ export default function MembersPage() {
             {activeTab === 'workout' ? (
               <MemberGraphs
                 member={selectedMember}
-                record={workoutLogs.filter(log => log.member_id === selectedMember.member_id)}
-                logs={workoutLogs.filter(log => log.member_id === selectedMember.member_id)}
-                // workoutTypes={workoutTypes}
-                // setWorkoutTypes={setWorkoutTypes} // ✅ 추가
-                onBack={() => setSelectedMember(null)}
+                record={workoutLogs}
+                logs={workoutLogs}
+                onBack={() => {
+                  if (isTrainer) {
+                    setSelectedMember(null)
+                  }
+                }}
               />
             ) : (
               <MemberHealthGraphs
                 member={selectedMember}
-                healthLogs={healthLogs.filter(log => log.member_id === selectedMember.member_id)}
-                onBack={() => setSelectedMember(null)}
+                healthLogs={healthLogs}
+                onBack={() => {
+                  if (isTrainer) {
+                    setSelectedMember(null)
+                  }
+                }}
               />
             )}
           </>
         ) : (
-          <MemberSearch
-            onSelectMember={(member) => {
-              setSelectedMember(member)
-              setActiveTab('workout')
-            }}
-            onSetLogs={setWorkoutLogs}
-            onSetHealthLogs={setHealthLogs}
-          />
+          // 트레이너만 회원 검색 가능
+          isTrainer && (
+            <MemberSearch
+              onSelectMember={(member) => {
+                setSelectedMember(member)
+                setActiveTab('workout')
+              }}
+              onSetLogs={setWorkoutLogs}
+              onSetHealthLogs={setHealthLogs}
+            />
+          )
         )}
       </div>
     </main>

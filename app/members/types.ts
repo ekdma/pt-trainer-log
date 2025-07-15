@@ -8,7 +8,48 @@ export type Member = {
   sex: string
   before_level: string
   modified_dt: string
+  role: string
+  phone: string
 }
+
+export type MemberPackage = {
+  member_package_id: number;
+  member_id: number;
+  package_id: number;
+  pt_session_cnt: number;
+  group_session_cnt: number;
+  price: number;
+  start_date: string;
+  end_date: string;
+  trainer_id: number | null;
+  status: string;
+  packages?: {
+    package_id: number;
+    package_name: string;
+    valid_date: number;
+    pt_session_cnt: number;
+    group_session_cnt: number;
+    price: number;
+  }
+  trainers?: {
+    trainer_id: number;
+    name: string;
+  }
+};
+
+export type Package = {
+  package_id: number;
+  package_name: string;
+  valid_date: number;
+  pt_session_cnt: number;
+  group_session_cnt: number;
+  price: number;
+};
+
+export type Trainer = {
+  trainer_id: number;
+  name: string;
+};
 
 // 사용자가 입력할 때 사용하는 타입
 export type NewWorkoutRecord = {

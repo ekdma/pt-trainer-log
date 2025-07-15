@@ -54,8 +54,8 @@ export default function OrderManagementModal({ allTypes, isOpen, onClose, onRefr
   const [selectedTarget, setSelectedTarget] = useState<string | null>(null);
   const [workoutOrder, setWorkoutOrder] = useState<string[]>([]);
   const [loading, setLoading] = useState(false);
-
-  const uniqueTargets = Array.from(new Set(allTypes.map((t) => t.target)));
+  const filteredTypes = allTypes.filter(t => t.level !== 'GROUP');
+  const uniqueTargets = Array.from(new Set(filteredTypes.map(t => t.target)));
 
   const sensors = useSensors(
     useSensor(MouseSensor),
@@ -70,13 +70,13 @@ export default function OrderManagementModal({ allTypes, isOpen, onClose, onRefr
   // 초기 Target 순서 설정
   useEffect(() => {
     const targetMap = new Map<string, number>();
-    for (const t of allTypes) {
+    for (const t of filteredTypes) {
       if (!targetMap.has(t.target)) {
-        const found = allTypes.find((x) => x.target === t.target);
-        if (typeof found?.["order_target"] === "number") {
-          targetMap.set(t.target, found["order_target"]);
+        const found = filteredTypes.find((x) => x.target === t.target);
+        if (typeof found?.order_target === "number") {
+          targetMap.set(t.target, found.order_target);
         } else {
-          targetMap.set(t.target, 999); // 순서 없으면 뒤로
+          targetMap.set(t.target, 999);
         }
       }
     }
@@ -84,16 +84,16 @@ export default function OrderManagementModal({ allTypes, isOpen, onClose, onRefr
       (a, b) => (targetMap.get(a) ?? 999) - (targetMap.get(b) ?? 999)
     );
     setTargetOrder(sorted);
-  }, [allTypes]);  
+  }, [filteredTypes]);
 
   // Workout 순서 설정 (Target 선택 시)
   useEffect(() => {
     if (!selectedTarget) return;
-    const filtered = allTypes.filter((t) => t.target === selectedTarget);
+    const filtered = filteredTypes.filter((t) => t.target === selectedTarget);
     const workoutMap = new Map<string, number>();
     for (const f of filtered) {
-      if (typeof f["order_workout"] === "number") {
-        workoutMap.set(f.workout, f["order_workout"]);
+      if (typeof f.order_workout === "number") {
+        workoutMap.set(f.workout, f.order_workout);
       } else {
         workoutMap.set(f.workout, 999);
       }
@@ -103,7 +103,7 @@ export default function OrderManagementModal({ allTypes, isOpen, onClose, onRefr
       .filter((w, i, arr) => arr.indexOf(w) === i)
       .sort((a, b) => (workoutMap.get(a) ?? 999) - (workoutMap.get(b) ?? 999));
     setWorkoutOrder(sorted);
-  }, [selectedTarget, allTypes]);
+  }, [selectedTarget, filteredTypes]);
   
   // DND 핸들러
   const handleDragEnd = (event: DragEndEvent) => {

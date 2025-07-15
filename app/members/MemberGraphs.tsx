@@ -117,6 +117,7 @@ function getColorForWorkout(target: string, workout: string) {
 }
 
 export default function MemberGraphs({ member, logs: initialLogs, onBack }: Props) {
+  const [isTrainer, setIsTrainer] = useState(false)
   const [logs, setLogs] = useState<WorkoutRecord[]>([])
   const [allTypes, setAllTypes] = useState<WorkoutType[]>([]);
   const [isOrderModalOpen, setIsOrderModalOpen] = useState(false)
@@ -126,6 +127,18 @@ export default function MemberGraphs({ member, logs: initialLogs, onBack }: Prop
   const [selectedTarget, setSelectedTarget] = useState<string | null>(null)
   const [viewMode, setViewMode] = useState<'daily' | 'monthly'>('daily');
 
+  useEffect(() => {
+    try {
+      const raw = localStorage.getItem('litpt_member')
+      const loggedInMember = raw ? JSON.parse(raw) : null
+      if (loggedInMember?.role === 'trainer') {
+        setIsTrainer(true)
+      }
+    } catch (e) {
+      console.error('Failed to read login info:', e)
+    }
+  }, [])
+  
   useEffect(() => {
     setLogs(initialLogs)
   }, [initialLogs])
@@ -212,13 +225,15 @@ export default function MemberGraphs({ member, logs: initialLogs, onBack }: Prop
         <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center space-y-2 sm:space-y-0">
           <h2 className="text-xl text-black font-semibold">{member.name} 님의 운동 기록</h2>
           <div className="flex flex-col sm:flex-row sm:space-x-2 space-y-2 sm:space-y-0">
-            <Button 
-              className="w-full sm:w-auto flex items-center gap-1 text-sm text-gray-600 border border-gray-400 px-3 py-1.5 rounded-lg hover:bg-gray-100 transition duration-200"
-              onClick={() => setIsOrderModalOpen(true)}
-            >
-              <ArrowUpDown size={16} />
-              순서관리
-            </Button>
+            {isTrainer && (
+              <Button 
+                className="w-full sm:w-auto flex items-center gap-1 text-sm text-gray-600 border border-gray-400 px-3 py-1.5 rounded-lg hover:bg-gray-100 transition duration-200"
+                onClick={() => setIsOrderModalOpen(true)}
+              >
+                <ArrowUpDown size={16} />
+                순서관리
+              </Button>
+            )}
             <Button 
               onClick={() => setIsWorkoutManagerOpen(true)}
               className="w-full sm:w-auto flex items-center gap-1 text-sm text-violet-600 border border-violet-600 px-3 py-1.5 rounded-lg hover:bg-violet-100 transition duration-200"
@@ -226,13 +241,16 @@ export default function MemberGraphs({ member, logs: initialLogs, onBack }: Prop
               <NotebookPen size={16} />
               기록관리
             </Button>
-            <Button
-              onClick={onBack}
-              className="w-full sm:w-auto flex items-center gap-1 text-sm text-indigo-600 border border-indigo-600 px-3 py-1.5 rounded-lg hover:bg-indigo-100 transition duration-200"
-            >
-              <ArrowLeft size={16} />
-              뒤로
-            </Button>
+            
+            {isTrainer && (
+              <Button
+                onClick={onBack}
+                className="w-full sm:w-auto flex items-center gap-1 text-sm text-indigo-600 border border-indigo-600 px-3 py-1.5 rounded-lg hover:bg-indigo-100 transition duration-200"
+              >
+                <ArrowLeft size={16} />
+                뒤로
+              </Button>
+            )}
           </div>
         </div>
 

@@ -55,6 +55,8 @@ export default function WorkoutLogManager({
   onClose,
   onUpdateLogs,
 }: WorkoutLogManagerProps) {
+  const [isTrainer, setIsTrainer] = useState(false)
+
   const [dates, setDates] = useState<string[]>([])
   const [rows, setRows] = useState<{ target: string; workout: string; level: string }[]>([])
   const [logMap, setLogMap] = useState<Record<string, Record<string, { weight: number; id?: number }>>>({})
@@ -87,9 +89,106 @@ export default function WorkoutLogManager({
   const monthRef = useRef<HTMLInputElement>(null);
   const dayRef = useRef<HTMLInputElement>(null);
 
+  const baseline_today = new Date();
+  const oneWeekAgo = new Date(baseline_today);
+  oneWeekAgo.setDate(baseline_today.getDate() - 7);
+
   const [showFavoritesOnly, setShowFavoritesOnly] = useState(false);
   const [favorites, setFavorites] = useState<Set<string>>(new Set());
   
+  const [ptSessionDates, setPtSessionDates] = useState<Set<string>>(new Set());
+  const [ptSessionMenu, setPtSessionMenu] = useState<{ date: string; anchor: DOMRect } | null>(null);
+  const headerRefs = useRef<Record<string, HTMLTableCellElement | null>>({});
+  const longPressTimeout = useRef<NodeJS.Timeout | null>(null);
+
+  const handleLongPressStart = (e: React.TouchEvent | React.MouseEvent, date: string) => {
+    const target = headerRefs.current[date];
+    if (!target) return;
+  
+    longPressTimeout.current = setTimeout(() => {
+      const rect = target.getBoundingClientRect();
+      setPtSessionMenu({ date, anchor: rect });
+    }, 600);
+  };
+  
+  const handleLongPressEnd = () => {
+    if (longPressTimeout.current) {
+      clearTimeout(longPressTimeout.current);
+      longPressTimeout.current = null;
+    }
+  };
+  
+  const savePtSession = async (date: string, type: 'PT' | 'SELF') => {
+    await supabase.from('pt_sessions').upsert({
+      member_id: member.member_id,
+      session_date: date,
+      session_type: type,
+    }, { onConflict: 'member_id,session_date' }); // ✅ 문자열 (콤마로 연결된 컬럼명)
+  };
+  
+  const deletePtSession = async (date: string) => {
+    const { error } = await supabase
+      .from('pt_sessions')
+      .delete()
+      .eq('member_id', member.member_id)
+      .eq('session_date', date);
+  
+    if (error) {
+      alert('PT 세션 삭제 실패: ' + error.message);
+    }
+  };
+
+  useEffect(() => {
+    const loadPtSessions = async () => {
+      const { data, error } = await supabase
+        .from('pt_sessions')
+        .select('session_date')
+        .eq('member_id', member.member_id)
+        .eq('session_type', 'PT'); // PT 세션만
+  
+      if (error) {
+        console.error('PT 세션 불러오기 실패:', error.message);
+      } else if (data) {
+        const ptDates = new Set(data.map(row => dayjs(row.session_date).format('YYYY-MM-DD')));
+        setPtSessionDates(ptDates);
+      }
+    };
+  
+    loadPtSessions();
+  }, [member.member_id]);
+
+  
+  const scrollRef = useRef<HTMLDivElement>(null);
+  useHorizontalDragScroll(scrollRef);
+
+  useEffect(() => {
+    if (dates.length === 0) return;
+    
+    const timeout = setTimeout(() => {
+      if (scrollRef.current) {
+        scrollRef.current.scrollTo({
+          left: scrollRef.current.scrollWidth,
+          behavior: 'smooth',
+        });
+      }
+    }, 50);
+  
+    return () => clearTimeout(timeout);
+  }, [dates]);
+  
+  
+  useEffect(() => {
+    try {
+      const raw = localStorage.getItem('litpt_member')
+      const loggedInMember = raw ? JSON.parse(raw) : null
+      if (loggedInMember?.role === 'trainer') {
+        setIsTrainer(true)
+      }
+    } catch (e) {
+      console.error('Failed to read login info:', e)
+    }
+  }, [])
+
   useEffect(() => {
     fetchLastViewMode(); // 마지막 보기 상태 불러오기
     fetchFavorites();    // 즐겨찾기 불러오기
@@ -305,6 +404,20 @@ export default function WorkoutLogManager({
     setIsEmptyLog((logs ?? []).length === 0)
   }
 
+  const isDateWithinLast7Days = (dateStr: string): boolean => {
+    const inputDate = new Date(dateStr)
+    const today = new Date()
+    const sevenDaysAgo = new Date()
+    sevenDaysAgo.setDate(today.getDate() - 7)
+  
+    // normalize time to avoid time comparison issues
+    inputDate.setHours(0, 0, 0, 0)
+    today.setHours(0, 0, 0, 0)
+    sevenDaysAgo.setHours(0, 0, 0, 0)
+  
+    return inputDate >= sevenDaysAgo && inputDate <= today
+  }
+
   const startAddingDate = () => {
     if (addingDate !== null) return;
     setAddingDate(today); // 또는 null로 설정
@@ -387,6 +500,11 @@ export default function WorkoutLogManager({
     
     // 2. 신규 날짜 추가된 셀 입력 (addingDate + newLogInputs)
     if (addingDate) {
+      if (!isTrainer && !isDateWithinLast7Days(addingDate)) {
+        alert('7일 이내의 날짜만 추가할 수 있습니다 😥');
+        return;
+      }
+
       for (const key of Object.keys(newLogInputs)) {
         const [target, workout] = key.split('||')
         const weight = Number(newLogInputs[key].weight)
@@ -512,8 +630,7 @@ export default function WorkoutLogManager({
     }
   }
   
-  const scrollRef = useRef<HTMLDivElement>(null);
-  useHorizontalDragScroll(scrollRef);
+
 
   // 열 추가시 오른쪽 끝으로 자동 스크롤
   useEffect(() => {
@@ -629,8 +746,18 @@ export default function WorkoutLogManager({
                 {dates.map((date) => (
                   <th
                     key={date}
-                    className="border px-1 py-1 text-center text-xs font-semibold md:sticky top-0 bg-gray-100 z-10 w-[80px] whitespace-nowrap overflow-hidden text-ellipsis"
-                  >
+                    onTouchStart={(e) => handleLongPressStart(e, date)}
+                    onTouchEnd={handleLongPressEnd}
+                    onMouseDown={(e) => handleLongPressStart(e, date)}
+                    onMouseUp={handleLongPressEnd}
+                    ref={(el) => {
+                      headerRefs.current[date] = el
+                    }}
+                    className={`
+                      border px-1 py-1 text-center text-xs font-semibold md:sticky top-0 bg-gray-100 z-10 w-[80px] whitespace-nowrap overflow-hidden text-ellipsis
+                      ${ptSessionDates.has(date) ? 'bg-red-100' : ''}
+                    `}
+                    >
                     {dayjs(date).format('YY.MM.DD')}
                   </th>
                 ))}
@@ -684,6 +811,18 @@ export default function WorkoutLogManager({
                             const fullDate = `${year}.${month}.${day}`;
                             const normalized = normalizeDateInput(fullDate);
                             if (normalized) {
+                              const todayDate = new Date().toISOString().split('T')[0];
+                            
+                              if (!isTrainer && !isDateWithinLast7Days(normalized)) {
+                                alert('7일 이내의 날짜만 추가할 수 있습니다 😥');
+                                return;
+                              }
+                            
+                              if (dates.includes(normalized)) {
+                                alert(`이미 존재하는 날짜입니다: ${normalized} ☹`);
+                                return;
+                              }
+                            
                               setAddingDate(normalized);
                         
                               // focus 다음 weight 입력칸으로 이동
@@ -770,14 +909,22 @@ export default function WorkoutLogManager({
                       const isCommonWorkout = commonWorkouts.includes(rowKey);
                       const isBeforeLevelWorkout = level === member.before_level;
                       const isAfterLevelWorkout = level === member.level;
+                      
+                      const isPastEditable =
+                        isTrainer || isDateWithinLast7Days(date)  
 
                       const isDisabled =
-                        !isCommonWorkout &&
-                        ((isBeforeLevelWorkout && !isBeforeModified) ||
-                          (isAfterLevelWorkout && !isAfterModified));
+                        !isPastEditable || (
+                          !isCommonWorkout &&
+                          ((isBeforeLevelWorkout && !isBeforeModified) ||
+                            (isAfterLevelWorkout && !isAfterModified))
+                        );
 
                       return (
-                        <td key={date} className="border px-1 py-1 text-center w-[80px]">
+                        <td 
+                          key={date} 
+                          className="border px-1 py-1 text-center w-[80px]"
+                        >
                           <input
                             type="number"
                             className={`
@@ -822,6 +969,7 @@ export default function WorkoutLogManager({
                         !isCommonWorkout &&
                         ((isBeforeLevelWorkout && !isBeforeModified) ||
                           (isAfterLevelWorkout && !isAfterModified));
+                  
 
                       return (
                         <td className="border px-1 py-1 text-center bg-yellow-50 w-[80px]">
@@ -1006,10 +1154,45 @@ export default function WorkoutLogManager({
             </>
           )}
         </Disclosure>
-
-
-
       </div>
+      
+      {isTrainer && ptSessionMenu && (
+        <div
+          className="absolute z-50 bg-white border rounded shadow-md text-sm"
+          style={{
+            top: ptSessionMenu.anchor.bottom + window.scrollY - 10,
+            left: ptSessionMenu.anchor.left + window.scrollX,
+          }}
+        >
+          <button
+            onClick={async () => {
+              await deletePtSession(ptSessionMenu.date);
+              await savePtSession(ptSessionMenu.date, 'PT');
+              setPtSessionDates(prev => new Set(prev).add(ptSessionMenu.date));
+              setPtSessionMenu(null);
+            }}
+            className="block w-full px-3 py-2 text-gray-600 hover:bg-red-100"
+          >
+            PT세션
+          </button>
+          <button
+            onClick={async () => {
+              await deletePtSession(ptSessionMenu.date);
+              await savePtSession(ptSessionMenu.date, 'SELF');
+              setPtSessionDates(prev => {
+                const newSet = new Set(prev);
+                newSet.delete(ptSessionMenu.date);
+                return newSet;
+              });
+              setPtSessionMenu(null);
+            }}
+            className="block w-full px-3 py-2 text-gray-600 hover:bg-gray-100"
+          >
+            개인운동
+          </button>
+        </div>
+      )}
+
     </div>
   )
 }

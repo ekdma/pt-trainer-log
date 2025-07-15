@@ -14,8 +14,121 @@
   }
 }
 
+@media (max-width: 640px) {
+  .react-calendar {
+    font-size: 0.875rem; /* 조금 작게 */
+  }
+  .react-calendar__navigation button {
+    width: 1.5rem;
+    height: 1.5rem;
+  }
+}
+
+
 body {
-  color: var(--foreground);
-  background: var(--background);
-  font-family: Arial, Helvetica, sans-serif;
+  @apply font-nanum;
+}
+
+.react-calendar {
+  font-family: 'Nanum Gothic', sans-serif !important;
+  border: none !important;
+  box-shadow: none !important; /* 혹시 그림자도 제거하고 싶으면 */
+}
+
+/* react-calendar 상단 네비게이션 텍스트 색상 변경 */
+.react-calendar__navigation {
+  color: #4b5563; /* Tailwind의 text-gray-600 색상 (#4b5563) */
+  background: transparent !important;
+  font-weight: 600;
+}
+
+/* react-calendar 날짜 기본 텍스트 색상 */
+.react-calendar__tile {
+  color: #4b5563; /* text-gray-600 */
+  padding: 0.75rem 0;
+}
+
+.react-calendar__navigation__label {
+  font-weight: 700;
+  font-size: 1.25rem;
+  letter-spacing: 0.05em;
+}
+
+
+.react-calendar__month-view__days__day--weekend {
+  color: #6b7280 !important; /* Tailwind text-gray-500 조금 더 부드럽게 */
+}
+
+
+/* PT 세션 날짜 배경색과 텍스트색 덮어쓰기 */
+.react-calendar__tile.pt-session {
+  background-color: #3b82f6 !important; /* Tailwind bg-blue-500 (#3b82f6) */
+  color: white !important;
+  font-weight: 700;
+  border-radius: 9999px; /* rounded-full */
+}
+
+/* GROUP 세션 날짜 배경색과 텍스트색 덮어쓰기 */
+.react-calendar__tile.group-session {
+  background-color: #9c31ff !important; /* Tailwind bg-green-500 (#22c55e) */
+  color: white !important;
+  font-weight: 700;
+  border-radius: 9999px; /* rounded-full */
+}
+
+/* 요일 텍스트 색상 (월~일 표시 줄) */
+.react-calendar__month-view__weekdays {
+  text-align: center;
+  text-transform: uppercase;
+  font-weight: 500;
+  color: #374151 !important; /* Tailwind text-gray-700 */
+  font-family: inherit;
+}
+
+/* 요일(월~일)의 개별 span */
+.react-calendar__month-view__weekdays__weekday {
+  padding: 0.5rem 0;
+}
+
+/* 이전/다음 달의 날짜 텍스트 색상 커스터마이징 */
+.react-calendar__month-view__days__day--neighboringMonth {
+  color: #d1d5db !important; /* Tailwind text-gray-300 */
+  background-color: transparent !important;
+}
+
+/* 선택된 날짜 배경색 회색, 글자색 검정 */
+.react-calendar__tile--active {
+  background-color: #9ca3af !important; /* Tailwind의 bg-gray-400 */
+  color: black !important;
+  font-weight: 700;
+}
+
+.react-calendar__tile:hover {
+  background-color: #e0e7ff; /* Tailwind의 bg-indigo-100 느낌 */
+  border-radius: 0.5rem;
+  transition: background-color 0.3s ease;
+}
+
+
+.react-calendar__tile--now {
+  border: 2px solid #f0bf7f; /* Tailwind blue-500 */
+  border-radius: 0.5rem;
+  font-weight: 700;
+}
+
+.react-calendar__navigation__prev-button,
+.react-calendar__navigation__next-button {
+  font-size: 0 !important; /* 기본 텍스트(← →) 숨김 */
+}
+
+.react-calendar__navigation__prev2-button,
+.react-calendar__navigation__next2-button {
+  font-size: 0 !important;
+}
+
+.react-calendar__navigation button {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0.25rem;
 }
