@@ -2,7 +2,6 @@
 
 import { useEffect, useState } from 'react'
 import { useRouter, useSearchParams } from 'next/navigation' // useSearchParams 추가
-import { getSupabaseClient } from '@/lib/supabase'
 import { useAuthGuard } from '@/hooks/useAuthGuard'
 import FoodDiaryMemberView from './FoodDiaryMemberView'
 import FoodDiaryTrainerView from './FoodDiaryTrainerView'
@@ -22,7 +21,6 @@ interface SessionUser {
 export default function FoodDiaryPage() {
   const router = useRouter()
   const searchParams = useSearchParams()
-  const supabase = getSupabaseClient()
   const [user, setUser] = useState<SessionUser | null>(null)
   const [loading, setLoading] = useState(true)
 

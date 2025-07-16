@@ -108,6 +108,7 @@ export default function FoodDiaryTrainerView({ initialSelectedMember = null }: F
 
   useEffect(() => {
     fetchMembers()
+    fetchCommentTemplates() 
   }, [])
 
   useEffect(() => {
