@@ -8,7 +8,7 @@ import MemberGraphs from './MemberGraphs'
 import MemberHealthGraphs from './MemberHealthGraphs'
 import type { Member, WorkoutRecord, HealthMetric } from './types'
 import { fetchWorkoutLogs, fetchHealthLogs } from '../../utils/fetchLogs' // ✅ 따로 fetch 함수 만든다고 가정
-import { getSupabaseClient } from '@/lib/supabase'
+import { useAuthGuard } from '@/hooks/useAuthGuard'
 
 export default function MembersPage() {
   const [selectedMember, setSelectedMember] = useState<Member | null>(null)
@@ -18,24 +18,25 @@ export default function MembersPage() {
   // const [workoutTypes, setWorkoutTypes] = useState<WorkoutType[]>([]);
 
   const router = useRouter()
-  const supabase = getSupabaseClient()
+  
+  useAuthGuard()
 
-  useEffect(() => {
-    const checkRole = () => {
-      try {
-        const raw = localStorage.getItem('litpt_member')
-        const member = raw ? JSON.parse(raw) : null
+  // useEffect(() => {
+  //   const checkRole = () => {
+  //     try {
+  //       const raw = localStorage.getItem('litpt_member')
+  //       const member = raw ? JSON.parse(raw) : null
   
-        if (!member || member.role !== 'trainer') {
-          router.replace('/not-authorized')
-        }
-      } catch (e) {
-        router.replace('/not-authorized')
-      }
-    }
+  //       if (!member || member.role !== 'trainer') {
+  //         router.replace('/not-authorized')
+  //       }
+  //     } catch (e) {
+  //       router.replace('/not-authorized')
+  //     }
+  //   }
   
-    checkRole()
-  }, [router])
+  //   checkRole()
+  // }, [router])
   
 
   // ✅ 탭 전환 시 자동 새로고침

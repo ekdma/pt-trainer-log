@@ -76,13 +76,16 @@ export default function AddGroupSessionOpen({ onClose, onSessionAdded }: Props) 
     const { data, error } = await supabase
       .from('trainers')
       .select('trainer_id, name')
-
+      .returns<{ trainer_id: number; name: string }[]>()  
+  
     if (!error && data) {
-      // trainers 배열에 id, name 저장
-      const formatted = data.map((t: any) => ({ id: t.trainer_id, name: t.name }))
+      const formatted = data.map(t => ({
+        id: t.trainer_id,
+        name: t.name,
+      }))
       setTrainers(formatted)
       if (formatted.length > 0) {
-        setSelectedTrainerId(formatted[0].id) // 첫번째 트레이너를 기본 선택으로
+        setSelectedTrainerId(formatted[0].id)
       }
     } else {
       console.error('트레이너 목록 불러오기 실패:', error)
@@ -114,10 +117,8 @@ export default function AddGroupSessionOpen({ onClose, onSessionAdded }: Props) 
       return
     }
   
-    let trainerId: number
     try {
       const member = JSON.parse(memberRaw)
-      trainerId = member.member_id
     } catch {
       setErrorMsg('로그인 정보가 올바르지 않습니다.')
       return

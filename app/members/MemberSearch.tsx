@@ -1,7 +1,6 @@
 'use client'
 
 import dayjs from 'dayjs';
-import { Button } from '@/components/ui/button'
 import { useState, useEffect } from 'react'
 import { getSupabaseClient } from '@/lib/supabase'
 import { Member, WorkoutRecord, HealthMetric } from './types'
@@ -11,11 +10,10 @@ import EditMemberModal from './EditMemberModal'
 import { useRouter } from 'next/navigation'
 import Calendar from 'react-calendar'
 import 'react-calendar/dist/Calendar.css'
-import { UsersIcon, Eye, EyeClosedIcon, X, UserRoundPen, UserRoundMinus, UserRoundPlus, UserRoundSearch, Calendar as CalendarIcon, PackageSearch, User, EyeClosed } from 'lucide-react';
+import { UsersIcon, Eye, EyeClosedIcon, X, UserRoundPen, UserRoundMinus, UserRoundPlus, UserRoundSearch, Calendar as CalendarIcon, PackageSearch, User } from 'lucide-react';
 import { ChevronLeftIcon, ChevronRightIcon, ChevronDoubleLeftIcon, ChevronDoubleRightIcon } from '@heroicons/react/24/solid'
 
 function toOrdinal(num: number) {
-  const suffixes = ["th", "st", "nd", "rd"];
   const v = num % 100;
   if (v >= 11 && v <= 13) {
     return num + "th";
@@ -78,7 +76,8 @@ export default function MemberSearch({
     if (!error && data) {
       setFilteredMembers(data);
       fetchSessionProgress(data); 
-      fetchRegistrationCounts(data); 
+      // fetchRegistrationCounts(data); 
+      fetchMemberPackageData(data); 
     }
   }
 
@@ -152,6 +151,7 @@ export default function MemberSearch({
     fetchMembers();
   };
 
+  // 재등록 횟수
   const fetchRegistrationCounts = async (members: Member[]) => {
     if (!supabase) return;
   
@@ -183,6 +183,44 @@ export default function MemberSearch({
     });
   
     setRegistrationCountMap(counts);
+  };
+
+  // valid_date 합
+  type Package = { valid_date: number | null }
+
+  const fetchMemberPackageData = async (members: Member[]) => {
+    if (!supabase) return;
+
+    const memberIds = members.map(m => m.member_id);
+
+    const { data, error } = await supabase
+      .from('member_packages')
+      .select('member_id, packages!member_packages_package_id_fkey(valid_date)')
+      .in('member_id', memberIds);
+
+    if (error) {
+      console.error('Supabase error:', error);
+      return;
+    }
+
+    const validDateMap: { [key: number]: number } = {};
+
+    data.forEach((pkg) => {
+      const memberId = pkg.member_id;
+      const packages = pkg.packages as unknown;
+
+      let totalValid = 0;
+
+      if (Array.isArray(packages)) {
+        totalValid = packages.reduce((sum, p) => sum + (p.valid_date ?? 0), 0);
+      } else if (packages && typeof packages === 'object' && 'valid_date' in packages) {
+        totalValid = (packages as Package).valid_date ?? 0;
+      }
+
+      validDateMap[memberId] = (validDateMap[memberId] ?? 0) + totalValid;
+    });
+
+    setRegistrationCountMap(validDateMap);
   };
   
   const fetchSessionProgress = async (members: Member[]) => {

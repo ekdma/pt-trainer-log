@@ -2,12 +2,13 @@
 
 import { Dumbbell, Salad } from 'lucide-react'
 import { useState, useEffect } from 'react'
-import { getSupabaseClient } from '@/lib/supabase'
 import MemberSearch from '@/app/members/MemberSearch'
 import MemberGraphs from '@/app/members/MemberGraphs'
 import MemberHealthGraphs from '@/app/members/MemberHealthGraphs'
 import type { Member, WorkoutRecord, HealthMetric } from '@/app/members/types'
 import { fetchWorkoutLogs, fetchHealthLogs } from '../../utils/fetchLogs'
+import { useRouter } from 'next/navigation'
+import { useAuthGuard } from '@/hooks/useAuthGuard'
 
 export default function MembersPage() {
   const [selectedMember, setSelectedMember] = useState<Member | null>(null)
@@ -16,8 +17,10 @@ export default function MembersPage() {
   const [activeTab, setActiveTab] = useState<'workout' | 'health'>('workout')
   const [isTrainer, setIsTrainer] = useState<boolean>(true)
 
-  const supabase = getSupabaseClient()
+  const router = useRouter()
 
+  useAuthGuard()
+  
   // 🔐 로그인한 사용자 정보에서 member 설정
   useEffect(() => {
     const initializeMember = async () => {

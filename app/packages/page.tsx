@@ -3,8 +3,8 @@
 import { useEffect, useState } from 'react'
 import { getSupabaseClient } from '@/lib/supabase'
 import PackageSearch from './PackageSearch'
-import dayjs from 'dayjs'
 import { useRouter } from 'next/navigation'
+import { useAuthGuard } from '@/hooks/useAuthGuard'
 
 interface Package {
   package_id: number
@@ -21,33 +21,33 @@ export default function PackageListPage() {
   const supabase = getSupabaseClient()
   const router = useRouter()
 
-  useEffect(() => {
-    const checkRole = () => {
-      try {
-        const raw = localStorage.getItem('litpt_member')
-        const member = raw ? JSON.parse(raw) : null
+  useAuthGuard()
+
+  // useEffect(() => {
+  //   const checkRole = () => {
+  //     try {
+  //       const raw = localStorage.getItem('litpt_member')
+  //       const member = raw ? JSON.parse(raw) : null
   
-        if (!member || member.role !== 'trainer') {
-          router.replace('/not-authorized')
-        }
-      } catch (e) {
-        router.replace('/not-authorized')
-      }
-    }
+  //       if (!member || member.role !== 'trainer') {
+  //         router.replace('/not-authorized')
+  //       }
+  //     } catch (e) {
+  //       console.error('Authorization error:', e)
+  //       router.replace('/not-authorized')
+  //     }
+  //   }
   
-    checkRole()
-  }, [router])
+  //   checkRole()
+  // }, [router])
+
+  const fetchPackages = async () => {
+    const { data, error } = await supabase.from('packages').select('*')
+    if (!error) setPackages(data ?? [])
+    else console.error('패키지 불러오기 실패:', error.message)
+  }
 
   useEffect(() => {
-    const fetchPackages = async () => {
-      const { data, error } = await supabase.from('packages').select('*')
-      if (error) {
-        console.error('패키지 불러오기 실패:', error.message)
-      } else {
-        setPackages(data ?? [])
-      }
-    }
-
     fetchPackages()
   }, [])
 
@@ -55,8 +55,13 @@ export default function PackageListPage() {
     <main className="flex min-h-screen flex-col p-6 bg-gray-50 overflow-auto">
       <div className="p-4 w-full max-w-screen-2xl mx-auto">
         <PackageSearch
+          packages={packages}
+          setPackages={setPackages}
+          fetchPackages={fetchPackages}
         />
+        {/* <PackageList packages={packages} /> */}
       </div>
     </main>
   )
 }
+

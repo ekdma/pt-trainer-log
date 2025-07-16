@@ -19,8 +19,10 @@ export default function MembersLayout({
         router.replace('/not-authorized')
       }
     } catch (e) {
+      console.error('Authorization error:', e)
       router.replace('/not-authorized')
     }
+    
   }, [router])
 
   return <>{children}</>

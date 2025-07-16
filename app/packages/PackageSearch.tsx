@@ -3,7 +3,6 @@
 import { useEffect, useState } from 'react'
 import { getSupabaseClient } from '@/lib/supabase'
 import { PackagePlus, PackageSearch as PackageSearchIcon, PackageOpen, PackageMinus, UserRoundSearch } from 'lucide-react'
-import dayjs from 'dayjs'
 import { useRouter } from 'next/navigation'
 import AddPackageOpen from './AddPackageOpen'
 import EditPackageModal from './EditPackageModal'
@@ -18,22 +17,28 @@ interface Package {
   created_at: string
 }
 
-export default function PackageSearch() {
+type Props = {
+  packages: Package[]
+  setPackages: (pkgs: Package[]) => void
+  fetchPackages: () => void
+}
+
+export default function PackageSearch({ packages, setPackages, fetchPackages }: Props) {
   const [supabase] = useState(getSupabaseClient())
-  const [packages, setPackages] = useState<Package[]>([])
+  // const [packages, setPackages] = useState<Package[]>([])
   const [keyword, setKeyword] = useState('')
   const router = useRouter()
   const [isAddPackageOpen, setIsAddPackageOpen] = useState(false)
   const [editingPackage, setEditingPackage] = useState<Package | null>(null)
 
-  const fetchPackages = async () => {
-    const { data, error } = await supabase.from('packages').select('*')
-    if (error) {
-      console.error('패키지 불러오기 실패:', error.message)
-    } else {
-      setPackages(data ?? [])
-    }
-  }
+  // const fetchPackages = async () => {
+  //   const { data, error } = await supabase.from('packages').select('*')
+  //   if (error) {
+  //     console.error('패키지 불러오기 실패:', error.message)
+  //   } else {
+  //     setPackages(data ?? [])
+  //   }
+  // }
 
   const handleSearch = async () => {
     if (!keyword.trim()) {
@@ -79,7 +84,9 @@ export default function PackageSearch() {
     fetchPackages()
   }, [])
 
-  const sortedPackages = [...packages].sort((a, b) => a.package_name.localeCompare(b.package_name, 'ko'))
+  const sortedPackages = [...packages].sort((a, b) =>
+    a.package_name.localeCompare(b.package_name, 'ko')
+  )
 
   return (
     <div className="flex flex-col items-center justify-center text-center bg-slate-50 py-8 px-4">
@@ -127,7 +134,6 @@ export default function PackageSearch() {
       {/* 패키지 목록 */}
       <ul className="space-y-3 w-full max-w-md">
         {sortedPackages.map((pkg) => {
-          const formattedDate = dayjs(pkg.created_at).format('YY.MM.DD')
           return (
             <li
               key={pkg.package_id}

@@ -914,11 +914,14 @@ export default function WorkoutLogManager({
                         isTrainer || isDateWithinLast7Days(date)  
 
                       const isDisabled =
-                        !isPastEditable || (
+                        !isPastEditable ||
+                        ptSessionDates.has(date) || // ✅ PT 세션이면 수정 금지
+                        (
                           !isCommonWorkout &&
                           ((isBeforeLevelWorkout && !isBeforeModified) ||
-                            (isAfterLevelWorkout && !isAfterModified))
+                           (isAfterLevelWorkout && !isAfterModified))
                         );
+                      
 
                       return (
                         <td 
@@ -966,10 +969,12 @@ export default function WorkoutLogManager({
                       const isAfterLevelWorkout = level === member.level;
 
                       const isDisabled =
-                        !isCommonWorkout &&
-                        ((isBeforeLevelWorkout && !isBeforeModified) ||
-                          (isAfterLevelWorkout && !isAfterModified));
-                  
+                        ptSessionDates.has(addingDate) || // ✅ PT 세션이면 수정 금지
+                        (
+                          !isCommonWorkout &&
+                          ((isBeforeLevelWorkout && !isBeforeModified) ||
+                          (isAfterLevelWorkout && !isAfterModified))
+                        );
 
                       return (
                         <td className="border px-1 py-1 text-center bg-yellow-50 w-[80px]">
@@ -1055,105 +1060,107 @@ export default function WorkoutLogManager({
           </Button>
         </div>
 
-        <Disclosure>
-          {({ open }) => (
-            <>
-              <Disclosure.Button
-                className="flex w-full justify-between items-center mt-6 text-sm font-medium text-indigo-600 hover:underline"
-                onClick={() => setDisclosureOpen(!open)}
-              >
-                <span>측정 항목 추가/삭제</span>
-                <ChevronUpIcon
-                  className={`h-5 w-5 transform transition-transform ${open ? 'rotate-180' : ''}`}
-                />
-              </Disclosure.Button>
-
-              <Disclosure.Panel className="mt-2 bg-white border rounded-xl shadow-md p-6 text-sm space-y-4 text-gray-800">
-              <div className="grid grid-cols-1 sm:grid-cols-[1.5fr_1.5fr_1fr_auto] gap-4 items-end">
-                {/* Target Input */}
-                <div>
-                  <label className="block text-xs font-semibold text-gray-500 mb-1">분류 (Target)</label>
-                  <input
-                    type="text"
-                    value={newTarget}
-                    onChange={(e) => setNewTarget(e.target.value)}
-                    placeholder="예: Leg"
-                    className="w-full border rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-300"
+        {isTrainer && (
+          <Disclosure>
+            {({ open }) => (
+              <>
+                <Disclosure.Button
+                  className="flex w-full justify-between items-center mt-6 text-sm font-medium text-indigo-600 hover:underline"
+                  onClick={() => setDisclosureOpen(!open)}
+                >
+                  <span>측정 항목 추가/삭제</span>
+                  <ChevronUpIcon
+                    className={`h-5 w-5 transform transition-transform ${open ? 'rotate-180' : ''}`}
                   />
-                </div>
+                </Disclosure.Button>
 
-                {/* Workout Input */}
-                <div>
-                  <label className="block text-xs font-semibold text-gray-500 mb-1">항목 (Workout)</label>
-                  <input
-                    type="text"
-                    value={newWorkout}
-                    onChange={(e) => setNewWorkout(e.target.value)}
-                    placeholder="예: Squat"
-                    className="w-full border rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-300"
-                  />
-                </div>
+                <Disclosure.Panel className="mt-2 bg-white border rounded-xl shadow-md p-6 text-sm space-y-4 text-gray-800">
+                  <div className="grid grid-cols-1 sm:grid-cols-[1.5fr_1.5fr_1fr_auto] gap-4 items-end">
+                    {/* Target Input */}
+                    <div>
+                      <label className="block text-xs font-semibold text-gray-500 mb-1">분류 (Target)</label>
+                      <input
+                        type="text"
+                        value={newTarget}
+                        onChange={(e) => setNewTarget(e.target.value)}
+                        placeholder="예: Leg"
+                        className="w-full border rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-300"
+                      />
+                    </div>
 
-                {/* Level Select */}
-                <div>
-                  <label className="block text-xs font-semibold text-gray-500 mb-1">난이도 (Level)</label>
-                  <select
-                    value={newLevel}
-                    onChange={(e) => setNewLevel(e.target.value)}
-                    className="w-full border rounded-lg px-3 py-2 text-sm text-center focus:outline-none focus:ring-2 focus:ring-indigo-300"
-                  >
-                    <option value="">선택</option>
-                    <option value="Level 1">Level 1</option>
-                    <option value="Level 2">Level 2</option>
-                    <option value="Level 3">Level 3</option>
-                    <option value="Level 4">Level 4</option>
-                    <option value="Level 5">Level 5</option>
-                  </select>
-                </div>
+                    {/* Workout Input */}
+                    <div>
+                      <label className="block text-xs font-semibold text-gray-500 mb-1">항목 (Workout)</label>
+                      <input
+                        type="text"
+                        value={newWorkout}
+                        onChange={(e) => setNewWorkout(e.target.value)}
+                        placeholder="예: Squat"
+                        className="w-full border rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-300"
+                      />
+                    </div>
 
-                {/* Add Button */}
-                <div className="self-stretch flex items-end">
-                  <button
-                    type="button"
-                    onClick={handleAddType}
-                    disabled={loadingManage}
-                    className="w-full bg-indigo-600 text-white px-3 py-2 rounded-lg text-xs font-medium hover:bg-indigo-700 transition disabled:opacity-50"
-                  >
-                    추가
-                  </button>
-                </div>
-              </div>
+                    {/* Level Select */}
+                    <div>
+                      <label className="block text-xs font-semibold text-gray-500 mb-1">난이도 (Level)</label>
+                      <select
+                        value={newLevel}
+                        onChange={(e) => setNewLevel(e.target.value)}
+                        className="w-full border rounded-lg px-3 py-2 text-sm text-center focus:outline-none focus:ring-2 focus:ring-indigo-300"
+                      >
+                        <option value="">선택</option>
+                        <option value="Level 1">Level 1</option>
+                        <option value="Level 2">Level 2</option>
+                        <option value="Level 3">Level 3</option>
+                        <option value="Level 4">Level 4</option>
+                        <option value="Level 5">Level 5</option>
+                      </select>
+                    </div>
 
-
-                <ul className="max-h-40 overflow-y-auto border-t pt-3 space-y-1 text-sm text-gray-700">
-                {[...allTypes]
-                  .sort((a, b) => {
-                    // level은 문자열, order_target / order_workout은 숫자
-                    if (a.level !== b.level) return a.level.localeCompare(b.level)
-                    if (a.order_target !== b.order_target) return a.order_target - b.order_target
-                    return a.order_workout - b.order_workout
-                  })
-                  .map((m) => (
-                    <li
-                      key={m.workout_type_id}
-                      className="flex justify-between items-center border-b py-1 px-1"
-                    >
-                      <span>{m.target} / {m.workout} / {m.level}</span>
+                    {/* Add Button */}
+                    <div className="self-stretch flex items-end">
                       <button
                         type="button"
-                        onClick={() => handleDeleteType(m.workout_type_id)}
-                        className="text-red-500 hover:underline text-xs"
+                        onClick={handleAddType}
+                        disabled={loadingManage}
+                        className="w-full bg-indigo-600 text-white px-3 py-2 rounded-lg text-xs font-medium hover:bg-indigo-700 transition disabled:opacity-50"
                       >
-                        삭제
+                        추가
                       </button>
-                    </li>
-                ))}
+                    </div>
+                  </div>
 
-                </ul>
-              </Disclosure.Panel>
-            </>
-          )}
-        </Disclosure>
+                  <ul className="max-h-40 overflow-y-auto border-t pt-3 space-y-1 text-sm text-gray-700">
+                    {[...allTypes]
+                      .filter((m) => m.level !== 'GROUP') // 👈 GROUP 제외
+                      .sort((a, b) => {
+                        if (a.level !== b.level) return a.level.localeCompare(b.level)
+                        if (a.order_target !== b.order_target) return a.order_target - b.order_target
+                        return a.order_workout - b.order_workout
+                      })
+                      .map((m) => (
+                        <li
+                          key={m.workout_type_id}
+                          className="flex justify-between items-center border-b py-1 px-1"
+                        >
+                          <span>{m.target} / {m.workout} / {m.level}</span>
+                          <button
+                            type="button"
+                            onClick={() => handleDeleteType(m.workout_type_id)}
+                            className="text-red-500 hover:underline text-xs"
+                          >
+                            삭제
+                          </button>
+                        </li>
+                      ))}
+                  </ul>
+
+                </Disclosure.Panel>
+              </>
+            )}
+          </Disclosure>
+        )}
+
       </div>
       
       {isTrainer && ptSessionMenu && (

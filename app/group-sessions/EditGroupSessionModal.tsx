@@ -97,9 +97,13 @@ export default function EditGroupSessionModal({ session, onClose, onUpdate, supa
     const { data, error } = await supabase
       .from('trainers')
       .select('trainer_id, name')
+      .returns<{ trainer_id: number; name: string }[]>()
   
     if (!error && data) {
-      const formatted = data.map((t: any) => ({ member_id: t.trainer_id, name: t.name }))
+      const formatted = data.map(t => ({
+        member_id: t.trainer_id,
+        name: t.name,
+      }))
       setTrainers(formatted)
   
       // 현재 선택된 트레이너가 없다면 기본값 설정
