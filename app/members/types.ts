@@ -98,3 +98,19 @@ export type HealthMetricType = {
   order_target?: number;
   order_type?: number;
 };
+
+export interface FoodLog {
+  id: number;
+  member_id: number;
+  date: string; // 'YYYY-MM-DD'
+  meal_type: '아침' | '점심' | '저녁' | '간식';
+  content: string;
+}
+
+export interface FoodComment {
+  id: number;
+  member_id: number;
+  week_start_date: string; // 'YYYY-MM-DD'
+  meal_type: '아침' | '점심' | '저녁' | '간식';
+  comment: string;
+}

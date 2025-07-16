@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from 'react'
 import { getSupabaseClient } from '@/lib/supabase'
-import { NotebookPen, CalendarPlus, CalendarCheck2, X, UserRoundSearch } from 'lucide-react'
+import { NotebookPen, CalendarPlus, CalendarSearch, X, UserRoundSearch } from 'lucide-react'
 import dayjs from 'dayjs'
 import { useRouter } from 'next/navigation'
 import AddGroupSessionOpen from './AddGroupSessionOpen'  
@@ -205,7 +205,7 @@ export default function GroupSessionPage() {
                 onClick={handleSearch}
                 className="w-full sm:w-auto bg-purple-600 hover:bg-purple-700 text-white px-3 py-2 rounded-full shadow-md transition flex justify-center items-center gap-1 text-sm"
               >
-                <CalendarCheck2 size={20} /> 검색
+                <CalendarSearch size={20} /> 검색
               </button>
               <button
                 onClick={() => setIsAddOpen(true)}

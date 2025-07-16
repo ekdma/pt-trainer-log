@@ -10,7 +10,7 @@ import EditMemberModal from './EditMemberModal'
 import { useRouter } from 'next/navigation'
 import Calendar from 'react-calendar'
 import 'react-calendar/dist/Calendar.css'
-import { UsersIcon, Eye, EyeClosedIcon, X, UserRoundPen, UserRoundMinus, UserRoundPlus, UserRoundSearch, Calendar as CalendarIcon, PackageSearch, User } from 'lucide-react';
+import { Utensils, UsersIcon, Eye, EyeClosedIcon, X, UserRoundPen, UserRoundMinus, UserRoundPlus, UserRoundSearch, Calendar as CalendarIcon, PackageSearch, User } from 'lucide-react';
 import { ChevronLeftIcon, ChevronRightIcon, ChevronDoubleLeftIcon, ChevronDoubleRightIcon } from '@heroicons/react/24/solid'
 
 function toOrdinal(num: number) {
@@ -349,6 +349,12 @@ export default function MemberSearch({
           className="w-full sm:w-auto bg-purple-600 hover:bg-purple-700 text-white px-3 py-2 rounded-full shadow-md transition flex justify-center items-center gap-1 text-sm"
           >
           <UsersIcon size={20} /> 그룹세션
+        </button>
+        <button
+          onClick={() => router.push('/food-diary')}
+          className="w-full sm:w-auto bg-purple-600 hover:bg-purple-700 text-white px-3 py-2 rounded-full shadow-md transition flex justify-center items-center gap-1 text-sm"
+          >
+          <Utensils size={20} /> 식단
         </button>
       </div>
 

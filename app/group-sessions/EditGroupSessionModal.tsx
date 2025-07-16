@@ -220,16 +220,16 @@ export default function EditGroupSessionModal({ session, onClose, onUpdate, supa
           </div>
           
           <div className="flex-1">
-            <div className="flex justify-between items-center mb-1">
-              <label className="block text-sm font-medium text-gray-700">
+            <div className="relative mb-1 h-5">
+              <label className="absolute left-1/2 transform -translate-x-1/2 text-sm font-medium text-gray-700">
                 운동 테마
               </label>
               <button
                 type="button"
                 onClick={() => setShowAddTheme(true)}
-                className="text-purple-600 text-xs hover:underline"
+                className="absolute right-0 text-purple-600 text-sm hover:underline"
               >
-                + 테마 추가
+                + 추가
               </button>
             </div>
             <select

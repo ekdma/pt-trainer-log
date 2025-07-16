@@ -1,6 +1,6 @@
 'use client'
 
-import { Dumbbell, Salad } from 'lucide-react'
+import { Utensils, Dumbbell, Salad } from 'lucide-react'
 import { useState, useEffect } from 'react'
 import MemberSearch from '@/app/members/MemberSearch'
 import MemberGraphs from '@/app/members/MemberGraphs'
@@ -8,13 +8,15 @@ import MemberHealthGraphs from '@/app/members/MemberHealthGraphs'
 import type { Member, WorkoutRecord, HealthMetric } from '@/app/members/types'
 import { fetchWorkoutLogs, fetchHealthLogs } from '../../utils/fetchLogs'
 import { useAuthGuard } from '@/hooks/useAuthGuard'
+import { useRouter } from 'next/navigation'
 
 export default function MembersPage() {
   const [selectedMember, setSelectedMember] = useState<Member | null>(null)
   const [workoutLogs, setWorkoutLogs] = useState<WorkoutRecord[]>([])
   const [healthLogs, setHealthLogs] = useState<HealthMetric[]>([])
-  const [activeTab, setActiveTab] = useState<'workout' | 'health'>('workout')
+  const [activeTab, setActiveTab] = useState<'workout' | 'health' | 'food'>('workout')
   const [isTrainer, setIsTrainer] = useState<boolean>(true)
+  const router = useRouter()
 
   useAuthGuard()
   
@@ -54,6 +56,11 @@ export default function MembersPage() {
     fetchLogs()
   }, [activeTab, selectedMember])
 
+  const navigateTo = (tab: typeof activeTab) => {
+    setActiveTab(tab)
+    if (tab === 'food') router.push('/food-diary')
+  }
+
   return (
     <main className="flex min-h-screen flex-col p-6 bg-gray-50 overflow-auto">
       <div className="p-4 w-full max-w-screen-2xl mx-auto">
@@ -85,6 +92,16 @@ export default function MembersPage() {
                 onClick={() => setActiveTab('health')}
               >
                 <Salad size={16} /> 건강지표
+              </button>
+              <button
+                className={`flex items-center gap-1 text-sm px-4 py-2 rounded-lg border transition duration-200 ${
+                  activeTab === 'food'
+                    ? 'bg-green-100 border-green-600 text-green-700 font-semibold'
+                    : 'bg-white border-gray-300 text-gray-600 hover:bg-gray-100'
+                }`}
+                onClick={() => navigateTo('food')}
+              >
+                <Utensils size={16} /> 식단일지
               </button>
             </div>
 
