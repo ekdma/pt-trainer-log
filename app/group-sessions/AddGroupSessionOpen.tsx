@@ -118,7 +118,6 @@ export default function AddGroupSessionOpen({ onClose, onSessionAdded }: Props) 
     }
   
     try {
-      const member = JSON.parse(memberRaw)
     } catch {
       setErrorMsg('로그인 정보가 올바르지 않습니다.')
       return

@@ -152,38 +152,38 @@ export default function MemberSearch({
   };
 
   // 재등록 횟수
-  const fetchRegistrationCounts = async (members: Member[]) => {
-    if (!supabase) return;
+  // const fetchRegistrationCounts = async (members: Member[]) => {
+  //   if (!supabase) return;
   
-    const memberIds = members.map(m => m.member_id);
-    const { data, error } = await supabase
-      .from('member_packages')
-      .select('member_id', { count: 'exact', head: false })
-      .in('member_id', memberIds);
+  //   const memberIds = members.map(m => m.member_id);
+  //   const { data, error } = await supabase
+  //     .from('member_packages')
+  //     .select('member_id', { count: 'exact', head: false })
+  //     .in('member_id', memberIds);
   
-    if (error) {
-      console.error('Registration count error:', error);
-      return;
-    }
+  //   if (error) {
+  //     console.error('Registration count error:', error);
+  //     return;
+  //   }
   
-    // supabase에서 직접 그룹별 카운트 반환이 안 되면 아래와 같이 직접 카운트하는 방식도 사용 가능:
-    // const counts = data.reduce((acc, pkg) => {
-    //   acc[pkg.member_id] = (acc[pkg.member_id] ?? 0) + 1;
-    //   return acc;
-    // }, {} as { [key: number]: number });
+  //   // supabase에서 직접 그룹별 카운트 반환이 안 되면 아래와 같이 직접 카운트하는 방식도 사용 가능:
+  //   // const counts = data.reduce((acc, pkg) => {
+  //   //   acc[pkg.member_id] = (acc[pkg.member_id] ?? 0) + 1;
+  //   //   return acc;
+  //   // }, {} as { [key: number]: number });
   
-    // 여기서는 간단히 직접 count 조회 후 재구성
+  //   // 여기서는 간단히 직접 count 조회 후 재구성
   
-    // supabase에서 멤버별로 묶어 가져오는 것이 기본적으로 어려우므로,
-    // 아래처럼 멤버별 패키지 전체 데이터 받고 직접 카운트할 수도 있습니다.
+  //   // supabase에서 멤버별로 묶어 가져오는 것이 기본적으로 어려우므로,
+  //   // 아래처럼 멤버별 패키지 전체 데이터 받고 직접 카운트할 수도 있습니다.
   
-    const counts: { [key: number]: number } = {};
-    data?.forEach((pkg) => {
-      counts[pkg.member_id] = (counts[pkg.member_id] ?? 0) + 1;
-    });
+  //   const counts: { [key: number]: number } = {};
+  //   data?.forEach((pkg) => {
+  //     counts[pkg.member_id] = (counts[pkg.member_id] ?? 0) + 1;
+  //   });
   
-    setRegistrationCountMap(counts);
-  };
+  //   setRegistrationCountMap(counts);
+  // };
 
   // valid_date 합
   type Package = { valid_date: number | null }

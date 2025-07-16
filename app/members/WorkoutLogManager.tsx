@@ -811,8 +811,6 @@ export default function WorkoutLogManager({
                             const fullDate = `${year}.${month}.${day}`;
                             const normalized = normalizeDateInput(fullDate);
                             if (normalized) {
-                              const todayDate = new Date().toISOString().split('T')[0];
-                            
                               if (!isTrainer && !isDateWithinLast7Days(normalized)) {
                                 alert('7일 이내의 날짜만 추가할 수 있습니다 😥');
                                 return;

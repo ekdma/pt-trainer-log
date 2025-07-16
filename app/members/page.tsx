@@ -2,7 +2,6 @@
 
 import { Dumbbell, Salad } from 'lucide-react'
 import { useState, useEffect } from 'react'
-import { useRouter } from 'next/navigation'
 import MemberSearch from './MemberSearch'
 import MemberGraphs from './MemberGraphs'
 import MemberHealthGraphs from './MemberHealthGraphs'
@@ -16,8 +15,6 @@ export default function MembersPage() {
   const [healthLogs, setHealthLogs] = useState<HealthMetric[]>([])
   const [activeTab, setActiveTab] = useState<'workout' | 'health'>('workout')
   // const [workoutTypes, setWorkoutTypes] = useState<WorkoutType[]>([]);
-
-  const router = useRouter()
   
   useAuthGuard()
 

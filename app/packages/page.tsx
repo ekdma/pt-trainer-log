@@ -3,7 +3,6 @@
 import { useEffect, useState } from 'react'
 import { getSupabaseClient } from '@/lib/supabase'
 import PackageSearch from './PackageSearch'
-import { useRouter } from 'next/navigation'
 import { useAuthGuard } from '@/hooks/useAuthGuard'
 
 interface Package {
@@ -19,7 +18,6 @@ interface Package {
 export default function PackageListPage() {
   const [packages, setPackages] = useState<Package[]>([])
   const supabase = getSupabaseClient()
-  const router = useRouter()
 
   useAuthGuard()
 

@@ -7,7 +7,6 @@ import MemberGraphs from '@/app/members/MemberGraphs'
 import MemberHealthGraphs from '@/app/members/MemberHealthGraphs'
 import type { Member, WorkoutRecord, HealthMetric } from '@/app/members/types'
 import { fetchWorkoutLogs, fetchHealthLogs } from '../../utils/fetchLogs'
-import { useRouter } from 'next/navigation'
 import { useAuthGuard } from '@/hooks/useAuthGuard'
 
 export default function MembersPage() {
@@ -16,8 +15,6 @@ export default function MembersPage() {
   const [healthLogs, setHealthLogs] = useState<HealthMetric[]>([])
   const [activeTab, setActiveTab] = useState<'workout' | 'health'>('workout')
   const [isTrainer, setIsTrainer] = useState<boolean>(true)
-
-  const router = useRouter()
 
   useAuthGuard()
   
