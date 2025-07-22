@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from "react";
 import { DndContext, closestCenter } from "@dnd-kit/core";
-import { HealthMetricType } from './types'
+import { HealthMetricType } from '@/components/members/types'
 import type { DragEndEvent } from "@dnd-kit/core";
 import { useSensors, useSensor, TouchSensor, MouseSensor } from "@dnd-kit/core";
 import { Button } from '@/components/ui/button'
