@@ -110,7 +110,7 @@ export default function GoalsPage() {
       .single()
 
     if (!error && data) {
-      setGoals((prev: any) => ({
+      setGoals((prev: Goals) => ({
         ...prev,
         sessions: data
       }))

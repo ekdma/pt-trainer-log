@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useEffect } from 'react'
 import { useAuthGuard } from '@/hooks/useAuthGuard'
 import Header from '@/components/layout/Header'
 import MemberGoalsPart from '@/components/my/MemberGoalsPart'

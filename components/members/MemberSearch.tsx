@@ -8,7 +8,6 @@ import { getSupabaseClient } from '@/lib/supabase'
 import { Member, WorkoutRecord, HealthMetric } from './types'
 import MemberCalendar from './MemberCalendar'
 import { SupabaseClient } from '@supabase/supabase-js'
-import { useRouter } from 'next/navigation'
 import 'react-calendar/dist/Calendar.css'
 import {  UsersIcon, UserRoundPen, UserRoundMinus, Calendar as CalendarIcon, User } from 'lucide-react';
 import { Button } from '@/components/ui/button'
