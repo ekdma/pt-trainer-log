@@ -119,23 +119,23 @@ export default function MemberGraphs({ logs: initialLogs, showFavoritesOnly, fav
   // const [isTrainer, setIsTrainer] = useState(false)
   const [logs, setLogs] = useState<WorkoutRecord[]>([])
   const [allTypes, setAllTypes] = useState<WorkoutType[]>([]);
-  const [isOrderModalOpen, setIsOrderModalOpen] = useState(false)
+  // const [isOrderModalOpen, setIsOrderModalOpen] = useState(false)
   // const [isAddRecordOpen, setIsAddRecordOpen] = useState(false)
   // const [isListOpen, setIsListOpen] = useState(false)
   const [selectedTarget, setSelectedTarget] = useState<string | null>(null)
   const [viewMode, setViewMode] = useState<'daily' | 'monthly'>('daily');
 
-  useEffect(() => {
-    try {
-      const raw = localStorage.getItem('litpt_member')
-      const loggedInMember = raw ? JSON.parse(raw) : null
-      // if (loggedInMember?.role === 'trainer') {
-      //   setIsTrainer(true)
-      // }
-    } catch (e) {
-      console.error('Failed to read login info:', e)
-    }
-  }, [])
+  // useEffect(() => {
+  //   try {
+  //     // const raw = localStorage.getItem('litpt_member')
+  //     // const loggedInMember = raw ? JSON.parse(raw) : null
+  //     // if (loggedInMember?.role === 'trainer') {
+  //     //   setIsTrainer(true)
+  //     // }
+  //   } catch (e) {
+  //     console.error('Failed to read login info:', e)
+  //   }
+  // }, [])
   
   useEffect(() => {
     if (!initialLogs) return;
@@ -164,11 +164,11 @@ export default function MemberGraphs({ logs: initialLogs, showFavoritesOnly, fav
       .catch(console.error);
   }
 
-  useEffect(() => {
-    if (isOrderModalOpen) {
-      fetchWorkoutTypes();
-    }
-  }, [isOrderModalOpen]);
+  // useEffect(() => {
+  //   if (isOrderModalOpen) {
+  //     fetchWorkoutTypes();
+  //   }
+  // }, [isOrderModalOpen]);
 
   // 날짜 오름차순 정렬
   const chartData = [...logs].sort((a, b) => new Date(a.workout_date).getTime() - new Date(b.workout_date).getTime())
