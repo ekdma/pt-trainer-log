@@ -158,11 +158,11 @@ export default function MemberGraphs({ logs: initialLogs, showFavoritesOnly, fav
       .catch(console.error)
   }, [])
 
-  function fetchWorkoutTypes() {
-    getWorkoutTypes()
-      .then(types => setAllTypes(types))
-      .catch(console.error);
-  }
+  // function fetchWorkoutTypes() {
+  //   getWorkoutTypes()
+  //     .then(types => setAllTypes(types))
+  //     .catch(console.error);
+  // }
 
   // useEffect(() => {
   //   if (isOrderModalOpen) {
