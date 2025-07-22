@@ -2,16 +2,16 @@
 import { createClient } from '@supabase/supabase-js'
 import { NewWorkoutRecord, NewHealthMetric, WorkoutType, HealthMetricType } from '../components/members/types'
 
-const supabaseUrl = process.env.SUPABASE_URL || process.env.NEXT_PUBLIC_SUPABASE_URL
+const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!
 const supabaseKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
-const serviceKey = process.env.SUPABASE_SERVICE_ROLE_KEY!
+// const serviceKey = process.env.SUPABASE_SERVICE_ROLE_KEY!
 
 if (!supabaseUrl || !supabaseKey) {
   throw new Error('❗ Supabase 환경변수 누락됨')
 }
 
 export const supabase = createClient(supabaseUrl, supabaseKey)
-export const serverSupabase  = createClient(supabaseUrl, serviceKey)
+// export const serverSupabase  = createClient(supabaseUrl, serviceKey)
 
 export function getSupabaseClient() {
   return createClient(
