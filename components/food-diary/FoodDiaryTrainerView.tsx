@@ -242,13 +242,17 @@ export default function FoodDiaryTrainerView({ initialSelectedMember = null }: F
     })
   
     // 기존 데이터와 합쳐서 mealType 단위로 통합 필요
-    const merged: Record<string, any> = {}
+    const merged: Record<string, {
+      member_id: number
+      target_date: string
+      hashtags: Record<string, string[]>
+    }> = {}
   
     upserts.forEach((item) => {
       const key = item.target_date
       if (!merged[key]) {
         merged[key] = {
-          member_id: item.member_id,
+          member_id: Number(item.member_id),  // 숫자 변환
           target_date: item.target_date,
           hashtags: {},
         }
@@ -348,7 +352,9 @@ export default function FoodDiaryTrainerView({ initialSelectedMember = null }: F
           <div className="flex justify-between items-center mb-2">
             <button onClick={() => setBaseDate(baseDate.subtract(7, 'day'))} className="text-sm text-gray-600">{'<'}</button>
             <div className="text-center">
-              <h3 className="text-lg font-semibold">{selectedMember.name}'s Food Diary</h3>
+              <h3 className="text-lg font-semibold">
+                {`${selectedMember.name}'s Food Diary`}
+              </h3>
               <p className="text-sm text-gray-500">{weekRangeText}</p>
             </div>
             <div className="flex items-center gap-2">

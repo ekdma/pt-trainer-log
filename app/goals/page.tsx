@@ -7,13 +7,56 @@ import TrainerHeader from '@/components/layout/TrainerHeader'
 import { getSupabaseClient } from '@/lib/supabase'
 import type { Member } from '@/components/members/types'
 
+interface Sessions {
+  pt_session_cnt: number
+  group_session_cnt: number
+  self_session_cnt: number
+}
+
+interface Goals {
+  sessions?: Sessions
+  diet?: DietGoal
+  hydration?: HydrationGoal
+  sleep?: SleepGoal
+  body?: BodyGoal
+}
+
+interface Template {
+  id: number
+  hashtag_content: string
+  description?: string
+}
+
+interface DietGoal {
+  meals_per_day?: number
+  important_meal?: string
+  finish_by_hour?: number
+  custom?: string
+  hashtags?: string[]
+}
+
+interface HydrationGoal {
+  cups_per_day?: number
+}
+
+interface SleepGoal {
+  hours_per_day?: number
+}
+
+interface BodyGoal {
+  muscle_gain_kg?: number
+  fat_loss_kg?: number
+}
+
+type GoalContent = DietGoal | HydrationGoal | SleepGoal | BodyGoal
+
 export default function GoalsPage() {
   useAuthGuard()
   const [userRole, setUserRole] = useState<'member' | 'trainer' | null>(null)
   const [members, setMembers] = useState<Member[]>([])
   const [selectedMember, setSelectedMember] = useState<Member | null>(null)
-  const [goals, setGoals] = useState<any>({})
-  const [templates, setTemplates] = useState<any[]>([])
+  const [goals, setGoals] = useState<Goals>({})
+  const [templates, setTemplates] = useState<Template[]>([])
   const supabase = getSupabaseClient()
 
   // 상태 변수들
@@ -27,6 +70,7 @@ export default function GoalsPage() {
   const [fatLoss, setFatLoss] = useState(0)
   const [selectedTags, setSelectedTags] = useState<string[]>([])
 
+  console.log(goals)
   useEffect(() => {
     const raw = localStorage.getItem('litpt_member')
     const user = raw ? JSON.parse(raw) : null
@@ -96,41 +140,41 @@ export default function GoalsPage() {
 			.eq('member_id', selectedMember?.member_id)
 			.order('created_at', { ascending: false })
 	
-		if (!error && data) {
-			const latestGoals = new Map<string, any>()
-	
-			for (const goal of data) {
-				if (!latestGoals.has(goal.goal_type)) {
-					latestGoals.set(goal.goal_type, goal.content)
-				}
-			}
-	
-			const diet = latestGoals.get('diet')
-      if (diet) {
-        setMealsPerDay(diet.meals_per_day || 3)
-        setImportantMeal(diet.important_meal || '아침')
-        setFinishByHour(diet.finish_by_hour || 8)
-        setCustomGoal(diet.custom || '')
-        setSelectedTags(diet.hashtags || [])   
+    if (!error && data) {
+      const latestGoals = new Map<string, GoalContent>()
+    
+      for (const goal of data) {
+        if (!latestGoals.has(goal.goal_type)) {
+          latestGoals.set(goal.goal_type, goal.content)
+        }
       }
-	
-			const hydration = latestGoals.get('hydration')
-			if (hydration) {
-				setCupsPerDay(hydration.cups_per_day || 2)
-			}
-	
-			const sleep = latestGoals.get('sleep')
-			if (sleep) {
-				setSleepHours(sleep.hours_per_day || 7)
-			}
-	
-			const body = latestGoals.get('body')
-			if (body) {
-				setMuscleGain(body.muscle_gain_kg || 0)
-				setFatLoss(body.fat_loss_kg || 0)
-			}
-		}
-	}
+    
+      const diet = latestGoals.get('diet') as DietGoal | undefined
+      if (diet) {
+        setMealsPerDay(diet.meals_per_day ?? 3)
+        setImportantMeal(diet.important_meal ?? '아침')
+        setFinishByHour(diet.finish_by_hour ?? 8)
+        setCustomGoal(diet.custom ?? '')
+        setSelectedTags(diet.hashtags ?? [])
+      }
+    
+      const hydration = latestGoals.get('hydration') as HydrationGoal | undefined
+      if (hydration) {
+        setCupsPerDay(hydration.cups_per_day ?? 2)
+      }
+    
+      const sleep = latestGoals.get('sleep') as SleepGoal | undefined
+      if (sleep) {
+        setSleepHours(sleep.hours_per_day ?? 7)
+      }
+    
+      const body = latestGoals.get('body') as BodyGoal | undefined
+      if (body) {
+        setMuscleGain(body.muscle_gain_kg ?? 0)
+        setFatLoss(body.fat_loss_kg ?? 0)
+      }
+    }
+  }
 	
   const handleSaveGoals = async () => {
     if (!selectedMember) return

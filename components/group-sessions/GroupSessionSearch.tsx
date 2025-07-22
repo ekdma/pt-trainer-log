@@ -16,7 +16,6 @@ interface Props {
 
 export default function GroupSessionSearch({
   sessions,
-  setSessions,
   fetchSessions,
   setSelectedSession,
   setIsEditOpen,
@@ -32,9 +31,14 @@ export default function GroupSessionSearch({
       await deleteGroupSessionDeeply(sessionId)
       alert('세션 삭제를 완료하였습니다 🎉')
       fetchSessions()
-    } catch (err: any) {
-      console.error('삭제 중 오류:', err)
-      alert('세션 삭제 중 문제가 발생했어요 😥\n\n' + err.message)
+    } catch (err: unknown) {
+      if (err instanceof Error) {
+        console.error('삭제 중 오류:', err)
+        alert('세션 삭제 중 문제가 발생했어요 😥\n\n' + err.message)
+      } else {
+        console.error('삭제 중 알 수 없는 오류:', err)
+        alert('알 수 없는 오류가 발생했어요 😥')
+      }
     }
   }
 
@@ -90,18 +94,3 @@ export default function GroupSessionSearch({
     </ul>
   )
 }
-
-
-// 여기 삭제하는 부분을 const handleDelete = async (tag: string) => {
-//   const { error } = await supabase
-//     .from('food_hashtag_templates')
-//     .delete()
-//     .eq('trainer_id', trainerId)
-//     .eq('meal_type', 'common')
-//     .eq('hashtag_content', tag)
-
-//   if (!error) {
-//     onTemplateDeleted?.(tag)
-//     setTagList((prev) => prev.filter((t) => t !== tag))
-//   }
-// } 이런 식으로 하면 안돼? 꼭 route 를 써야해? 

@@ -1,8 +1,7 @@
 'use client'
 
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog"
-import { X } from "lucide-react"
-import { Button } from "@/components/ui/button"
+import { Package } from '@/components/members/types';
 
 interface AddMemberPackageProps {
   open: boolean
@@ -16,7 +15,7 @@ interface AddMemberPackageProps {
     group_session_cnt: number
     price: number
   }[]
-  onSelect: (pkg: any) => void
+  onSelect: (pkg: Package) => void
 }
 
 export default function AddMemberPackage({

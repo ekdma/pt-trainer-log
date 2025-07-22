@@ -1,7 +1,6 @@
 'use client'
 
-import { useState, useEffect } from 'react'
-import { useRouter } from 'next/navigation'
+import { useEffect } from 'react'
 import { useAuthGuard } from '@/hooks/useAuthGuard'
 import TrainerHeader from '@/components/layout/TrainerHeader'
 import MemberGoalsPart from '@/components/my/MemberGoalsPart'
@@ -9,9 +8,6 @@ import MemberCalendar from '@/components/my/MemberCalendar'
 
 export default function HomePage() {
   useAuthGuard()
-  const router = useRouter()
-
-  const [scheduledDates, setScheduledDates] = useState<Date[]>([])
 
   useEffect(() => {
     // fetchGoals() / fetchSchedules()

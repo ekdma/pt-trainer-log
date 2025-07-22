@@ -6,6 +6,7 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
+import { SupabaseClient } from '@supabase/supabase-js';
 
 type Trainer = {
   trainer_id: number;
@@ -45,7 +46,7 @@ type Props = {
   customPrice: number;
   setCustomPrice: (val: number) => void;
   trainers: Trainer[];
-  supabase: any;
+  supabase: SupabaseClient;
   fetchMemberPackages: () => void;
   setIsOpen: (val: boolean) => void;
 };

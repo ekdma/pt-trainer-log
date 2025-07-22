@@ -3,9 +3,6 @@
 import { CalendarPlus} from 'lucide-react'
 import React, { useEffect, useState, useRef } from 'react'
 import { getSupabaseClient } from '@/lib/supabase'
-import { Button } from '@/components/ui/button'
-import { Disclosure } from '@headlessui/react'
-import { ChevronUpIcon } from '@heroicons/react/20/solid'
 import dayjs from 'dayjs';
 import { normalizeDateInput, handleKeyNavigation } from '@/utils/inputUtils';
 import { useHorizontalDragScroll } from '@/utils/useHorizontalDragScroll';
@@ -47,7 +44,6 @@ type UpdateLog = {
 
 export default function HealthMetricManager({
   member,
-  onClose,
   onUpdateLogs,
 }: HealthMetricManagerProps) {
   const [isTrainer, setIsTrainer] = useState(false)
@@ -67,7 +63,6 @@ export default function HealthMetricManager({
   const canSave = hasModifiedCells || hasNewLogInputs //|| hasNewWorkoutInputs
   const supabase = getSupabaseClient()
   const [isEmptyLog, setIsEmptyLog] = useState(false) // 로그 비었는지 여부
-  const [disclosureOpen, setDisclosureOpen] = useState(false)
   const [loadingManage, setLoadingManage] = useState(false)
   const [allTypes, setAllTypes] = useState<
     { health_metric_type_id: number; metric_target: string; metric_type: string; order_target: number; order_type: number }[]
@@ -83,18 +78,11 @@ export default function HealthMetricManager({
   const monthRef = useRef<HTMLInputElement>(null);
   const dayRef = useRef<HTMLInputElement>(null);
   const dateInputRef = useRef<HTMLInputElement | null>(null);
-  const [isAddHealthMetricOpen, setIsAddHealthMetricOpen] = React.useState(false)
   const [openAddMetric, setOpenAddMetric] = React.useState(false)
 
   useEffect(() => {
     fetchLogs()
   }, [member.member_id])
-
-  useEffect(() => {
-    if (disclosureOpen) {
-      fetchLogs()
-    }
-  }, [disclosureOpen])
 
   useEffect(() => {
     try {

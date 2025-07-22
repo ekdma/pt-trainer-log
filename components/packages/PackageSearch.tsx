@@ -1,7 +1,6 @@
 'use client'
 
 import { getSupabaseClient } from '@/lib/supabase'
-import { useState } from 'react'
 import { PackageOpen, PackageMinus } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 
@@ -25,7 +24,6 @@ type Props = {
 
 export default function PackageSearch({
   packages,
-  setPackages,
   fetchPackages,
   setEditingPackage,
 }: Props) {

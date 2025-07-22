@@ -3,9 +3,6 @@
 import { CalendarPlus} from 'lucide-react'
 import React, { useEffect, useState, useRef } from 'react'
 import { getSupabaseClient } from '@/lib/supabase'
-import { Button } from '@/components/ui/button'
-import { Disclosure } from '@headlessui/react'
-import { ChevronUpIcon } from '@heroicons/react/20/solid'
 import dayjs from 'dayjs';
 import { normalizeDateInput, handleKeyNavigation } from '@/utils/inputUtils';
 import { useHorizontalDragScroll } from '@/utils/useHorizontalDragScroll';
@@ -56,7 +53,6 @@ type UpdateLog = {
 
 export default function WorkoutLogManager({
   member,
-  onClose,
   onUpdateLogs,
   showFavoritesOnly = false,
   favorites = new Set(),
@@ -79,7 +75,6 @@ export default function WorkoutLogManager({
   const canSave = hasModifiedCells || hasNewLogInputs //|| hasNewWorkoutInputs
   const supabase = getSupabaseClient()
   const [isEmptyLog, setIsEmptyLog] = useState(false) // 로그 비었는지 여부
-  const [disclosureOpen, setDisclosureOpen] = useState(false)
   const [newLevel, setNewLevel] = useState('')
   const [loadingManage, setLoadingManage] = useState(false)
   const [allTypes, setAllTypes] = useState<
@@ -257,12 +252,6 @@ export default function WorkoutLogManager({
   useEffect(() => {
     fetchLogs()
   }, [member.member_id])
-
-  useEffect(() => {
-    if (disclosureOpen) {
-      fetchLogs()
-    }
-  }, [disclosureOpen])
 
   const fetchLogs = async () => {
     const { data: logs, error: logError } = await supabase

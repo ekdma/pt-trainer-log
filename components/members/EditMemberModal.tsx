@@ -1,6 +1,6 @@
 'use client'
 
-import { UserRoundPen, PackagePlus, PackageMinus, PackageOpen } from 'lucide-react'
+import { UserRoundPen, PackageOpen } from 'lucide-react'
 import { useState, useEffect } from 'react'
 import { SupabaseClient } from '@supabase/supabase-js'
 import { Member, MemberPackage, Package, Trainer } from './types'
@@ -9,11 +9,6 @@ import dayjs from 'dayjs'
 import EditMemberPackage from "@/components/members/EditMemberPackage";
 import ReRegisterMemberPackage from "@/components/members/ReRegisterMemberPackage";
 import BeforeMemberPackage from "@/components/members/BeforeMemberPackage";
-
-function formatPrice(value: string) {
-  if (!value) return '';
-  return Number(value).toLocaleString();
-}
 
 export default function EditMemberModal({
   member,
@@ -40,15 +35,20 @@ export default function EditMemberModal({
   const today = new Date().toISOString().split('T')[0]
 
   const [selectedPackage, setSelectedPackage] = useState<Package | null>(null)
-  const [customPt, setCustomPt] = useState(0)
-  const [customGroup, setCustomGroup] = useState(0)
-  const [customSelf, setCustomSelf] = useState(0)
+  // const [customPt, setCustomPt] = useState(0)
+  const [customPt] = useState(0)
+  // const [customGroup, setCustomGroup] = useState(0)
+  const [customGroup] = useState(0)
+  // const [customSelf, setCustomSelf] = useState(0)
+  const [customSelf] = useState(0)
   const [customPrice, setCustomPrice] = useState(0)
-  const [startDate, setStartDate] = useState<string>(() => dayjs().format('YYYY-MM-DD'))
+  // const [startDate, setStartDate] = useState<string>(() => dayjs().format('YYYY-MM-DD'))
+  const [startDate] = useState<string>(() => dayjs().format('YYYY-MM-DD'));
   const [endDate, setEndDate] = useState<string>(() => dayjs().add(1, 'month').format('YYYY-MM-DD'))
 
   const [trainers, setTrainers] = useState<Trainer[]>([])
-  const [selectedTrainerId, setSelectedTrainerId] = useState<number | null>(null)
+  // const [selectedTrainerId, setSelectedTrainerId] = useState<number | null>(null)
+  const [selectedTrainerId] = useState<number | null>(null)
 
   const [isEditPackageOpen, setIsEditPackageOpen] = useState(false)
 
@@ -232,14 +232,14 @@ export default function EditMemberModal({
     }
   }
 
-  const handlePackageSelect = (pkg: Package) => {
-    setSelectedPackage(pkg)
-    setCustomPt(pkg.pt_session_cnt)
-    setCustomGroup(pkg.group_session_cnt)
-    setCustomSelf(pkg.self_session_cnt)
-    setCustomPrice(pkg.price)
-    setShowPackagePopup(false)
-  }
+  // const handlePackageSelect = (pkg: Package) => {
+  //   setSelectedPackage(pkg)
+  //   setCustomPt(pkg.pt_session_cnt)
+  //   setCustomGroup(pkg.group_session_cnt)
+  //   setCustomSelf(pkg.self_session_cnt)
+  //   setCustomPrice(pkg.price)
+  //   setShowPackagePopup(false)
+  // }
 
   return (
     <div className="fixed inset-0 bg-black bg-opacity-40 backdrop-blur-sm flex items-center justify-center z-50">

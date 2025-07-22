@@ -5,8 +5,6 @@ import { useRouter, useSearchParams } from 'next/navigation'
 import { useAuthGuard } from '@/hooks/useAuthGuard'
 import FoodDiaryMemberView from './FoodDiaryMemberView'
 import FoodDiaryTrainerView from './FoodDiaryTrainerView'
-import { ArrowLeft, Utensils } from 'lucide-react'
-import { Button } from '@/components/ui/button'
 
 type Role = 'member' | 'trainer'
 

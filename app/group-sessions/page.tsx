@@ -2,7 +2,6 @@
 'use client'
 
 import { useState, useEffect } from 'react'
-import { useRouter } from 'next/navigation'
 import { getSupabaseClient } from '@/lib/supabase'
 import { useAuthGuard } from '@/hooks/useAuthGuard'
 import TrainerHeader from '@/components/layout/TrainerHeader'
@@ -28,7 +27,6 @@ export default function GroupSessionPage() {
   const [selectedSession, setSelectedSession] = useState<GroupSession | null>(null)
   const [showAll, setShowAll] = useState(false)
 
-  const router = useRouter()
   useAuthGuard()
 
   const fetchSessions = async () => {

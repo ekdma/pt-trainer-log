@@ -13,6 +13,10 @@ type SessionDates = {
   group: string[]
   self: string[]
 }
+interface Member {
+  member_id: number
+  name: string
+}
 
 export default function MemberCalendar() {
   const [sessionDates, setSessionDates] = useState<SessionDates>({
@@ -22,7 +26,7 @@ export default function MemberCalendar() {
   })
   const [showSessionList, setShowSessionList] = useState(true)
   const supabase = getSupabaseClient()
-  const [member, setMember] = useState<any>(null)
+  const [member, setMember] = useState<Member | null>(null)
 
   useEffect(() => {
     const raw = localStorage.getItem('litpt_member')

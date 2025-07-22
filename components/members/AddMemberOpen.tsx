@@ -334,7 +334,6 @@ export default function AddMemberOpen({ onClose, onMemberAdded }: Props) {
                       inputMode="numeric"
                       value={formatPrice(customPrice.toString())}
                       onChange={e => {
-                        const onlyNums = e.target.value.replace(/[^0-9]/g, '');
                         setCustomPrice(Number(e.target.value))
                       }}
                       className="w-full border rounded px-2 py-1 text-center"

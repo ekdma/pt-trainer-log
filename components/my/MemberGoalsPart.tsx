@@ -3,10 +3,45 @@
 import { useEffect, useState } from 'react'
 import { getSupabaseClient } from '@/lib/supabase'
 
+interface DietGoal {
+  meals_per_day: number
+  important_meal: string
+  finish_by_hour: number
+  custom?: string
+  hashtags?: string[]
+}
+
+interface HydrationGoal {
+  cups_per_day: number
+}
+
+interface SleepGoal {
+  hours_per_day: number
+}
+
+interface BodyGoal {
+  muscle_gain_kg: number
+  fat_loss_kg: number
+}
+
+interface MemberGoals {
+  diet?: DietGoal
+  hydration?: HydrationGoal
+  sleep?: SleepGoal
+  body?: BodyGoal
+}
+
+interface HashtagTemplate {
+  id: number
+  hashtag_content: string
+  description?: string
+}
+
 export default function MemberGoalsPart() {
-  const [goals, setGoals] = useState<Record<string, any>>({})
-  const [templates, setTemplates] = useState<any[]>([])
   const supabase = getSupabaseClient()
+  const [goals, setGoals] = useState<MemberGoals>({})
+  const [templates, setTemplates] = useState<HashtagTemplate[]>([])
+  const latestGoals: MemberGoals = {}
 
   const fetchGoals = async () => {
     const raw = localStorage.getItem('litpt_member')
@@ -21,13 +56,18 @@ export default function MemberGoalsPart() {
 
     if (error || !data) return
 
-    const latestGoals: Record<string, any> = {}
+    const validGoalTypes = ['diet', 'hydration', 'sleep', 'body'] as const
+    type GoalType = typeof validGoalTypes[number]
+
     for (const goal of data) {
-      if (!latestGoals[goal.goal_type]) {
-        latestGoals[goal.goal_type] = goal.content
+      const type = goal.goal_type as string
+      if (validGoalTypes.includes(type as GoalType)) {
+        const typedType = type as GoalType
+        if (!latestGoals[typedType]) {
+          latestGoals[typedType] = goal.content
+        }
       }
     }
-
     setGoals(latestGoals)
   }
 

@@ -1,9 +1,31 @@
 // MemberPackageCheck.tsx
 import { useState } from 'react';
-import { PackageMinus, PackagePlus } from 'lucide-react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
+import { SupabaseClient } from '@supabase/supabase-js';
+import { MemberPackage } from '@/components/members/types';
 
+interface Props {
+  isEditPackageOpen: boolean;
+  setIsEditPackageOpen: (open: boolean) => void;
+  currentPackage: MemberPackage;
+  editStartDate: string;
+  setEditStartDate: (date: string) => void;
+  editEndDate: string;
+  setEditEndDate: (date: string) => void;
+  editPtSession: number;
+  setEditPtSession: (count: number) => void;
+  editSelfSession: number;
+  setEditSelfSession: (count: number) => void;
+  editGroupSession: number;
+  setEditGroupSession: (count: number) => void;
+  editTrainerId: number | null;
+  setEditTrainerId: (id: number | null) => void;
+  customPrice: number;
+  setCustomPrice: (price: number) => void;
+  fetchMemberPackages: () => void;
+  supabase: SupabaseClient;
+}
 export default function MemberPackageCheck({
   isEditPackageOpen,
   setIsEditPackageOpen,
@@ -24,7 +46,7 @@ export default function MemberPackageCheck({
   setCustomPrice,
   fetchMemberPackages,
   supabase
-}: any) {
+}: Props) {
   const [loading, setLoading] = useState(false);
 
   const handleSave = async () => {
@@ -92,7 +114,7 @@ export default function MemberPackageCheck({
               <label className="text-xs text-gray-500">트레이너 ID</label>
               <input
                 type="number"
-                value={editTrainerId}
+                value={editTrainerId ?? ''}
                 onChange={(e) => setEditTrainerId(Number(e.target.value))}
                 className="w-full border rounded px-2 py-1 text-center"
               />

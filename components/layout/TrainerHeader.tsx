@@ -2,9 +2,11 @@
 
 import Link from 'next/link'
 import { useEffect, useState } from 'react'
+import { usePathname } from 'next/navigation'
 
 export default function Header() {
   const [memberName, setMemberName] = useState<string | null>(null)
+  const pathname = usePathname()
 
   useEffect(() => {
     const raw = localStorage.getItem('litpt_member')
@@ -20,6 +22,16 @@ export default function Header() {
     }
   }, [])
 
+  const navItems = [
+    { href: '/members', label: '회원' },
+    { href: '/packages', label: '패키지' },
+    { href: '/group-sessions', label: '그룹세션' },
+    { href: '/food-diary', label: '식단' },
+    { href: '/workout', label: '운동' },
+    { href: '/health-metric', label: '건강' },
+    { href: '/goals', label: '목표설정' },
+  ]
+
   return (
     <header className="bg-white shadow-sm border-b sticky top-0 z-10">
       <div className="max-w-7xl mx-auto px-4 py-3 flex items-center justify-between">
@@ -30,14 +42,23 @@ export default function Header() {
             <span className="text-base font-semibold text-gray-800 ml-3">| {memberName}</span>
           )}
         </Link>
-        <nav className="flex gap-6 text-sm text-gray-700">
-          <Link href="/members" className="hover:text-rose-600">회원</Link>
-          <Link href="/packages" className="hover:text-rose-600">패키지</Link>
-          <Link href="/group-sessions" className="hover:text-rose-600">그룹세션</Link>
-          <Link href="/food-diary" className="hover:text-rose-600">식단</Link>
-          <Link href="/workout" className="hover:text-rose-600">운동</Link>
-          <Link href="/health-metric" className="hover:text-rose-600">건강</Link>
-          <Link href="/goals" className="hover:text-rose-600">목표설정</Link>
+        <nav className="flex gap-2 text-sm text-gray-700">
+          {navItems.map((item) => {
+            const isActive = pathname === item.href
+            return (
+              <Link
+                key={item.href}
+                href={item.href}
+                className={`px-3 py-1 rounded-md transition ${
+                  isActive
+                    ? 'bg-rose-100 text-rose-600 font-semibold'
+                    : 'hover:text-rose-600'
+                }`}
+              >
+                {item.label}
+              </Link>
+            )
+          })}
         </nav>
       </div>
     </header>

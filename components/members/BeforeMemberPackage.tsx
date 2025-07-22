@@ -2,11 +2,12 @@
 
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog"
 import { PackageMinus } from "lucide-react"
+import { MemberPackage } from '@/components/members/types';
 
 interface BeforeMemberPackageProps {
   open: boolean
   onOpenChange: (open: boolean) => void
-  memberPackages: any[]
+  memberPackages: MemberPackage[]
   today: string
 }
 

@@ -12,7 +12,6 @@ import {
   DialogHeader,
   DialogTitle,
   DialogFooter,
-  DialogClose,
 } from '@/components/ui/dialog';
 
 interface Props {
@@ -42,8 +41,6 @@ export default function ReRegisterMemberPackage({
   setShowPackagePopup,
   fetchMemberPackages,
 }: Props) {
-  const [isOpen, setIsOpen] = useState(false);
-
   // Form States
   const [editPtSession, setEditPtSession] = useState(0);
   const [editSelfSession, setEditSelfSession] = useState(0);
@@ -120,7 +117,6 @@ export default function ReRegisterMemberPackage({
       alert('패키지 등록 실패: ' + insertError.message);
     } else {
       alert('패키지 재등록 완료 ✅');
-      setIsOpen(false);
       setSelectedPackage(null);
       setShowPackagePopup(false);
       fetchMemberPackages();

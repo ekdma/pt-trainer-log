@@ -6,15 +6,11 @@ dayjs.extend(isBetween)
 import { useState, useEffect } from 'react'
 import { getSupabaseClient } from '@/lib/supabase'
 import { Member, WorkoutRecord, HealthMetric } from './types'
-import AddMemberOpen from './AddMemberOpen'
-import EditMemberModal from './EditMemberModal'
 import MemberCalendar from './MemberCalendar'
 import { SupabaseClient } from '@supabase/supabase-js'
 import { useRouter } from 'next/navigation'
-import Calendar from 'react-calendar'
 import 'react-calendar/dist/Calendar.css'
-import { Utensils, UsersIcon, Eye, EyeClosedIcon, X, UserRoundPen, UserRoundMinus, UserRoundPlus, UserRoundSearch, Calendar as CalendarIcon, PackageSearch, User } from 'lucide-react';
-import { ChevronLeftIcon, ChevronRightIcon, ChevronDoubleLeftIcon, ChevronDoubleRightIcon } from '@heroicons/react/24/solid'
+import {  UsersIcon, UserRoundPen, UserRoundMinus, Calendar as CalendarIcon, User } from 'lucide-react';
 import { Button } from '@/components/ui/button'
 
 function toOrdinal(num: number) {
@@ -46,9 +42,7 @@ export default function MemberSearch({
   setEditingMember: (member: Member) => void
 }) {
   const [supabase, setSupabase] = useState<SupabaseClient | null>(null)
-  const [keyword, setKeyword] = useState('')
   const [filteredMembers, setFilteredMembers] = useState<Member[]>([])
-  const router = useRouter()
 
   const [registrationCountMap, setRegistrationCountMap] = useState<{ [memberId: number]: number }>({});
 
@@ -93,25 +87,6 @@ export default function MemberSearch({
     }
   }, [supabase])
   
-  const handleSearch = async () => {
-    if (!supabase) return
-    if (!keyword.trim()) {
-      fetchMembers()
-      return
-    }
-  
-    const { data: membersData, error } = await supabase
-      .from('members')
-      .select('*')
-      .ilike('name', `%${keyword}%`)
-  
-    if (error) {
-      console.error('검색 에러:', error.message)
-    } else {
-      setFilteredMembers(membersData || [])
-    }
-  }
-
   const handleSelect = async (member: Member) => {
     if (!supabase) return
 

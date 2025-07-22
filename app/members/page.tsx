@@ -6,10 +6,8 @@ import MemberSearch from '../../components/members/MemberSearch'
 import type { Member, WorkoutRecord, HealthMetric } from '@/components/members/types'
 import { fetchWorkoutLogs, fetchHealthLogs } from '../../utils/fetchLogs'
 import { useAuthGuard } from '@/hooks/useAuthGuard'
-import { useRouter } from 'next/navigation'
 import { getSupabaseClient } from '@/lib/supabase'
-import { SupabaseClient } from '@supabase/supabase-js'
-import { Utensils, UsersIcon, Eye, EyeClosedIcon, X, UserRoundPen, UserRoundMinus, Search, UserRoundPlus, UserRoundSearch, Calendar as CalendarIcon, PackageSearch, User } from 'lucide-react';
+import { Search, UserRoundPlus, UserRoundSearch } from 'lucide-react';
 import { Button } from '@/components/ui/button'
 import AddMemberOpen from '@/components/members/AddMemberOpen'
 import EditMemberModal from '@/components/members/EditMemberModal'
@@ -27,10 +25,10 @@ export default function MembersPage() {
   const [healthLogs, setHealthLogs] = useState<HealthMetric[]>([])
   const [activeTab, setActiveTab] = useState<'workout' | 'health' | 'food'>('workout')
   // const [workoutTypes, setWorkoutTypes] = useState<WorkoutType[]>([]);
-  const router = useRouter()
 
   useAuthGuard()
-
+  console.log(filteredMembers, workoutLogs, healthLogs)
+  
   useEffect(() => {
     const fetchLogs = async () => {
       if (!selectedMember) return
@@ -85,17 +83,6 @@ export default function MembersPage() {
       setFilteredMembers(data);
     }
   };
-
-  const navigateTo = (tab: typeof activeTab) => {
-    setActiveTab(tab)
-    if (tab === 'food' && selectedMember) {
-      const params = new URLSearchParams({
-        memberId: String(selectedMember.member_id),
-        memberName: selectedMember.name,
-      })
-      router.push(`/food-diary?${params.toString()}`)
-    }
-  }
 
   return (
     <div className="min-h-screen bg-gray-50">

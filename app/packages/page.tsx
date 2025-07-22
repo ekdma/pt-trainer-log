@@ -1,14 +1,13 @@
 'use client'
 
 import { useEffect, useState } from 'react'
-import { useRouter } from 'next/navigation'
 import { getSupabaseClient } from '@/lib/supabase'
 import { useAuthGuard } from '@/hooks/useAuthGuard'
 import TrainerHeader from '@/components/layout/TrainerHeader'
 import PackageSearch from '@/components/packages/PackageSearch'
 import EditPackageModal from '@/components/packages/EditPackageModal'
 import AddPackageOpen from '@/components/packages/AddPackageOpen'
-import { Search, PackagePlus, PackageSearch as PackageSearchIcon, UserRoundSearch } from 'lucide-react'
+import { Search, PackagePlus, PackageSearch as PackageSearchIcon } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 
 interface Package {
@@ -28,7 +27,6 @@ export default function PackageListPage() {
   const [isAddPackageOpen, setIsAddPackageOpen] = useState(false)
   const [editingPackage, setEditingPackage] = useState<Package | null>(null)
   const supabase = getSupabaseClient()
-  const router = useRouter()
 
   useAuthGuard()
 

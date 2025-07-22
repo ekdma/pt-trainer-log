@@ -1,15 +1,12 @@
 'use client'
 
 import dayjs from 'dayjs';
-import { ArrowLeft, NotebookPen, ArrowUpDown } from 'lucide-react'
 import { useEffect, useState } from 'react'
 import { WorkoutRecord, Member, WorkoutType } from '@/components/members/types'
 import {
   LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer,
 } from 'recharts'
-import { Button } from '@/components/ui/button'
-import WorkoutLogManager from '@/components/members/WorkoutLogManager' 
-import OrderManagementModal from '@/components/members/OrderManagementModal'
+// import OrderManagementModal from '@/components/members/OrderManagementModal'
 import { getWorkoutTypes } from '../../lib/supabase'
 
 type Props = {
@@ -118,14 +115,13 @@ function getColorForWorkout(target: string, workout: string) {
   return newColor
 }
 
-export default function MemberGraphs({ member, logs: initialLogs, onBack, showFavoritesOnly, favorites }: Props) {
-  const [isTrainer, setIsTrainer] = useState(false)
+export default function MemberGraphs({ logs: initialLogs, showFavoritesOnly, favorites }: Props) {
+  // const [isTrainer, setIsTrainer] = useState(false)
   const [logs, setLogs] = useState<WorkoutRecord[]>([])
   const [allTypes, setAllTypes] = useState<WorkoutType[]>([]);
   const [isOrderModalOpen, setIsOrderModalOpen] = useState(false)
   // const [isAddRecordOpen, setIsAddRecordOpen] = useState(false)
   // const [isListOpen, setIsListOpen] = useState(false)
-  const [isWorkoutManagerOpen, setIsWorkoutManagerOpen] = useState(false)
   const [selectedTarget, setSelectedTarget] = useState<string | null>(null)
   const [viewMode, setViewMode] = useState<'daily' | 'monthly'>('daily');
 
@@ -133,9 +129,9 @@ export default function MemberGraphs({ member, logs: initialLogs, onBack, showFa
     try {
       const raw = localStorage.getItem('litpt_member')
       const loggedInMember = raw ? JSON.parse(raw) : null
-      if (loggedInMember?.role === 'trainer') {
-        setIsTrainer(true)
-      }
+      // if (loggedInMember?.role === 'trainer') {
+      //   setIsTrainer(true)
+      // }
     } catch (e) {
       console.error('Failed to read login info:', e)
     }

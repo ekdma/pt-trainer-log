@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect, useMemo } from 'react'
+import { useState, useEffect } from 'react'
 import dayjs from 'dayjs'
 import { getSupabaseClient } from '@/lib/supabase'
 
@@ -256,8 +256,8 @@ export default function FoodDiaryMemberView({ memberId, memberName }: Props) {
 
   return (
     <div className="space-y-4">
-      <h1 className="text-center text-lg font-semibold text-gray-600">{memberName}'s Food Diary</h1>
-
+      <h1 className="text-center text-lg font-semibold text-gray-600">{`${memberName}'s Food Diary`}</h1>
+              
       <div className="bg-white shadow rounded-xl p-4 space-y-3 border border-gray-100">
         <div className="flex justify-between items-center">
           <button onClick={() => handleDateChange('prev')} className="text-sm text-rose-600">{'<'} 이전</button>

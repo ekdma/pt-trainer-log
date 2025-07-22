@@ -18,10 +18,17 @@ interface ViewTotalGroupSessionModalProps {
   onClose: () => void
 }
 
+interface SupabaseGroupSessionRow {
+  group_session_id: number
+  group_session_date: string
+  theme: string
+  group_session_workouts: { workout_name: string }[]
+  group_session_participants: { members: { name: string } | null }[]
+}
+
 export default function ViewTotalGroupSessionModal({ onClose }: ViewTotalGroupSessionModalProps) {
   const [sessions, setSessions] = useState<GroupSession[]>([])
   const [workoutNames, setWorkoutNames] = useState<string[]>([])
-  const [dates, setDates] = useState<string[]>([])
   const [loading, setLoading] = useState(true)
   const [selectedParticipants, setSelectedParticipants] = useState<string[] | null>(null)
   const [selectedDate, setSelectedDate] = useState<string | null>(null)
@@ -53,22 +60,19 @@ export default function ViewTotalGroupSessionModal({ onClose }: ViewTotalGroupSe
       return
     }
 
-    const grouped: GroupSession[] = data.map((s: any) => ({
+    const grouped: GroupSession[] = (data as unknown as SupabaseGroupSessionRow[]).map((s) => ({
       id: s.group_session_id,
       date: dayjs(s.group_session_date).format('YY.MM.DD'),
       theme: s.theme,
-      workouts: s.group_session_workouts?.map((w: any) => w.workout_name) ?? [],
-      participants: s.group_session_participants?.map((p: any) => p.members?.name ?? '이름 없음') ?? [],
+      workouts: s.group_session_workouts?.map((w) => w.workout_name) ?? [],
+      participants: s.group_session_participants?.map((p) => p.members?.name ?? '이름 없음') ?? [],
     }))
 
     const allWorkoutsSet = new Set<string>()
     grouped.forEach(s => s.workouts.forEach((w: string) => allWorkoutsSet.add(w)))
 
-    const uniqueDates = [...new Set(grouped.map(s => s.date))]
-
     setSessions(grouped)
     setWorkoutNames(Array.from(allWorkoutsSet))
-    setDates(uniqueDates)
     setLoading(false)
   }
 

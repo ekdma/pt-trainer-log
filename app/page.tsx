@@ -3,7 +3,7 @@
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { getSupabaseClient } from '@/lib/supabase'
-import Image from 'next/image'
+// import Image from 'next/image'
 
 export default function Home() {
   const [name, setName] = useState('')
