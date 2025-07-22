@@ -3,6 +3,7 @@
 import { useState, useEffect } from 'react'
 import dayjs from 'dayjs'
 import { getSupabaseClient } from '@/lib/supabase'
+import { Button } from '@/components/ui/button'
 
 interface Props {
   memberId: string
@@ -396,12 +397,19 @@ export default function FoodDiaryMemberView({ memberId, memberName }: Props) {
       </div>
 
       <div className="text-center">
-        <button
+        {/* <button
           onClick={handleSave}
           className="text-sm mt-6 bg-rose-600 text-white font-semibold px-6 py-3 rounded-full shadow hover:bg-rose-700 transition"
         >
           저장
-        </button>
+        </button> */}
+        <Button
+          onClick={handleSave}
+          variant="darkGray" 
+          className="text-sm"
+        >
+          저장
+        </Button>
       </div>
 
     </div>

@@ -1,6 +1,7 @@
 'use client'
 
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog'
+import { Button } from "@/components/ui/button"
 
 interface WorkoutType {
   workout_type_id: number
@@ -87,14 +88,22 @@ export default function AddWorkout({
           </div>
 
           <div className="self-stretch flex items-end">
-            <button
+            {/* <button
               type="button"
               onClick={handleAddType}
               disabled={loadingManage}
               className="w-full bg-indigo-600 text-white px-3 py-2 rounded-lg text-xs font-medium hover:bg-indigo-700 transition disabled:opacity-50"
             >
               추가
-            </button>
+            </button> */}
+            <Button
+              onClick={handleAddType}
+              disabled={loadingManage}
+              variant="darkGray" 
+              className="text-sm"
+            >
+              추가
+            </Button>
           </div>
         </div>
 

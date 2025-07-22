@@ -255,8 +255,26 @@ export default function ReRegisterMemberPackage({
               </div>
             </div>
 
-            <DialogFooter className="mt-6 flex justify-end gap-2">
+            <DialogFooter className="mt-6">
+              <Button 
+                variant="ghost"
+                className="text-sm"
+                onClick={() => {
+                  onOpenChange(false);
+                  setSelectedPackage(null);
+                  setShowPackagePopup(false);
+                }}
+              >
+                닫기
+              </Button>
               <Button
+                onClick={handleSave}
+                variant="darkGray" 
+                className="text-sm"
+              >
+                저장
+              </Button>
+              {/* <Button
                 variant="outline"
                 onClick={() => {
                   onOpenChange(false);
@@ -266,7 +284,7 @@ export default function ReRegisterMemberPackage({
               >
                 취소
               </Button>
-              <Button onClick={handleSave}>저장</Button>
+              <Button onClick={handleSave}>저장</Button> */}
             </DialogFooter>
           </DialogContent>
         </Dialog>

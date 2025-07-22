@@ -569,8 +569,10 @@ export default function FoodDiaryTrainerView({ initialSelectedMember = null }: F
               />
               <Button
                 onClick={handleSaveAll}
-                type="submit"
-                className="bg-rose-600 hover:bg-rose-700 text-white text-sm"
+                variant="darkGray" 
+                className="text-sm"
+                // type="submit"
+                // className="bg-rose-600 hover:bg-rose-700 text-white text-sm"
               >
                 저장
               </Button>

@@ -6,6 +6,7 @@ import Header from '@/components/layout/Header'
 import TrainerHeader from '@/components/layout/TrainerHeader'
 import { getSupabaseClient } from '@/lib/supabase'
 import type { Member } from '@/components/members/types'
+import { Button } from '@/components/ui/button'
 
 interface Sessions {
   pt_session_cnt: number
@@ -486,12 +487,18 @@ export default function GoalsPage() {
             {/* 저장 버튼 */}
             {userRole === 'member' && (
               <div className="text-center">
-                <button
+                {/* <button
                   onClick={handleSaveGoals}
                   className="text-sm mt-6 bg-rose-600 text-white font-semibold px-6 py-3 rounded-full shadow hover:bg-rose-700 transition"
                 >
                   목표 저장하기
-                </button>
+                </button> */}
+                <Button 
+                  onClick={handleSaveGoals}
+                  variant="darkGray" 
+                  className="mt-6 text-sm rounded-full shadow px-6 py-3">
+                  목표 저장하기
+                </Button>
               </div>
             )}
 

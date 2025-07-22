@@ -207,7 +207,7 @@ export default function AddMemberOpen({ onClose, onMemberAdded }: Props) {
                 value={name}
                 onChange={(e) => setName(e.target.value)}
                 placeholder="이름을 입력하세요"
-                className="text-sm text-gray-700 w-full p-2 border rounded focus:ring-2 focus:ring-indigo-500 focus:outline-none"
+                className="text-sm text-gray-700 w-full p-2 border rounded focus:ring-2 focus:ring-gray-500 focus:outline-none"
               />
             </div>
 
@@ -219,7 +219,7 @@ export default function AddMemberOpen({ onClose, onMemberAdded }: Props) {
                   value={birthInput}
                   onChange={(e) => setBirthInput(e.target.value)}
                   placeholder="예: 19950703"
-                  className="text-sm text-gray-700 w-full p-2 border rounded focus:ring-2 focus:ring-indigo-500 focus:outline-none"
+                  className="text-sm text-gray-700 w-full p-2 border rounded focus:ring-2 focus:ring-gray-500 focus:outline-none"
                 />
                 {/* <p className="text-xs text-gray-500 mt-1">
                   ※ 연도만 입력 시 '01-01'로 자동 처리됩니다
@@ -232,7 +232,7 @@ export default function AddMemberOpen({ onClose, onMemberAdded }: Props) {
                   value={phone}
                   onChange={(e) => setPhone(e.target.value)}
                   placeholder="예: 01012345678"
-                  className="text-sm text-gray-700 w-full p-2 border rounded focus:ring-2 focus:ring-indigo-500 focus:outline-none"
+                  className="text-sm text-gray-700 w-full p-2 border rounded focus:ring-2 focus:ring-gray-500 focus:outline-none"
                 />
               </div>
             </div>
@@ -243,7 +243,7 @@ export default function AddMemberOpen({ onClose, onMemberAdded }: Props) {
                 <select
                   value={sex}
                   onChange={(e) => setSex(e.target.value)}
-                  className="text-sm text-gray-700 w-full p-2 border rounded focus:ring-2 focus:ring-indigo-500 focus:outline-none"
+                  className="text-sm text-gray-700 w-full p-2 border rounded focus:ring-2 focus:ring-gray-500 focus:outline-none"
                 >
                   <option value="F">여자</option>
                   <option value="M">남자</option>
@@ -254,7 +254,7 @@ export default function AddMemberOpen({ onClose, onMemberAdded }: Props) {
                 <select
                   value={level}
                   onChange={(e) => setLevel(e.target.value)}
-                  className="text-sm text-gray-700 w-full p-2 border rounded focus:ring-2 focus:ring-indigo-500 focus:outline-none"
+                  className="text-sm text-gray-700 w-full p-2 border rounded focus:ring-2 focus:ring-gray-500 focus:outline-none"
                 >
                   <option value="Level 1">Level 1</option>
                   <option value="Level 2">Level 2</option>
@@ -269,7 +269,7 @@ export default function AddMemberOpen({ onClose, onMemberAdded }: Props) {
                   type="date"
                   value={joinDate}
                   onChange={(e) => setJoinDate(e.target.value)}
-                  className="text-sm text-gray-700 w-full p-2 border rounded focus:ring-2 focus:ring-indigo-500 focus:outline-none"
+                  className="text-sm text-gray-700 w-full p-2 border rounded focus:ring-2 focus:ring-gray-500 focus:outline-none"
                 />
               </div>
             </div>
@@ -390,11 +390,11 @@ export default function AddMemberOpen({ onClose, onMemberAdded }: Props) {
         </div>
         
         <div className="flex justify-end space-x-3">
-          <Button
+          {/* <Button
             onClick={handleSubmit}
             disabled={loading}
             variant="outline"
-            className="px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white text-sm rounded transition"
+            className="px-4 py-2 bg-gray-600 hover:bg-gray-700 text-white text-sm rounded transition"
           >
             {loading ? '등록 중...' : '등록'}
           </Button>
@@ -406,6 +406,22 @@ export default function AddMemberOpen({ onClose, onMemberAdded }: Props) {
             className="px-4 py-2 text-sm"
           >
             취소
+          </Button> */}
+          <Button 
+            variant="ghost"
+            className="text-sm"
+            onClick={onClose}
+            disabled={loading}
+          >
+            닫기
+          </Button>
+          <Button
+            onClick={handleSubmit}
+            disabled={loading}
+            variant="darkGray" 
+            className="text-sm"
+          >
+            {loading ? '저장 중...' : '저장'}
           </Button>
         </div>
 

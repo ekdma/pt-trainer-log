@@ -67,14 +67,22 @@ export default function AddHealthMetric({
           </div>
 
           <div className="self-stretch flex items-end">
-            <button
+            {/* <button
               type="button"
               onClick={onAdd}
               disabled={loading}
               className="w-full bg-indigo-600 text-white px-3 py-2 rounded-lg text-xs font-medium hover:bg-indigo-700 transition disabled:opacity-50"
             >
               추가
-            </button>
+            </button> */}
+            <Button
+              onClick={onAdd}
+              disabled={loading}
+              variant="darkGray" 
+              className="text-sm"
+            >
+              추가
+            </Button>
           </div>
         </div>
 
@@ -101,11 +109,11 @@ export default function AddHealthMetric({
           ))}
         </ul>
 
-        <div className="text-right mt-4">
+        {/* <div className="text-right mt-4">
           <Button variant="outline" size="sm" onClick={() => onOpenChange(false)}>
             닫기
           </Button>
-        </div>
+        </div> */}
       </DialogContent>
     </Dialog>
   )

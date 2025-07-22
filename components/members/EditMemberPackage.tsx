@@ -197,12 +197,26 @@ export default function EditMemberPackage({
         </div>
 
         <DialogFooter className="mt-6">
-          <Button variant="save" onClick={handleSave}>
+          <Button 
+            variant="ghost"
+            className="text-sm"
+            onClick={() => setIsOpen(false)}
+          >
+            닫기
+          </Button>
+          <Button
+            onClick={handleSave}
+            variant="darkGray" 
+            className="text-sm"
+          >
+            저장
+          </Button>
+          {/* <Button variant="save" onClick={handleSave}>
             저장
           </Button>
           <Button variant="outline" onClick={() => setIsOpen(false)}>
             취소
-          </Button>
+          </Button> */}
         </DialogFooter>
       </DialogContent>
     </Dialog>

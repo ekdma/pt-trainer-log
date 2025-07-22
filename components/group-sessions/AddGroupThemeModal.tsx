@@ -69,7 +69,23 @@ export default function AddGroupThemeModal({ open, onClose, onThemeAdded }: Prop
         </div>
 
         <DialogFooter>
+          <Button 
+            variant="ghost"
+            className="text-sm"
+            onClick={onClose}
+            disabled={loading}
+          >
+            닫기
+          </Button>
           <Button
+            onClick={handleAdd}
+            disabled={loading}
+            variant="darkGray" 
+            className="text-sm"
+          >
+            {loading ? '저장 중...' : '저장'}
+          </Button>
+          {/* <Button
             onClick={handleAdd}
             disabled={loading}
             variant="save"
@@ -82,7 +98,7 @@ export default function AddGroupThemeModal({ open, onClose, onThemeAdded }: Prop
             disabled={loading}
           >
             취소
-          </Button>
+          </Button> */}
         </DialogFooter>
       </DialogContent>
     </Dialog>

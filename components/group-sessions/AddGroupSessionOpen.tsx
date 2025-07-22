@@ -191,8 +191,24 @@ export default function AddGroupSessionDialog({ open, onClose, onSessionAdded }:
         </div>
 
         <DialogFooter className="mt-6">
-          <Button onClick={handleSubmit} disabled={loading} variant="save" >{loading ? '등록 중...' : '등록'}</Button>
-          <Button variant="outline" onClick={onClose} disabled={loading}>취소</Button>
+          {/* <Button onClick={handleSubmit} disabled={loading} variant="save" >{loading ? '등록 중...' : '등록'}</Button>
+          <Button variant="outline" onClick={onClose} disabled={loading}>취소</Button> */}
+          <Button 
+            variant="ghost"
+            className="text-sm"
+            onClick={onClose}
+            disabled={loading}
+          >
+            닫기
+          </Button>
+          <Button
+            onClick={handleSubmit}
+            disabled={loading}
+            variant="darkGray" 
+            className="text-sm"
+          >
+            {loading ? '저장 중...' : '저장'}
+          </Button>
         </DialogFooter>
 
         {showAddWorkout && (

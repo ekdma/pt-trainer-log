@@ -168,12 +168,27 @@ export default function EditPackageModal({
         </div>
 
         <DialogFooter className="mt-6">
-          <Button onClick={handleSubmit} disabled={loading} variant="save">
+          <Button 
+            variant="ghost"
+            className="text-sm"
+            onClick={onClose}
+          >
+            닫기
+          </Button>
+          <Button
+            onClick={handleSubmit}
+            disabled={loading}
+            variant="darkGray" 
+            className="text-sm"
+          >
+            {loading ? '저장 중...' : '저장'}
+          </Button>
+          {/* <Button onClick={handleSubmit} disabled={loading} variant="save">
             {loading ? '수정 중...' : '수정'}
           </Button>
           <Button onClick={onClose} disabled={loading} variant="outline">
             취소
-          </Button>
+          </Button> */}
         </DialogFooter>
       </DialogContent>
     </Dialog>

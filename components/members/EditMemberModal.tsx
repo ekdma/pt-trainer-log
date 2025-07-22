@@ -461,7 +461,24 @@ export default function EditMemberModal({
         </div>
 
         <div className="flex justify-end space-x-3 mt-6">
+          <Button 
+            variant="ghost"
+            className="text-sm"
+            onClick={onClose}
+            disabled={loading}
+          >
+            닫기
+          </Button>
           <Button
+            onClick={handleSubmit}
+            disabled={loading}
+            variant="darkGray" 
+            className="text-sm"
+          >
+            {loading ? '저장 중...' : '저장'}
+          </Button>
+          
+          {/* <Button
             onClick={handleSubmit}
             disabled={loading}
             variant="outline"
@@ -477,7 +494,7 @@ export default function EditMemberModal({
             className="px-4 py-2 text-sm"
           >
             취소
-          </Button>
+          </Button> */}
         </div>
       </div>
     </div>

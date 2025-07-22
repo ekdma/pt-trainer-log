@@ -162,11 +162,18 @@ export default function AddHashTagTemplateModal({
 
         <DialogFooter>
           <DialogClose asChild>
-            <Button variant="ghost" className="text-sm">닫기</Button>
+            <Button 
+              variant="ghost"
+              className="text-sm"
+            >
+              닫기
+            </Button>
           </DialogClose>
           <Button
             onClick={handleSave}
-            className="bg-rose-600 hover:bg-rose-700 text-white text-sm"
+            variant="darkGray" 
+            className="text-sm"
+            // className="bg-rose-600 hover:bg-rose-700 text-white text-sm"
           >
             저장
           </Button>

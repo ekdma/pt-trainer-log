@@ -277,10 +277,26 @@ export default function EditGroupSessionModal({ session, onClose, onUpdate, supa
 
         {/* 버튼 */}
         <div className="flex justify-end gap-2">
-          <Button onClick={handleSubmit} disabled={loading} variant="save" >
+          <Button 
+            variant="ghost"
+            className="text-sm"
+            onClick={onClose}
+          >
+            닫기
+          </Button>
+          <Button
+            onClick={handleSubmit}
+            disabled={loading}
+            variant="darkGray" 
+            className="text-sm"
+          >
+            저장
+          </Button>
+          
+          {/* <Button onClick={handleSubmit} disabled={loading} variant="save" >
             {loading ? '수정 중...' : '수정'}
           </Button>
-          <Button onClick={onClose} variant="outline" disabled={loading}>취소</Button>
+          <Button onClick={onClose} variant="outline" disabled={loading}>취소</Button> */}
         </div>
 
         {/* 운동/테마 추가 다이얼로그 */}

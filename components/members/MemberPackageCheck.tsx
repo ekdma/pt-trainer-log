@@ -150,7 +150,22 @@ export default function MemberPackageCheck({
         </div>
 
         <div className="mt-6 flex justify-end gap-3">
+          <Button 
+            variant="ghost"
+            className="text-sm"
+            onClick={() => setIsEditPackageOpen(false)}
+          >
+            닫기
+          </Button>
           <Button
+            onClick={handleSave}
+            disabled={loading}
+            variant="darkGray" 
+            className="text-sm"
+          >
+            저장
+          </Button>
+          {/* <Button
             variant="outline"
             className="px-4 py-2 text-sm bg-indigo-600 hover:bg-indigo-700 text-white"
             onClick={handleSave}
@@ -164,7 +179,7 @@ export default function MemberPackageCheck({
             className="px-4 py-2 text-sm"
           >
             취소
-          </Button>
+          </Button> */}
         </div>
       </DialogContent>
     </Dialog>

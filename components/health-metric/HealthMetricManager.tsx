@@ -7,6 +7,7 @@ import dayjs from 'dayjs';
 import { normalizeDateInput, handleKeyNavigation } from '@/utils/inputUtils';
 import { useHorizontalDragScroll } from '@/utils/useHorizontalDragScroll';
 import AddHealthMetric from '@/components/health-metric/AddHealthMetric'
+import { Button } from '@/components/ui/button'
 
 type Member = {
   member_id: number
@@ -692,13 +693,21 @@ export default function HealthMetricManager({
             )}
 
             {/* 저장/닫기 버튼 */}
-            <button 
+            <Button
+              onClick={saveAllChanges}
+              disabled={!canSave}
+              variant="darkGray" 
+              className="text-sm"
+            >
+              저장
+            </Button>
+            {/* <button 
               onClick={saveAllChanges} 
               disabled={!canSave}
               className="text-sm h-9 px-4 bg-rose-600 text-white font-semibold rounded-full shadow hover:bg-rose-700 transition"
             >
               저장
-            </button>
+            </button> */}
             {/* <Button  
               onClick={onClose}
               variant="outline"

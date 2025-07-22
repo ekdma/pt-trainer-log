@@ -103,7 +103,7 @@ export default function AddPackageOpen({ open, onClose, onPackageAdded }: Props)
               value={packageName}
               onChange={(e) => setPackageName(e.target.value)}
               placeholder="예: Start, Core, Routine"
-              className="text-sm w-full p-2 border border-gray-300 text-gray-700 rounded focus:ring-2 focus:ring-emerald-500 focus:outline-none"
+              className="text-sm w-full p-2 border border-gray-300 text-gray-700 rounded focus:ring-2 focus:ring-gray-500 focus:outline-none"
             />
           </div>
 
@@ -114,7 +114,7 @@ export default function AddPackageOpen({ open, onClose, onPackageAdded }: Props)
                 type="text"
                 value={validDays}
                 onChange={(e) => setValidDays(e.target.value)}
-                className="text-sm w-full p-2 border border-gray-300 text-center rounded focus:ring-2 focus:ring-emerald-500 focus:outline-none"
+                className="text-sm w-full p-2 border border-gray-300 text-center rounded focus:ring-2 focus:ring-gray-500 focus:outline-none"
               />
             </div>
             <div className="w-1/2">
@@ -126,7 +126,7 @@ export default function AddPackageOpen({ open, onClose, onPackageAdded }: Props)
                   const onlyNums = e.target.value.replace(/[^0-9]/g, '')
                   setPrice(onlyNums)
                 }}
-                className="text-sm w-full p-2 border border-gray-300 text-center rounded focus:ring-2 focus:ring-emerald-500 focus:outline-none"
+                className="text-sm w-full p-2 border border-gray-300 text-center rounded focus:ring-2 focus:ring-gray-500 focus:outline-none"
                 inputMode="numeric"
               />
             </div>
@@ -139,7 +139,7 @@ export default function AddPackageOpen({ open, onClose, onPackageAdded }: Props)
                 type="text"
                 value={ptCount}
                 onChange={(e) => setPtCount(e.target.value)}
-                className="text-sm w-full p-2 border border-gray-300 text-center rounded focus:ring-2 focus:ring-emerald-500 focus:outline-none"
+                className="text-sm w-full p-2 border border-gray-300 text-center rounded focus:ring-2 focus:ring-gray-500 focus:outline-none"
               />
             </div>
             <div className="w-1/3">
@@ -148,7 +148,7 @@ export default function AddPackageOpen({ open, onClose, onPackageAdded }: Props)
                 type="text"
                 value={selfCount}
                 onChange={(e) => setSelfCount(e.target.value)}
-                className="text-sm w-full p-2 border border-gray-300 text-center rounded focus:ring-2 focus:ring-emerald-500 focus:outline-none"
+                className="text-sm w-full p-2 border border-gray-300 text-center rounded focus:ring-2 focus:ring-gray-500 focus:outline-none"
               />
             </div>
             <div className="w-1/3">
@@ -157,18 +157,34 @@ export default function AddPackageOpen({ open, onClose, onPackageAdded }: Props)
                 type="text"
                 value={groupCount}
                 onChange={(e) => setGroupCount(e.target.value)}
-                className="text-sm w-full p-2 border border-gray-300 text-center rounded focus:ring-2 focus:ring-emerald-500 focus:outline-none"
+                className="text-sm w-full p-2 border border-gray-300 text-center rounded focus:ring-2 focus:ring-gray-500 focus:outline-none"
               />
             </div>
           </div>
         </div>
 
         <DialogFooter className="mt-6">
-          <Button onClick={handleSubmit} disabled={loading} variant="save">
+          {/* <Button onClick={handleSubmit} disabled={loading} variant="save">
             {loading ? '등록 중...' : '등록'}
           </Button>
           <Button onClick={onClose} disabled={loading} variant="outline">
             취소
+          </Button> */}
+          <Button 
+            variant="ghost"
+            className="text-sm"
+            onClick={onClose}
+            disabled={loading}
+          >
+            닫기
+          </Button>
+          <Button
+            onClick={handleSubmit}
+            disabled={loading}
+            variant="darkGray" 
+            className="text-sm"
+          >
+            {loading ? '저장 중...' : '저장'}
           </Button>
         </DialogFooter>
       </DialogContent>

@@ -11,6 +11,7 @@ type ButtonVariant =
   | 'ghost'
   | 'click'
   | 'save'
+  | 'darkGray'
   | 'menu_click'
   | 'menu_unclick';
 
@@ -40,6 +41,7 @@ export function Button({
     destructive: 'bg-red-600 text-white hover:bg-red-700',
     secondary: 'bg-gray-200 text-gray-700 hover:bg-gray-300',
     ghost: 'bg-transparent text-gray-700 hover:bg-gray-100',
+    darkGray: 'bg-[#595959] text-white hover:bg-[#3f3f3f]',
   };
 
   const sizeStyles = {
