@@ -42,26 +42,28 @@ export default function Home() {
     }
 
     localStorage.setItem('litpt_member', JSON.stringify(member))
-    router.push(member.role === 'trainer' ? '/members' : '/my')
+    router.push(member.role === 'trainer' ? '/trainer' : '/my')
   }
 
   return (
     <main className="min-h-screen grid grid-cols-1 md:grid-cols-2 bg-gradient-to-br from-indigo-100 to-white">
       {/* 소개 카드 */}
       <section className="flex flex-col justify-center items-center p-8 md:p-16 text-center md:text-left bg-white/30 backdrop-blur-md">
-        <Image
+        {/* <Image
           src="/logo.png"
           alt="LIT PT Logo"
           width={150}
           height={150}
           priority
           className="w-24 h-24 sm:w-28 sm:h-28 md:w-36 md:h-36 mb-6"
-        />
-        <h1 className="text-center text-3xl sm:text-4xl md:text-5xl font-extrabold text-indigo-700 drop-shadow mb-4 leading-tight">
-          LIT PT Training Log
+        /> */}
+        <h1 className="text-center text-3xl sm:text-4xl md:text-5xl font-montserrat font-bold drop-shadow mb-4 leading-tight">
+          <span className="text-[#FF6600]">Lit</span>{' '}
+          <span className="text-[#595959]">Personal Training Log</span>
         </h1>
+
         <p className="text-center text-sm sm:text-base md:text-lg text-gray-700 max-w-md leading-relaxed">
-          회원의 운동 데이터를 기록하고 시각화하여 <br />
+          Lit PT 회원의 운동 데이터를 기록하고 시각화하여 <br />
           건강한 피트니스 라이프를 돕는 시스템입니다 🙌
         </p>
       </section>

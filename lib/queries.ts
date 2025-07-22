@@ -1,6 +1,6 @@
 import { getSupabaseClient } from "@/lib/supabase"
 
-import type { Member, WorkoutRecord } from "../app/members/types"; 
+import type { Member, WorkoutRecord } from "../components/members/types"; 
 // 타입 경로도 네 프로젝트에 맞게 조정 필요
 
 const supabase = getSupabaseClient()

@@ -61,7 +61,7 @@ body {
 
 /* PT 세션 날짜 배경색과 텍스트색 덮어쓰기 */
 .react-calendar__tile.pt-session {
-  background-color: #3b82f6 !important; /* Tailwind bg-blue-500 (#3b82f6) */
+  background-color: #3b82f6 !important;  
   color: white !important;
   font-weight: 700;
   border-radius: 9999px; /* rounded-full */
@@ -69,7 +69,15 @@ body {
 
 /* GROUP 세션 날짜 배경색과 텍스트색 덮어쓰기 */
 .react-calendar__tile.group-session {
-  background-color: #9c31ff !important; /* Tailwind bg-green-500 (#22c55e) */
+  background-color: #9c31ff !important;  
+  color: white !important;
+  font-weight: 700;
+  border-radius: 9999px; /* rounded-full */
+}
+
+/* GROUP 세션 날짜 배경색과 텍스트색 덮어쓰기 */
+.react-calendar__tile.self-session {
+  background-color: #c7c7c7 !important; 
   color: white !important;
   font-weight: 700;
   border-radius: 9999px; /* rounded-full */

@@ -13,7 +13,8 @@ const config: Config = {
         foreground: "var(--foreground)",
       },
       fontFamily: {
-        nanum: ['var(--font-nanum-gothic)', 'sans-serif'], // 추가됨
+        montserrat: ['var(--font-montserrat)'],
+        nanum: ['var(--font-nanum-gothic)'],
       },
     },
   },

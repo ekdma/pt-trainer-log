@@ -1,16 +1,27 @@
 'use client'
 
-import { Utensils, Dumbbell, Salad } from 'lucide-react'
 import { useState, useEffect } from 'react'
-import MemberSearch from './MemberSearch'
-import MemberGraphs from './MemberGraphs'
-import MemberHealthGraphs from './MemberHealthGraphs'
-import type { Member, WorkoutRecord, HealthMetric } from './types'
+import TrainerHeader from '@/components/layout/TrainerHeader'
+import MemberSearch from '../../components/members/MemberSearch'
+import type { Member, WorkoutRecord, HealthMetric } from '@/components/members/types'
 import { fetchWorkoutLogs, fetchHealthLogs } from '../../utils/fetchLogs'
 import { useAuthGuard } from '@/hooks/useAuthGuard'
 import { useRouter } from 'next/navigation'
+import { getSupabaseClient } from '@/lib/supabase'
+import { SupabaseClient } from '@supabase/supabase-js'
+import { Utensils, UsersIcon, Eye, EyeClosedIcon, X, UserRoundPen, UserRoundMinus, Search, UserRoundPlus, UserRoundSearch, Calendar as CalendarIcon, PackageSearch, User } from 'lucide-react';
+import { Button } from '@/components/ui/button'
+import AddMemberOpen from '@/components/members/AddMemberOpen'
+import EditMemberModal from '@/components/members/EditMemberModal'
 
 export default function MembersPage() {
+  // const [supabase, setSupabase] = useState<SupabaseClient | null>(null)
+  const [keyword, setKeyword] = useState('')
+  const [filteredMembers, setFilteredMembers] = useState<Member[]>([])
+  const [isAddMemberOpen, setIsAddMemberOpen] = useState(false)
+  const [editingMember, setEditingMember] = useState<Member | null>(null)
+  const supabase = getSupabaseClient()
+
   const [selectedMember, setSelectedMember] = useState<Member | null>(null)
   const [workoutLogs, setWorkoutLogs] = useState<WorkoutRecord[]>([])
   const [healthLogs, setHealthLogs] = useState<HealthMetric[]>([])
@@ -36,6 +47,45 @@ export default function MembersPage() {
     fetchLogs()
   }, [activeTab, selectedMember])
 
+  const fetchMembers = async () => {
+    if (!supabase) return
+    const { data, error } = await supabase.from('members').select('*')
+    if (!error && data) {
+      setFilteredMembers(data);
+    }
+  }
+
+  useEffect(() => {
+    if (supabase) {
+      fetchMembers()
+    }
+  }, [supabase])
+  
+  const handleSearch = async () => {
+    if (!supabase) return;
+  
+    const trimmedKeyword = keyword.trim();
+    
+    if (!trimmedKeyword) {
+      fetchMembers();
+      return;
+    }
+  
+    const { data, error } = await supabase
+      .from('members')
+      .select('*')
+      .ilike('name', `%${trimmedKeyword}%`);
+  
+    if (error) {
+      console.error('검색 에러:', error.message);
+      return;
+    }
+  
+    if (data) {
+      setFilteredMembers(data);
+    }
+  };
+
   const navigateTo = (tab: typeof activeTab) => {
     setActiveTab(tab)
     if (tab === 'food' && selectedMember) {
@@ -48,77 +98,76 @@ export default function MembersPage() {
   }
 
   return (
-    <main className="flex min-h-screen flex-col p-6 bg-gray-50 overflow-auto">
-      <div className="p-4 w-full max-w-screen-2xl mx-auto">
-        {selectedMember ? (
-          <>
-            <div className="flex items-center justify-between mb-6">
-              <h2 className="text-2xl font-semibold text-gray-800">
-                {selectedMember.name} 님
-              </h2>
+    <div className="min-h-screen bg-gray-50">
+      <TrainerHeader />
+      <main className="max-w-6xl mx-auto px-4 py-8 space-y-6">
+        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-6 w-full">
+          {/* 좌측: 제목 */}
+          <h2 className="text-lg font-semibold text-gray-800">회원 관리</h2>
+
+          {/* 우측: 검색창 + 버튼들 */}
+          <div className="flex flex-col sm:flex-row items-center gap-2 sm:gap-3 w-full sm:w-auto">
+            {/* 검색창 */}
+            <div className="relative w-full sm:w-64">
+              <input
+                type="text"
+                value={keyword}
+                onChange={(e) => setKeyword(e.target.value)}
+                onKeyDown={(e) => {
+                  if (e.key === 'Enter') handleSearch()
+                }}
+                placeholder="이름을 입력하세요"
+                className="pl-10 pr-4 py-2 w-full border border-gray-300 rounded-full shadow-sm focus:outline-none focus:ring-2 focus:ring-gray-500 text-black placeholder-gray-400"
+              />
+              <span className="absolute left-3 top-2.5 text-gray-400"><Search size={18} /></span>
             </div>
 
-            <div className="flex gap-2 mb-6">
-              <button
-                className={`flex items-center gap-1 text-sm px-4 py-2 rounded-lg border transition duration-200 ${
-                  activeTab === 'workout'
-                    ? 'bg-blue-100 border-blue-600 text-blue-700 font-semibold'
-                    : 'bg-white border-gray-300 text-gray-600 hover:bg-gray-100'
-                }`}
-                onClick={() => setActiveTab('workout')}
-              >
-                <Dumbbell size={16} /> 운동기록
-              </button>
-              <button
-                className={`flex items-center gap-1 text-sm px-4 py-2 rounded-lg border transition duration-200 ${
-                  activeTab === 'health'
-                    ? 'bg-pink-100 border-pink-600 text-pink-700 font-semibold'
-                    : 'bg-white border-gray-300 text-gray-600 hover:bg-gray-100'
-                }`}
-                onClick={() => setActiveTab('health')}
-              >
-                <Salad size={16} /> 건강지표
-              </button>
-              <button
-                className={`flex items-center gap-1 text-sm px-4 py-2 rounded-lg border transition duration-200 ${
-                  activeTab === 'food'
-                    ? 'bg-green-100 border-green-600 text-green-700 font-semibold'
-                    : 'bg-white border-gray-300 text-gray-600 hover:bg-gray-100'
-                }`}
-                onClick={() => navigateTo('food')}
-              >
-                <Utensils size={16} /> 식단일지
-              </button>
-            </div>
+            {/* 버튼들 */}
+            <Button
+              onClick={handleSearch}
+              variant="click"
+              className="text-sm"
+            >
+              <UserRoundSearch size={20} /> 검색
+            </Button>
 
-            {activeTab === 'workout' ? (
-              <MemberGraphs
-                member={selectedMember}
-                record={workoutLogs.filter(log => log.member_id === selectedMember.member_id)}
-                logs={workoutLogs.filter(log => log.member_id === selectedMember.member_id)}
-                // workoutTypes={workoutTypes}
-                // setWorkoutTypes={setWorkoutTypes} // ✅ 추가
-                onBack={() => setSelectedMember(null)}
-              />
-            ) : (
-              <MemberHealthGraphs
-                member={selectedMember}
-                healthLogs={healthLogs.filter(log => log.member_id === selectedMember.member_id)}
-                onBack={() => setSelectedMember(null)}
-              />
-            )}
-          </>
-        ) : (
-          <MemberSearch
-            onSelectMember={(member) => {
-              setSelectedMember(member)
-              setActiveTab('workout')
-            }}
-            onSetLogs={setWorkoutLogs}
-            onSetHealthLogs={setHealthLogs}
-          />
-        )}
-      </div>
-    </main>
+            <Button
+              onClick={() => setIsAddMemberOpen(true)}
+              variant="click"
+              className="text-sm"
+            >
+              <UserRoundPlus size={20} /> 회원 추가
+            </Button>
+          </div>
+        </div>
+        <MemberSearch
+          onSelectMember={(member) => {
+            setSelectedMember(member)
+            setActiveTab('workout')
+          }}
+          onSetLogs={setWorkoutLogs}
+          onSetHealthLogs={setHealthLogs}
+          setEditingMember={setEditingMember}
+        />
+      </main>
+
+      {editingMember && (
+        <EditMemberModal
+          member={editingMember}
+          onClose={() => setEditingMember(null)}
+          onUpdate={fetchMembers}
+          supabase={supabase}
+        />
+      )}
+
+      {isAddMemberOpen && (
+        <AddMemberOpen
+          // open={isAddMemberOpen}
+          onClose={() => setIsAddMemberOpen(false)}
+          onMemberAdded={() => fetchMembers()}
+        />
+      )}
+          
+    </div>
   )
 }

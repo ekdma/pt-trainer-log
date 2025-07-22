@@ -2,6 +2,13 @@ import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
 import { Nanum_Gothic } from "next/font/google";
+import { Montserrat } from 'next/font/google'
+
+const montserrat = Montserrat({
+  weight: ['700'], // Bold
+  subsets: ['latin'],
+  variable: '--font-montserrat',
+})
 
 const nanumGothic = Nanum_Gothic({
   weight: ["400", "700", "800"], // 사용할 굵기 지정
@@ -32,7 +39,7 @@ export default function RootLayout({
   return (
     <html lang="en">
       <body
-        className={`${geistSans.variable} ${geistMono.variable} ${nanumGothic.variable} font-nanum antialiased`}
+        className={`${geistSans.variable} ${geistMono.variable} ${nanumGothic.variable} ${montserrat.variable} font-nanum antialiased`}
       >
         {children}
       </body>
