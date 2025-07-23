@@ -5,7 +5,7 @@ import TrainerHeader from '@/components/layout/TrainerHeader'
 import MemberSearch from '../../components/members/MemberSearch'
 // import type { Member, WorkoutRecord, HealthMetric } from '@/components/members/types'
 import type { Member } from '@/components/members/types'
-import { fetchWorkoutLogs, fetchHealthLogs } from '../../utils/fetchLogs'
+// import { fetchWorkoutLogs, fetchHealthLogs } from '../../utils/fetchLogs'
 import { useAuthGuard } from '@/hooks/useAuthGuard'
 import { getSupabaseClient } from '@/lib/supabase'
 import { Search, UserRoundPlus, UserRoundSearch } from 'lucide-react';
