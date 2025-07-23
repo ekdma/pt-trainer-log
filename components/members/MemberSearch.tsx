@@ -11,7 +11,7 @@ import { SupabaseClient } from '@supabase/supabase-js'
 import 'react-calendar/dist/Calendar.css'
 import {  UsersIcon, UserRoundPen, UserRoundMinus, Calendar as CalendarIcon, User } from 'lucide-react';
 import { Button } from '@/components/ui/button'
-import { useRouter } from 'next/navigation'  
+// import { useRouter } from 'next/navigation'  
 
 function toOrdinal(num: number) {
   const v = num % 100;
@@ -31,19 +31,19 @@ function toOrdinal(num: number) {
 }
 
 export default function MemberSearch({
-  onSelectMember,
-  onSetLogs,
-  onSetHealthLogs,
+  // onSelectMember,
+  // onSetLogs,
+  // onSetHealthLogs,
   setEditingMember,
   members,
 }: {
   onSelectMember: (member: Member) => void
-  onSetLogs: (logs: WorkoutRecord[]) => void
-  onSetHealthLogs: (logs: HealthMetric[]) => void
+  // onSetLogs: (logs: WorkoutRecord[]) => void
+  // onSetHealthLogs: (logs: HealthMetric[]) => void
   setEditingMember: (member: Member) => void
   members: Member[] 
 }) {
-  const router = useRouter()  
+  // const router = useRouter()  
   const [supabase, setSupabase] = useState<SupabaseClient | null>(null)
   const filteredMembers = useMemo(() => members, [members]);
   const [registrationCountMap, setRegistrationCountMap] = useState<{ [memberId: number]: number }>({});

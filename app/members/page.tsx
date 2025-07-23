@@ -21,8 +21,8 @@ export default function MembersPage() {
   const supabase = getSupabaseClient()
 
   const [selectedMember, setSelectedMember] = useState<Member | null>(null)
-  const [workoutLogs, setWorkoutLogs] = useState<WorkoutRecord[]>([])
-  const [healthLogs, setHealthLogs] = useState<HealthMetric[]>([])
+  // const [workoutLogs, setWorkoutLogs] = useState<WorkoutRecord[]>([])
+  // const [healthLogs, setHealthLogs] = useState<HealthMetric[]>([])
   const [activeTab, setActiveTab] = useState<'workout' | 'health' | 'food'>('workout')
   // const [workoutTypes, setWorkoutTypes] = useState<WorkoutType[]>([]);
 
@@ -34,10 +34,10 @@ export default function MembersPage() {
   
       if (activeTab === 'workout') {
         const logs = await fetchWorkoutLogs(selectedMember.member_id)
-        setWorkoutLogs(logs)
+        // setWorkoutLogs(logs)
       } else if (activeTab === 'health') {
         const logs = await fetchHealthLogs(selectedMember.member_id)
-        setHealthLogs(logs)
+        // setHealthLogs(logs)
       }
     }
   
@@ -125,8 +125,8 @@ export default function MembersPage() {
             setSelectedMember(member)
             setActiveTab('workout')
           }}
-          onSetLogs={setWorkoutLogs}
-          onSetHealthLogs={setHealthLogs}
+          // onSetLogs={setWorkoutLogs}
+          // onSetHealthLogs={setHealthLogs}
           setEditingMember={setEditingMember}
         />
       </main>
