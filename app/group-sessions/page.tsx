@@ -26,6 +26,7 @@ export default function GroupSessionPage() {
   const [isEditOpen, setIsEditOpen] = useState(false)
   const [selectedSession, setSelectedSession] = useState<GroupSession | null>(null)
   const [showAll, setShowAll] = useState(false)
+  const [allSessions, setAllSessions] = useState<GroupSession[]>([]) // ✅ 원본 전체 세션
 
   useAuthGuard()
 
@@ -66,7 +67,20 @@ export default function GroupSessionPage() {
     })
 
     setSessions(transformed)
+    setAllSessions(transformed)
+    setSessions(filterSessionsByKeyword(keyword, transformed))
+
   }
+
+  const filterSessionsByKeyword = (keyword: string, allSessions: GroupSession[]) => {
+    const trimmed = keyword.trim().toLowerCase();
+    if (!trimmed) return allSessions;
+  
+    return allSessions.filter((session) =>
+      session.participants.some((name) => name.toLowerCase().includes(trimmed))
+    );
+  };
+  
 
   useEffect(() => {
     fetchSessions()
@@ -87,16 +101,20 @@ export default function GroupSessionPage() {
                 type="text"
                 value={keyword}
                 onChange={(e) => setKeyword(e.target.value)}
-                onKeyDown={(e) => e.key === 'Enter' && fetchSessions()}
+                onKeyDown={(e) => {
+                  if (e.key === 'Enter') {
+                    setSessions(filterSessionsByKeyword(keyword, allSessions)) // ✅
+                  }
+                }}
                 placeholder="이름을 입력하세요"
-                className="pl-10 pr-4 py-2 w-full border border-gray-300 rounded-full shadow-sm focus:outline-none focus:ring-2 focus:ring-purple-500 text-black placeholder-gray-400"
+                className="pl-10 pr-4 py-2 w-full border border-gray-300 rounded-full shadow-sm focus:outline-none focus:ring-2 focus:ring-gray-500 text-black placeholder-gray-400"
               />
               <span className="absolute left-3 top-2.5 text-gray-400"><Search size={18} /> </span>
             </div>
 
             {/* 버튼들 */}
             <Button
-              onClick={fetchSessions}
+              onClick={() => setSessions(filterSessionsByKeyword(keyword, allSessions))}
               variant="click"
               className="text-sm"
             >

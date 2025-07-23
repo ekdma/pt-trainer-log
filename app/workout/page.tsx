@@ -24,6 +24,7 @@ export default function MembersPage() {
   const [activeTab, setActiveTab] = useState<'records' | 'graphs'>('records')
   const [showFavoritesOnly, setShowFavoritesOnly] = useState(false)
   const [favorites, setFavorites] = useState<Set<string>>(new Set())
+  const [description, setDescription] = useState<string>('')
 
   // 사용자 정보 초기화
   useEffect(() => {
@@ -38,6 +39,14 @@ export default function MembersPage() {
       }
     }
   }, [])
+
+  useEffect(() => {
+    if (selectedMember) {
+      setDescription(selectedMember.description || '')
+    } else {
+      setDescription('')
+    }
+  }, [selectedMember])
 
   // 트레이너: 회원 목록 조회
   const fetchAllMembers = async () => {
@@ -95,6 +104,22 @@ export default function MembersPage() {
       .eq('member_id', selectedMember?.member_id)
   }
 
+  const saveDescription = async () => {
+    if (!selectedMember) return
+    const { error } = await supabase
+      .from('members')
+      .update({ description })
+      .eq('member_id', selectedMember.member_id)
+    if (error) {
+      alert('설명 저장 중 오류가 발생했습니다.')
+      console.error(error)
+    } else {
+      alert('설명이 저장되었습니다.')
+      // 선택 회원 상태 업데이트
+      setSelectedMember({ ...selectedMember, description })
+    }
+  }
+
   return (
     <div className="min-h-screen bg-gray-50">
       {userRole === 'trainer' ? <TrainerHeader /> : <Header />}
@@ -128,43 +153,85 @@ export default function MembersPage() {
         {selectedMember ? (
           <>
             {/* ✅ 공통 상단: 타이틀, 레벨, 즐겨찾기 버튼 */}
-            <div className="flex items-center gap-3 mb-6">
-              <h2 className="text-lg font-semibold text-gray-800">운동기록 관리</h2>
-              <div
-                className={`ml-2 px-3 py-1 rounded-md text-white font-semibold shadow-sm text-xs ${
-                  selectedMember.level === 'Level 1'
-                    ? 'bg-yellow-500'
-                    : selectedMember.level === 'Level 2'
-                    ? 'bg-green-500'
-                    : selectedMember.level === 'Level 3'
-                    ? 'bg-blue-500'
-                    : selectedMember.level === 'Level 4'
-                    ? 'bg-red-500'
-                    : selectedMember.level === 'Level 5'
-                    ? 'bg-black'
-                    : 'bg-gray-400'
-                }`}
-              >
-                {selectedMember.level}
+            <div className="mb-6 flex flex-col sm:flex-row sm:items-center gap-4">
+              {/* 1. 운동기록관리 */}
+              <h2 className="text-lg font-semibold text-gray-800 whitespace-nowrap">
+                운동기록 관리
+              </h2>
+
+              {/* 2. level + 즐겨찾기 버튼 */}
+              <div className="flex items-center gap-3 whitespace-nowrap">
+                <div
+                  className={`px-3 py-1 rounded-md text-white font-semibold shadow-sm text-xs ${
+                    selectedMember.level === 'Level 1'
+                      ? 'bg-yellow-500'
+                      : selectedMember.level === 'Level 2'
+                      ? 'bg-green-500'
+                      : selectedMember.level === 'Level 3'
+                      ? 'bg-blue-500'
+                      : selectedMember.level === 'Level 4'
+                      ? 'bg-red-500'
+                      : selectedMember.level === 'Level 5'
+                      ? 'bg-black'
+                      : 'bg-gray-400'
+                  }`}
+                >
+                  {selectedMember.level}
+                </div>
+
+                <button
+                  onClick={toggleViewMode}
+                  className={`flex items-center gap-2 px-3 py-1.5 rounded-full text-sm font-medium transition
+                    ${showFavoritesOnly ? 'bg-yellow-500 text-white hover:bg-yellow-600' : 'bg-gray-200 text-gray-800 hover:bg-gray-300'}`}
+                >
+                  {showFavoritesOnly ? (
+                    <>
+                      <FaStar className="text-yellow-300" />
+                      즐겨찾기
+                    </>
+                  ) : (
+                    <>
+                      <FaRegStar className="text-gray-500" />
+                      전체운동
+                    </>
+                  )}
+                </button>
               </div>
-              <button
-                onClick={toggleViewMode}
-                className={`flex items-center gap-2 px-3 py-1.5 rounded-full text-sm font-medium transition
-                ${showFavoritesOnly ? 'bg-yellow-500 text-white hover:bg-yellow-600' : 'bg-gray-200 text-gray-800 hover:bg-gray-300'}`}
-              >
-                {showFavoritesOnly ? (
-                  <>
-                    <FaStar className="text-yellow-300" />
-                    즐겨찾기
-                  </>
-                ) : (
-                  <>
-                    <FaRegStar className="text-gray-500" />
-                    전체운동
-                  </>
-                )}
-              </button>
+
+              {userRole === 'trainer' && (        
+                <>
+                  {/* 3. 회원 설명 + 저장 + textarea */}
+                  <div className="flex-1 min-w-0">
+                    <div className="flex items-center gap-3 mb-1">
+                      <label
+                        htmlFor="description"
+                        className="text-gray-700 font-semibold flex-shrink-0 whitespace-nowrap"
+                      >
+                        회원 설명
+                      </label>
+                      <Button
+                        onClick={saveDescription}
+                        variant="darkGray"
+                        size="sm"
+                        className="text-sm shrink-0"
+                      >
+                        저장
+                      </Button>
+                    </div>
+                    <textarea
+                      id="description"
+                      value={description}
+                      onChange={(e) => setDescription(e.target.value)}
+                      rows={2}
+                      className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-gray-500 resize-none min-w-0"
+                      placeholder="예: 디스크 있음, 병원 다녀옴 등 회원 상태를 기록하세요."
+                    />
+                  </div>
+                </>
+              )}  
             </div>
+
+
 
             {/* 탭 메뉴 */}
             <div className="flex gap-3 mb-6">

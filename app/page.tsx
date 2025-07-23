@@ -18,30 +18,55 @@ export default function Home() {
 
   const handleLogin = async () => {
     setError('')
+  
     if (role === 'trainer' && adminCode !== ADMIN_CODE) {
       setError('관리자 코드를 올바르게 입력해주세요 😁')
       return
     }
-
-    const { data: member, error } = await supabase
+  
+    // nickname을 우선 시도
+    let { data: member, error } = await supabase
       .from('members')
       .select('*')
-      .eq('name', name)
+      .eq('nickname', name)
       .eq('role', role)
       .single()
-
+  
+    let loginBy = 'nickname'
+  
+    // nickname이 없거나 nickname으로 로그인 실패 → name으로 재시도
+    if (error || !member) {
+      const res = await supabase
+        .from('members')
+        .select('*')
+        .eq('name', name)
+        .eq('role', role)
+        .single()
+  
+      member = res.data
+      error = res.error
+      loginBy = 'name'
+    }
+  
     if (error || !member) {
       setError('일치하는 회원이 없습니다 😥')
       return
     }
-
+  
+    // 전화번호 끝 4자리 검사
     const phoneLast4 = (member.phone || '').slice(-4)
     if (password !== phoneLast4) {
       setError('비밀번호가 올바르지 않습니다.')
       return
     }
-
-    localStorage.setItem('litpt_member', JSON.stringify(member))
+  
+    // ✅ 로그인 식별자도 함께 저장 (선택적)
+    const memberWithLoginBy = {
+      ...member,
+      loginBy, // 'nickname' 또는 'name'
+    }
+  
+    localStorage.setItem('litpt_member', JSON.stringify(memberWithLoginBy))
     router.push(member.role === 'trainer' ? '/trainer' : '/my')
   }
 

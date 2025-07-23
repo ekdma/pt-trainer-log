@@ -102,7 +102,7 @@ export default function AddWorkout({
               variant="darkGray" 
               className="text-sm"
             >
-              추가
+              저장
             </Button>
           </div>
         </div>

@@ -60,6 +60,20 @@ export default function EditMemberModal({
   const [editStartDate, setEditStartDate] = useState('')
   const [editEndDate, setEditEndDate] = useState('')
 
+    // 기존 핸드폰 번호가 rawPhone 변수에 있다고 가정
+  const rawPhone = formData.phone || '' 
+
+  // 포맷 함수
+  const formatPhoneNumber = (value: string) => {
+    const digits = value.replace(/\D/g, '')
+    if (digits.length <= 3) return digits
+    if (digits.length <= 7) return `${digits.slice(0, 3)}-${digits.slice(3)}`
+    return `${digits.slice(0, 3)}-${digits.slice(3, 7)}-${digits.slice(7, 11)}`
+  }
+
+  // formData.phone 에서 보여줄 때 포맷팅 적용
+  const formattedPhone = formatPhoneNumber(rawPhone)
+
   useEffect(() => {
     const fetchTrainers = async () => {
       const { data, error } = await supabase
@@ -151,8 +165,28 @@ export default function EditMemberModal({
     setIsEditPackageOpen(true);
   }
 
+  // const formatPhoneNumber = (value: string) => {
+  //   // 숫자만 추출
+  //   const digits = value.replace(/\D/g, '')
+    
+  //   // ###-####-#### 형태로 자르기
+  //   if (digits.length <= 3) {
+  //     return digits
+  //   } else if (digits.length <= 7) {
+  //     return `${digits.slice(0, 3)}-${digits.slice(3)}`
+  //   } else {
+  //     return `${digits.slice(0, 3)}-${digits.slice(3, 7)}-${digits.slice(7, 11)}`
+  //   }
+  // }
+  
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
-    setFormData({ ...formData, [e.target.name]: e.target.value })
+    const { name, value } = e.target
+    if (name === 'phone') {
+      const formatted = formatPhoneNumber(value)
+      setFormData({ ...formData, [name]: formatted })
+    } else {
+      setFormData({ ...formData, [name]: value })
+    }
   }
 
   const handleSubmit = async () => {
@@ -168,13 +202,15 @@ export default function EditMemberModal({
       before_level?: string;
       modified_dt?: string;
       phone?: string;
+      nickname?: string;
     } = {
       name: formData.name,
       birth_date: formData.birth_date,
       join_date: formData.join_date,
       sex: formData.sex,
       level: formData.level,
-      phone: formData.phone,
+      phone: formData.phone?.replace(/-/g, ''),
+      nickname: formData.nickname,
     };
 
     if (formData.level !== member.level) {
@@ -255,16 +291,27 @@ export default function EditMemberModal({
           <div className="bg-white p-4 rounded-xl shadow-sm border">
             <h3 className="text-lg font-semibold text-gray-800 mb-4">회원 기본 정보</h3>
 
-            <div className="mb-4">
-              <label className="block text-sm font-medium text-gray-700 mb-1">이름</label>
-              <input
-                type="text"
-                name="name"
-                value={formData.name}
-                onChange={handleChange}
-                placeholder="이름을 입력하세요"
-                className="text-sm text-gray-700 w-full p-2 border rounded focus:ring-2 focus:ring-indigo-500 focus:outline-none"
-              />
+            <div className="flex gap-4 mb-4">
+              <div className="w-1/2">
+                <label className="block text-sm font-medium text-gray-700 mb-1">이름</label>
+                <input
+                  type="text"
+                  name="name"
+                  value={formData.name}
+                  onChange={handleChange}
+                  className="text-sm text-gray-700 w-full p-2 border rounded focus:ring-2 focus:ring-gray-500 focus:outline-none"
+                />
+              </div>
+              <div className="w-1/2">
+                <label className="block text-sm font-medium text-gray-700 mb-1">닉네임</label>
+                <input
+                  type="text"
+                  name="nickname"
+                  value={formData.nickname || ''}
+                  onChange={handleChange}
+                  className="text-sm text-gray-700 w-full p-2 border rounded focus:ring-2 focus:ring-gray-500 focus:outline-none"
+                />
+              </div>
             </div>
 
             <div className="mb-4 flex flex-col md:flex-row md:items-start md:gap-4">
@@ -275,7 +322,7 @@ export default function EditMemberModal({
                   name="birth_date"
                   value={formData.birth_date || ''}
                   onChange={handleChange}
-                  className="text-sm text-gray-700 w-full p-2 border rounded focus:ring-2 focus:ring-indigo-500 focus:outline-none"
+                  className="text-sm text-gray-700 w-full p-2 border rounded focus:ring-2 focus:ring-gray-500 focus:outline-none"
                 />
               </div>
               <div className="md:w-3/5 mt-4 md:mt-0">
@@ -283,10 +330,11 @@ export default function EditMemberModal({
                 <input
                   type="text"
                   name="phone"
-                  value={formData.phone || ''}
+                  value={formattedPhone}
                   onChange={handleChange}
-                  className="text-sm text-gray-700 w-full p-2 border rounded focus:ring-2 focus:ring-indigo-500 focus:outline-none"
+                  className="text-sm text-gray-700 w-full p-2 border rounded focus:ring-2 focus:ring-gray-500 focus:outline-none"
                 />
+
               </div>
             </div>
 
@@ -297,7 +345,7 @@ export default function EditMemberModal({
                   name="sex"
                   value={formData.sex}
                   onChange={handleChange}
-                  className="text-sm text-gray-700 w-full p-2 border rounded focus:ring-2 focus:ring-indigo-500 focus:outline-none"
+                  className="text-sm text-gray-700 w-full p-2 border rounded focus:ring-2 focus:ring-gray-500 focus:outline-none"
                 >
                   <option value="F">여자</option>
                   <option value="M">남자</option>
@@ -309,7 +357,7 @@ export default function EditMemberModal({
                   name="level"
                   value={formData.level}
                   onChange={handleChange}
-                  className="text-sm text-gray-700 w-full p-2 border rounded focus:ring-2 focus:ring-indigo-500 focus:outline-none"
+                  className="text-sm text-gray-700 w-full p-2 border rounded focus:ring-2 focus:ring-gray-500 focus:outline-none"
                 >
                   <option value="Level 1">Level 1</option>
                   <option value="Level 2">Level 2</option>
@@ -325,7 +373,7 @@ export default function EditMemberModal({
                   name="join_date"
                   value={formData.join_date || ''}
                   onChange={handleChange}
-                  className="text-sm text-gray-700 w-full p-2 border rounded focus:ring-2 focus:ring-indigo-500 focus:outline-none"
+                  className="text-sm text-gray-700 w-full p-2 border rounded focus:ring-2 focus:ring-gray-500 focus:outline-none"
                 />
               </div>
             </div>
@@ -482,7 +530,7 @@ export default function EditMemberModal({
             onClick={handleSubmit}
             disabled={loading}
             variant="outline"
-            className="px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white text-sm rounded transition"
+            className="px-4 py-2 bg-gray-600 hover:bg-gray-700 text-white text-sm rounded transition"
           >
             {loading ? '수정 중...' : '수정'}
           </Button>

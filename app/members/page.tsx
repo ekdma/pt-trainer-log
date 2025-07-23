@@ -27,40 +27,31 @@ export default function MembersPage() {
   // const [workoutTypes, setWorkoutTypes] = useState<WorkoutType[]>([]);
 
   useAuthGuard()
-  console.log(filteredMembers, workoutLogs, healthLogs)
   
   useEffect(() => {
     const fetchLogs = async () => {
       if (!selectedMember) return
-
+  
       if (activeTab === 'workout') {
         const logs = await fetchWorkoutLogs(selectedMember.member_id)
         setWorkoutLogs(logs)
-      } else {
+      } else if (activeTab === 'health') {
         const logs = await fetchHealthLogs(selectedMember.member_id)
         setHealthLogs(logs)
       }
     }
-
+  
     fetchLogs()
   }, [activeTab, selectedMember])
 
   const fetchMembers = async () => {
-    if (!supabase) return
     const { data, error } = await supabase.from('members').select('*')
-    if (!error && data) {
-      setFilteredMembers(data);
-    }
+    if (!error) setFilteredMembers(data ?? [])
+    else console.error('패키지 불러오기 실패:', error.message)
   }
 
-  useEffect(() => {
-    if (supabase) {
-      fetchMembers()
-    }
-  }, [supabase])
-  
   const handleSearch = async () => {
-    if (!supabase) return;
+    // if (!supabase) return;
   
     const trimmedKeyword = keyword.trim();
     
@@ -76,13 +67,14 @@ export default function MembersPage() {
   
     if (error) {
       console.error('검색 에러:', error.message);
-      return;
-    }
-  
-    if (data) {
+    } else {
       setFilteredMembers(data);
     }
   };
+
+  useEffect(() => {
+    fetchMembers()
+  }, []) 
 
   return (
     <div className="min-h-screen bg-gray-50">
@@ -128,6 +120,7 @@ export default function MembersPage() {
           </div>
         </div>
         <MemberSearch
+          members={filteredMembers} // ✅ 전달
           onSelectMember={(member) => {
             setSelectedMember(member)
             setActiveTab('workout')

@@ -123,50 +123,51 @@ export default function MemberGoalsPart() {
   }
 
   return (
-    <section className="grid grid-cols-1 md:grid-cols-2 gap-4">
-      {/* 식단 목표 */}
-      {goals.diet && (
-        <div className="bg-white rounded-2xl shadow p-4 border">
-          <div className="flex items-center justify-between mb-2">
-            <span className="text-lg font-semibold text-rose-600">🥗 식단 목표</span>
+    <>
+      <section className="grid grid-cols-1 md:grid-cols-2 gap-4">
+        {/* 식단 목표 */}
+        {goals.diet && (
+          <div className="bg-white rounded-2xl shadow p-4 border">
+            <div className="flex items-center justify-between mb-2">
+              <span className="text-lg font-semibold text-rose-600">🥗 식단 목표</span>
+            </div>
+            <ul className="text-sm text-gray-700 list-disc pl-5 space-y-1">
+              <li>하루 <span className="font-medium">{goals.diet.meals_per_day}</span>끼 챙겨먹기</li>
+              <li><span className="font-medium">{goals.diet.important_meal}</span> 챙겨먹기</li>
+              <li><span className="font-medium">{goals.diet.finish_by_hour}</span>시 이전에 식사 종료</li>
+              {goals.diet.custom && <li>{goals.diet.custom}</li>}
+            </ul>
+            {renderHashtags()}
           </div>
-          <ul className="text-sm text-gray-700 list-disc pl-5 space-y-1">
-            <li>하루 <span className="font-medium">{goals.diet.meals_per_day}</span>끼 챙겨먹기</li>
-            <li><span className="font-medium">{goals.diet.important_meal}</span> 챙겨먹기</li>
-            <li><span className="font-medium">{goals.diet.finish_by_hour}</span>시 이전에 식사 종료</li>
-            {goals.diet.custom && <li>{goals.diet.custom}</li>}
-          </ul>
-          {renderHashtags()}
-        </div>
-      )}
+        )}
 
-      {/* 수분 섭취 */}
-      {goals.hydration && (
-        <div className="bg-white rounded-2xl shadow p-4 border">
-          <div className="text-lg font-semibold text-sky-600 mb-2">💧 수분 섭취</div>
-          <p className="text-sm text-gray-700">하루 <span className="font-medium">{goals.hydration.cups_per_day}</span>잔 마시기 (500ml 기준)</p>
-        </div>
-      )}
+        {/* 수분 섭취 */}
+        {goals.hydration && (
+          <div className="bg-white rounded-2xl shadow p-4 border">
+            <div className="text-lg font-semibold text-sky-600 mb-2">💧 수분 섭취</div>
+            <p className="text-sm text-gray-700">하루 <span className="font-medium">{goals.hydration.cups_per_day}</span>잔 마시기 (500ml 기준)</p>
+          </div>
+        )}
 
-      {/* 수면 패턴 */}
-      {goals.sleep && (
-        <div className="bg-white rounded-2xl shadow p-4 border">
-          <div className="text-lg font-semibold text-purple-600 mb-2">🛌 수면 패턴</div>
-          <p className="text-sm text-gray-700">하루 <span className="font-medium">{goals.sleep.hours_per_day}</span>시간 수면하기</p>
-        </div>
-      )}
+        {/* 수면 패턴 */}
+        {goals.sleep && (
+          <div className="bg-white rounded-2xl shadow p-4 border">
+            <div className="text-lg font-semibold text-purple-600 mb-2">🛌 수면 패턴</div>
+            <p className="text-sm text-gray-700">하루 <span className="font-medium">{goals.sleep.hours_per_day}</span>시간 수면하기</p>
+          </div>
+        )}
 
-      {/* 체성분 목표 */}
-      {goals.body && (
-        <div className="bg-white rounded-2xl shadow p-4 border">
-          <div className="text-lg font-semibold text-emerald-600 mb-2">📈 체성분 목표</div>
-          <ul className="text-sm text-gray-700 list-disc pl-5 space-y-1">
-            <li>근육량 <span className="font-medium">{goals.body.muscle_gain_kg}</span>kg 증량</li>
-            <li>체지방량 <span className="font-medium">{goals.body.fat_loss_kg}</span>kg 감량</li>
-          </ul>
-        </div>
-      )}
-    </section>
-
+        {/* 체성분 목표 */}
+        {goals.body && (
+          <div className="bg-white rounded-2xl shadow p-4 border">
+            <div className="text-lg font-semibold text-emerald-600 mb-2">📈 체성분 목표</div>
+            <ul className="text-sm text-gray-700 list-disc pl-5 space-y-1">
+              <li>근육량 <span className="font-medium">{goals.body.muscle_gain_kg}</span>kg 증량</li>
+              <li>체지방량 <span className="font-medium">{goals.body.fat_loss_kg}</span>kg 감량</li>
+            </ul>
+          </div>
+        )}
+      </section>
+    </>
   )
 }

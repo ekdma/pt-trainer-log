@@ -81,7 +81,7 @@ export default function AddHealthMetric({
               variant="darkGray" 
               className="text-sm"
             >
-              추가
+              저장
             </Button>
           </div>
         </div>

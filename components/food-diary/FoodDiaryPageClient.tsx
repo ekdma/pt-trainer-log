@@ -14,6 +14,7 @@ interface SessionUser {
   role: Role
   member_id?: string
   name?: string
+  nickname?: string
 }
 
 export default function FoodDiaryPageClient() {
@@ -69,7 +70,7 @@ export default function FoodDiaryPageClient() {
               뒤로
             </Button>
           </div> */}
-          <FoodDiaryMemberView memberId={user.member_id!} memberName={user.name || ''} />
+          <FoodDiaryMemberView memberId={user.member_id!} memberName={user.nickname || ''} />
         </div>
       </main>
     )

@@ -10,6 +10,8 @@ export type Member = {
   modified_dt: string
   role: string
   phone: string
+  description: string
+  nickname: string
 }
 
 export type MemberPackage = {

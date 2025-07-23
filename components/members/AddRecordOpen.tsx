@@ -264,7 +264,7 @@ export default function AddRecordForm({ member, onCancel, onSave }: Props) {
                     disabled={loadingManage}
                     className="text-indigo-500 hover:underline"
                   >
-                    추가
+                    저장
                   </button>
                 </div>
 

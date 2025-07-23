@@ -3,7 +3,7 @@
 import dayjs from 'dayjs'
 import isBetween from 'dayjs/plugin/isBetween'
 dayjs.extend(isBetween)
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useMemo } from 'react'
 import { getSupabaseClient } from '@/lib/supabase'
 import { Member, WorkoutRecord, HealthMetric } from './types'
 import MemberCalendar from './MemberCalendar'
@@ -11,6 +11,7 @@ import { SupabaseClient } from '@supabase/supabase-js'
 import 'react-calendar/dist/Calendar.css'
 import {  UsersIcon, UserRoundPen, UserRoundMinus, Calendar as CalendarIcon, User } from 'lucide-react';
 import { Button } from '@/components/ui/button'
+import { useRouter } from 'next/navigation'  
 
 function toOrdinal(num: number) {
   const v = num % 100;
@@ -34,15 +35,17 @@ export default function MemberSearch({
   onSetLogs,
   onSetHealthLogs,
   setEditingMember,
+  members,
 }: {
   onSelectMember: (member: Member) => void
   onSetLogs: (logs: WorkoutRecord[]) => void
   onSetHealthLogs: (logs: HealthMetric[]) => void
   setEditingMember: (member: Member) => void
+  members: Member[] 
 }) {
+  const router = useRouter()  
   const [supabase, setSupabase] = useState<SupabaseClient | null>(null)
-  const [filteredMembers, setFilteredMembers] = useState<Member[]>([])
-
+  const filteredMembers = useMemo(() => members, [members]);
   const [registrationCountMap, setRegistrationCountMap] = useState<{ [memberId: number]: number }>({});
 
   const [showSessionList, setShowSessionList] = useState(false);
@@ -73,7 +76,7 @@ export default function MemberSearch({
     if (!supabase) return
     const { data, error } = await supabase.from('members').select('*')
     if (!error && data) {
-      setFilteredMembers(data);
+      // setFilteredMembers(data);
       fetchSessionProgress(data); 
       // fetchRegistrationCounts(data); 
       fetchMemberPackageData(data); 
@@ -86,28 +89,29 @@ export default function MemberSearch({
     }
   }, [supabase])
   
-  const handleSelect = async (member: Member) => {
-    if (!supabase) return
-
-    // 운동 기록 가져오기
-    const { data: logsData } = await supabase
-      .from('workout_logs')
-      .select('*')
-      .eq('member_id', member.member_id)
-
-    onSetLogs(logsData || [])
-
-    // 건강 지표 기록 가져오기
-    const { data: healthData } = await supabase
-      .from('health_metrics')
-      .select('*')
-      .eq('member_id', member.member_id)
-
-    onSetHealthLogs(healthData || [])
-
-    // 회원 선택 콜백 호출
-    onSelectMember(member)
-  }
+  // const handleSelect = async (member: Member) => {
+  //   if (!supabase) return;
+  
+  //   // 1. 운동 기록 가져오기
+  //   const { data: logsData } = await supabase
+  //     .from('workout_logs')
+  //     .select('*')
+  //     .eq('member_id', member.member_id);
+  //   onSetLogs(logsData || []);
+  
+  //   // 2. 건강 기록 가져오기
+  //   const { data: healthData } = await supabase
+  //     .from('health_metrics')
+  //     .select('*')
+  //     .eq('member_id', member.member_id);
+  //   onSetHealthLogs(healthData || []);
+  
+  //   // 3. 회원 선택 정보 저장 (localStorage 사용)
+  //   localStorage.setItem('litpt_member', JSON.stringify(member));
+  
+  //   // 4. workout 페이지로 이동
+  //   router.push('/workout');
+  // };
 
   const handleDelete = async (memberId: number) => {
     if (!supabase) return;
@@ -334,7 +338,7 @@ export default function MemberSearch({
             >
               {/* 왼쪽 정보 클릭 영역 */}
               <div
-                onClick={() => handleSelect(member)}
+                // onClick={() => handleSelect(member)}
                 className="flex cursor-pointer hover:bg-indigo-50 rounded-md px-3 py-2 transition flex-1 items-center gap-6"
               >
                 <div className="flex flex-col flex-shrink-0 items-center">
@@ -368,7 +372,7 @@ export default function MemberSearch({
                 {/* 이름 + 정보 */}
                 <div className="flex flex-col items-center flex-grow">
                   <span className="text-gray-800 font-semibold text-lg leading-tight">
-                    {member.name}
+                    {member.name}{member.nickname ? ` | ${member.nickname}` : ''}
                   </span>
 
                   {/* 첫 번째 줄: 성별 + 가입일 */}

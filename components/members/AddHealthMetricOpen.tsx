@@ -235,7 +235,7 @@ export default function AddHealthMetricOpen({ member, onCancel, onSave, isOpen }
                     disabled={loading}
                     className="text-indigo-500 hover:underline"
                   >
-                    추가
+                    저장
                   </button>
                 </div>
                 <ul className="max-h-40 overflow-y-auto border-t pt-2 space-y-1">

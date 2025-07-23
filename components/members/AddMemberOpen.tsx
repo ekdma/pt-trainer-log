@@ -60,7 +60,8 @@ export default function AddMemberOpen({ onClose, onMemberAdded }: Props) {
   const [selectedTrainerId, setSelectedTrainerId] = useState<number | null>(null)
 
   const [phone, setPhone] = useState('')
-  
+  const [nickname, setNickname] = useState('')
+
   useEffect(() => {
     const fetchTrainers = async () => {
       const { data, error } = await supabase
@@ -127,8 +128,10 @@ export default function AddMemberOpen({ onClose, onMemberAdded }: Props) {
       return
     }
 
-    if (!/^010\d{8}$/.test(phone)) {
-      setErrorMsg('유효한 핸드폰 번호를 입력하세요 (예: 01012345678)')
+    const rawPhone = phone.replace(/-/g, '')  // 하이픈 제거
+
+    if (!/^010\d{8}$/.test(rawPhone)) {
+      setErrorMsg('유효한 핸드폰 번호를 입력하세요 (예: 010-1234-5678)')
       return
     }
 
@@ -139,7 +142,8 @@ export default function AddMemberOpen({ onClose, onMemberAdded }: Props) {
       .insert([
         {
           name,
-          phone,
+          nickname,
+          phone: rawPhone,
           birth_date: birthDate,
           sex,
           level,
@@ -200,15 +204,27 @@ export default function AddMemberOpen({ onClose, onMemberAdded }: Props) {
           <div className="bg-white p-4 rounded-xl shadow-sm border">
             <h3 className="text-lg font-semibold text-gray-800 mb-4">회원 기본 정보</h3>
 
-            <div className="mb-4">
-              <label className="block text-sm font-medium text-gray-700 mb-1">이름</label>
-              <input
-                type="text"
-                value={name}
-                onChange={(e) => setName(e.target.value)}
-                placeholder="이름을 입력하세요"
-                className="text-sm text-gray-700 w-full p-2 border rounded focus:ring-2 focus:ring-gray-500 focus:outline-none"
-              />
+            <div className="flex gap-4 mb-4">
+              <div className="w-1/2">
+                <label className="block text-sm font-medium text-gray-700 mb-1">이름</label>
+                <input
+                  type="text"
+                  value={name}
+                  onChange={(e) => setName(e.target.value)}
+                  placeholder="이름을 입력하세요"
+                  className="text-sm text-gray-700 w-full p-2 border rounded focus:ring-2 focus:ring-gray-500 focus:outline-none"
+                />
+              </div>
+              <div className="w-1/2">
+                <label className="block text-sm font-medium text-gray-700 mb-1">닉네임</label>
+                <input
+                  type="text"
+                  value={nickname}
+                  onChange={(e) => setNickname(e.target.value)}
+                  placeholder="닉네임"
+                  className="text-sm text-gray-700 w-full p-2 border rounded focus:ring-2 focus:ring-gray-500 focus:outline-none"
+                />
+              </div>
             </div>
 
             <div className="mb-4 flex flex-col md:flex-row md:items-start md:gap-4">
@@ -230,9 +246,23 @@ export default function AddMemberOpen({ onClose, onMemberAdded }: Props) {
                 <input
                   type="text"
                   value={phone}
-                  onChange={(e) => setPhone(e.target.value)}
-                  placeholder="예: 01012345678"
+                  onChange={(e) => {
+                    let input = e.target.value
+                    // 숫자만 추출
+                    input = input.replace(/\D/g, '')
+
+                    // ###-####-#### 형태로 변환
+                    if (input.length > 3 && input.length <= 7) {
+                      input = `${input.slice(0, 3)}-${input.slice(3)}`
+                    } else if (input.length > 7) {
+                      input = `${input.slice(0, 3)}-${input.slice(3, 7)}-${input.slice(7, 11)}`
+                    }
+
+                    setPhone(input)
+                  }}
+                  placeholder="예: 010-1234-5678"
                   className="text-sm text-gray-700 w-full p-2 border rounded focus:ring-2 focus:ring-gray-500 focus:outline-none"
+                  maxLength={13} // 하이픈 포함 최대길이 제한
                 />
               </div>
             </div>
