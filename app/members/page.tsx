@@ -3,7 +3,8 @@
 import { useState, useEffect } from 'react'
 import TrainerHeader from '@/components/layout/TrainerHeader'
 import MemberSearch from '../../components/members/MemberSearch'
-import type { Member, WorkoutRecord, HealthMetric } from '@/components/members/types'
+// import type { Member, WorkoutRecord, HealthMetric } from '@/components/members/types'
+import type { Member } from '@/components/members/types'
 import { fetchWorkoutLogs, fetchHealthLogs } from '../../utils/fetchLogs'
 import { useAuthGuard } from '@/hooks/useAuthGuard'
 import { getSupabaseClient } from '@/lib/supabase'
@@ -23,7 +24,7 @@ export default function MembersPage() {
   const [selectedMember, setSelectedMember] = useState<Member | null>(null)
   // const [workoutLogs, setWorkoutLogs] = useState<WorkoutRecord[]>([])
   // const [healthLogs, setHealthLogs] = useState<HealthMetric[]>([])
-  const [activeTab, setActiveTab] = useState<'workout' | 'health' | 'food'>('workout')
+  // const [activeTab, setActiveTab] = useState<'workout' | 'health' | 'food'>('workout')
   // const [workoutTypes, setWorkoutTypes] = useState<WorkoutType[]>([]);
 
   useAuthGuard()
@@ -32,17 +33,18 @@ export default function MembersPage() {
     const fetchLogs = async () => {
       if (!selectedMember) return
   
-      if (activeTab === 'workout') {
-        const logs = await fetchWorkoutLogs(selectedMember.member_id)
+      // if (activeTab === 'workout') {
+      //   const logs = await fetchWorkoutLogs(selectedMember.member_id)
         // setWorkoutLogs(logs)
-      } else if (activeTab === 'health') {
-        const logs = await fetchHealthLogs(selectedMember.member_id)
+      // } else if (activeTab === 'health') {
+        // const logs = await fetchHealthLogs(selectedMember.member_id)
         // setHealthLogs(logs)
-      }
+      // }
     }
   
     fetchLogs()
-  }, [activeTab, selectedMember])
+  // }, [activeTab, selectedMember])
+  }, [selectedMember])
 
   const fetchMembers = async () => {
     const { data, error } = await supabase.from('members').select('*')
@@ -123,7 +125,7 @@ export default function MembersPage() {
           members={filteredMembers} // ✅ 전달
           onSelectMember={(member) => {
             setSelectedMember(member)
-            setActiveTab('workout')
+            // setActiveTab('workout')
           }}
           // onSetLogs={setWorkoutLogs}
           // onSetHealthLogs={setHealthLogs}
