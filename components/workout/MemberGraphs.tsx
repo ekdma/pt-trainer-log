@@ -7,7 +7,6 @@ import {
   LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer,
 } from 'recharts'
 // import OrderManagementModal from '@/components/members/OrderManagementModal'
-import { getWorkoutTypes } from '../../lib/supabase'
 
 type Props = {
   member: Member
@@ -15,7 +14,9 @@ type Props = {
   logs: WorkoutRecord[]
   onBack: () => void
   showFavoritesOnly?: boolean    
-  favorites?: Set<string>    
+  favorites?: Set<string>   
+  favoritesWithOrder?: { key: string, order: number }[]
+  allTypes: WorkoutType[];
 }
   
 // Base colors per target muscle group (hex)
@@ -115,10 +116,10 @@ function getColorForWorkout(target: string, workout: string) {
   return newColor
 }
 
-export default function MemberGraphs({ logs: initialLogs, showFavoritesOnly, favorites }: Props) {
+export default function MemberGraphs({ logs: initialLogs, showFavoritesOnly, favorites, favoritesWithOrder, allTypes }: Props) {
   // const [isTrainer, setIsTrainer] = useState(false)
   const [logs, setLogs] = useState<WorkoutRecord[]>([])
-  const [allTypes, setAllTypes] = useState<WorkoutType[]>([]);
+  // const [allTypes, setAllTypes] = useState<WorkoutType[]>([]);
   // const [isOrderModalOpen, setIsOrderModalOpen] = useState(false)
   // const [isAddRecordOpen, setIsAddRecordOpen] = useState(false)
   // const [isListOpen, setIsListOpen] = useState(false)
@@ -150,13 +151,13 @@ export default function MemberGraphs({ logs: initialLogs, showFavoritesOnly, fav
     }
   }, [initialLogs, showFavoritesOnly, favorites])
   
-  useEffect(() => {
-    getWorkoutTypes()
-      .then(types => {
-        setAllTypes(types)
-      })
-      .catch(console.error)
-  }, [])
+  // useEffect(() => {
+  //   getWorkoutTypes()
+  //     .then(types => {
+  //       setAllTypes(types)
+  //     })
+  //     .catch(console.error)
+  // }, [])
 
   // function fetchWorkoutTypes() {
   //   getWorkoutTypes()
@@ -280,12 +281,25 @@ export default function MemberGraphs({ logs: initialLogs, showFavoritesOnly, fav
               const allDates = Array.from(new Set(groupLogs.map((log) => log.workout_date))).sort();
 
               // ⬇️ order_workout 순서로 정렬
+              // const sortedWorkouts = workoutsInGroup.sort((a, b) => {
+              //   const aOrder = allTypes.find(w => w.workout === a && w.target === target)?.order_workout ?? 999
+              //   const bOrder = allTypes.find(w => w.workout === b && w.target === target)?.order_workout ?? 999
+              //   return aOrder - bOrder
+              // })
               const sortedWorkouts = workoutsInGroup.sort((a, b) => {
-                const aOrder = allTypes.find(w => w.workout === a && w.target === target)?.order_workout ?? 999
-                const bOrder = allTypes.find(w => w.workout === b && w.target === target)?.order_workout ?? 999
-                return aOrder - bOrder
+                if (showFavoritesOnly && favoritesWithOrder) {
+                  const aKey = `${selectedTarget}||${a}`
+                  const bKey = `${selectedTarget}||${b}`
+                  const aOrder = favoritesWithOrder.find(f => f.key === aKey)?.order ?? 999
+                  const bOrder = favoritesWithOrder.find(f => f.key === bKey)?.order ?? 999
+                  return aOrder - bOrder
+                } else {
+                  const aOrder = allTypes.find(w => w.workout === a && w.target === selectedTarget)?.order_workout ?? 999
+                  const bOrder = allTypes.find(w => w.workout === b && w.target === selectedTarget)?.order_workout ?? 999
+                  return aOrder - bOrder
+                }
               })
-
+              
               // 날짜별로 모든 운동 키를 포함한 weightData 생성 (null로 채우기)
               let weightData = allDates.map((date) => {
                 const dataForDate = weightDateGrouped[date] || {};
@@ -368,10 +382,23 @@ export default function MemberGraphs({ logs: initialLogs, showFavoritesOnly, fav
               <p className="text-center text-gray-500 mt-8">등록된 운동 기록이 없습니다.</p>
             ) : (
               Array.from(new Set(targetGroups[selectedTarget].map((log) => log.workout)))
+              // .sort((a, b) => {
+              //   const aOrder = allTypes.find(w => w.workout === a && w.target === selectedTarget)?.order_workout ?? 999
+              //   const bOrder = allTypes.find(w => w.workout === b && w.target === selectedTarget)?.order_workout ?? 999
+              //   return aOrder - bOrder
+              // })
               .sort((a, b) => {
-                const aOrder = allTypes.find(w => w.workout === a && w.target === selectedTarget)?.order_workout ?? 999
-                const bOrder = allTypes.find(w => w.workout === b && w.target === selectedTarget)?.order_workout ?? 999
-                return aOrder - bOrder
+                if (showFavoritesOnly && favoritesWithOrder) {
+                  const aKey = `${selectedTarget}||${a}`
+                  const bKey = `${selectedTarget}||${b}`
+                  const aOrder = favoritesWithOrder.find(f => f.key === aKey)?.order ?? 999
+                  const bOrder = favoritesWithOrder.find(f => f.key === bKey)?.order ?? 999
+                  return aOrder - bOrder
+                } else {
+                  const aOrder = allTypes.find(w => w.workout === a && w.target === selectedTarget)?.order_workout ?? 999
+                  const bOrder = allTypes.find(w => w.workout === b && w.target === selectedTarget)?.order_workout ?? 999
+                  return aOrder - bOrder
+                }
               })
               .map((workout) => {
                 let filtered = chartData.filter((d) => d.workout === workout && d.target === selectedTarget);

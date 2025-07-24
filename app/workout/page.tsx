@@ -6,7 +6,9 @@ import Header from '@/components/layout/Header'
 import TrainerHeader from '@/components/layout/TrainerHeader'
 import MemberGraphs from '@/components/workout/MemberGraphs'
 import WorkoutLogManager from '@/components/workout/WorkoutLogManager'
-import type { Member, WorkoutRecord } from '@/components/members/types'
+import OrderFavoriteWorkout from '@/components/workout/OrderFavoriteWorkout'
+import OrderManagementModal from '@/components/workout/OrderManagementModal'
+import type { Member, WorkoutRecord, WorkoutType } from '@/components/members/types'
 import { fetchWorkoutLogs } from '@/utils/fetchLogs'
 import { getSupabaseClient } from '@/lib/supabase'
 import { FaStar, FaRegStar } from 'react-icons/fa'
@@ -25,6 +27,10 @@ export default function MembersPage() {
   const [showFavoritesOnly, setShowFavoritesOnly] = useState(false)
   const [favorites, setFavorites] = useState<Set<string>>(new Set())
   const [description, setDescription] = useState<string>('')
+  const [showOrderModal, setShowOrderModal] = useState(false)
+  const [favoritesWithOrder, setFavoritesWithOrder] = useState<{ key: string, order: number }[]>([])
+  const [showGlobalOrderModal, setShowGlobalOrderModal] = useState(false); // 전체 운동용
+  const [allTypes, setAllTypes] = useState<WorkoutType[]>([]);
 
   // 사용자 정보 초기화
   useEffect(() => {
@@ -88,14 +94,22 @@ export default function MembersPage() {
   const fetchFavorites = async () => {
     const { data, error } = await supabase
       .from('favorites')
-      .select('target, workout')
+      .select('target, workout, order')
       .eq('member_id', selectedMember?.member_id)
-
+  
     if (!error && data) {
       const favSet = new Set(data.map(fav => `${fav.target}||${fav.workout}`))
       setFavorites(favSet)
+  
+      // ✅ 정렬 가능한 정보 저장
+      const ordered = data.map(fav => ({
+        key: `${fav.target}||${fav.workout}`,
+        order: fav.order ?? 0,
+      }))
+      setFavoritesWithOrder(ordered)
     }
   }
+  
 
   const toggleViewMode = async () => {
     const newMode = !showFavoritesOnly
@@ -122,6 +136,28 @@ export default function MembersPage() {
       setSelectedMember({ ...selectedMember, description })
     }
   }
+
+  const fetchAllTypes = async () => {
+    const { data, error } = await supabase
+      .from('workout_types')
+      .select('workout_type_id, target, workout, order_target, order_workout, level')
+      // order_target 기준으로 정렬하고, 그 다음 order_workout 기준 정렬 (필요시)
+      .order('order_target', { ascending: true })
+      .order('order_workout', { ascending: true })
+  
+    if (!error && data) {
+      setAllTypes(data as WorkoutType[])  // 타입 명시
+    } else {
+      console.error('전체 운동 항목 불러오기 실패:', error)
+    }
+  }
+
+  useEffect(() => {
+    if (!showFavoritesOnly) {
+      fetchAllTypes()
+    }
+  }, [showFavoritesOnly])
+  
 
   return (
     <div className="min-h-screen bg-gray-50">
@@ -199,6 +235,39 @@ export default function MembersPage() {
                     </>
                   )}
                 </button>
+
+                <button
+                  onClick={() => {
+                    if (showFavoritesOnly) {
+                      setShowOrderModal(true);  // 👉 OrderWorkout 모달
+                    } else {
+                      setShowGlobalOrderModal(true); // 👉 OrderManagementModal 모달
+                    }
+                  }}
+                  className={`flex items-center gap-2 px-3 py-1.5 rounded-full text-sm font-medium transition 
+                    ${showFavoritesOnly ? 'bg-yellow-200 text-white hover:bg-yellow-400' : 'bg-gray-200 text-gray-800 hover:bg-gray-300'}`}
+                >
+                  순서
+                </button>
+
+                {showOrderModal && selectedMember && (
+                  <OrderFavoriteWorkout
+                    memberId={selectedMember.member_id}
+                    onClose={async () => {
+                      setShowOrderModal(false)
+                      await fetchFavorites() // ✅ 순서 저장 후 다시 즐겨찾기 불러오기
+                    }}
+                  />
+                )}
+
+                {showGlobalOrderModal && (
+                  <OrderManagementModal
+                    isOpen={showGlobalOrderModal}
+                    onClose={() => setShowGlobalOrderModal(false)}
+                    allTypes={allTypes} // 이건 props로 받아야 함
+                    onRefreshAllTypes={fetchAllTypes} // 순서 저장 후 다시 불러오기
+                  />
+                )}
               </div>
 
               {userRole === 'trainer' && (        
@@ -263,7 +332,9 @@ export default function MembersPage() {
                 logs={workoutLogs}
                 onBack={() => {}}
                 showFavoritesOnly={showFavoritesOnly}  
-                favorites={favorites}                 
+                favorites={favorites}  
+                favoritesWithOrder={favoritesWithOrder}           
+                allTypes={allTypes}    
               />
             )}
             {activeTab === 'records' && (
@@ -273,7 +344,10 @@ export default function MembersPage() {
                 onUpdateLogs={setWorkoutLogs}
                 showFavoritesOnly={showFavoritesOnly}
                 favorites={favorites}
+                favoritesWithOrder={favoritesWithOrder}
                 setFavorites={setFavorites}
+                onFavoritesChange={fetchFavorites}
+                allTypes={allTypes}
               />
             )}
           </>

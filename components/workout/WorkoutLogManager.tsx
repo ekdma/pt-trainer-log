@@ -9,6 +9,7 @@ import { useHorizontalDragScroll } from '@/utils/useHorizontalDragScroll';
 import { FaStar, FaRegStar } from 'react-icons/fa';
 import AddWorkout from '@/components/workout/AddWorkout'
 import { Button } from '@/components/ui/button'
+import { WorkoutType } from '@/components/members/types'
 
 type Member = {
   member_id: number
@@ -36,6 +37,9 @@ interface WorkoutLogManagerProps {
   showFavoritesOnly?: boolean
   favorites?: Set<string>
   setFavorites?: React.Dispatch<React.SetStateAction<Set<string>>>
+  favoritesWithOrder?: { key: string; order: number }[] 
+  onFavoritesChange?: () => void
+  allTypes: WorkoutType[];
 }
 
 type InsertLog = {
@@ -57,7 +61,10 @@ export default function WorkoutLogManager({
   onUpdateLogs,
   showFavoritesOnly = false,
   favorites = new Set(),
+  favoritesWithOrder = [], 
   setFavorites = () => {},
+  onFavoritesChange,
+  allTypes
 }: WorkoutLogManagerProps) {
   const [isTrainer, setIsTrainer] = useState(false)
 
@@ -78,9 +85,9 @@ export default function WorkoutLogManager({
   const [isEmptyLog, setIsEmptyLog] = useState(false) // 로그 비었는지 여부
   const [newLevel, setNewLevel] = useState('')
   const [loadingManage, setLoadingManage] = useState(false)
-  const [allTypes, setAllTypes] = useState<
-    { workout_type_id: number; target: string; workout: string; level: string; order_target: number; order_workout: number }[]
-  >([])
+  // const [allTypes, setAllTypes] = useState<
+  //   { workout_type_id: number; target: string; workout: string; level: string; order_target: number; order_workout: number }[]
+  // >([])
   const inputRefs = useRef<Record<string, HTMLInputElement | null>>({}); 
 
   const [yy, mm, dd] = today.split('-'); // year = "2025", month = "06", day = "20"
@@ -102,7 +109,7 @@ export default function WorkoutLogManager({
   const headerRefs = useRef<Record<string, HTMLTableCellElement | null>>({});
   const longPressTimeout = useRef<NodeJS.Timeout | null>(null);
   const [isAddWorkoutOpen, setIsAddWorkoutOpen] = React.useState(false)
-
+  
   const handleLongPressStart = (e: React.TouchEvent | React.MouseEvent, date: string) => {
     const target = headerRefs.current[date];
     if (!target) return;
@@ -191,11 +198,19 @@ export default function WorkoutLogManager({
     }
   }, [])
   
+  // const displayedRows = showFavoritesOnly
+  //   ? rows.filter(({ target, workout }) =>
+  //       favorites.has(`${target}||${workout}`)
+  //     )
+  //   : rows;  
   const displayedRows = showFavoritesOnly
-    ? rows.filter(({ target, workout }) =>
-        favorites.has(`${target}||${workout}`)
-      )
-    : rows;  
+    ? favoritesWithOrder
+        .map(({ key }) => {
+          const [target, workout] = key.split('||');
+          return rows.find((row) => row.target === target && row.workout === workout);
+        })
+        .filter((row): row is typeof rows[number] => !!row)
+    : rows;
 
   const toggleFavorite = async (rowKey: string) => {
     const [target, workout] = rowKey.split('||');
@@ -232,6 +247,7 @@ export default function WorkoutLogManager({
       }
   
       setFavorites(prev => new Set(prev).add(rowKey));
+      onFavoritesChange?.();
     }
   };
     
@@ -265,75 +281,11 @@ export default function WorkoutLogManager({
       return
     }
   
-    const { data: memberInfo, error: memberError } = await supabase
-      .from('members')
-      .select('level')
-      .eq('member_id', member.member_id)
-      .single()
-  
-    if (memberError || !memberInfo) {
-      alert('멤버 정보 불러오기 오류: ' + (memberError?.message ?? '데이터 없음'))
-      return
-    }
-  
-    const memberLevel = memberInfo.level // ex. "Level 2"
-    const levelNumber = parseInt(memberLevel.replace(/\D/g, '')) // 숫자만 추출: 2
-  
-    const { data: workoutTypes, error: typeError } = await supabase
-      .from('workout_types')
-      .select('workout_type_id, target, workout, order_target, order_workout, level')
-  
-    if (typeError) {
-      alert('운동 타입 불러오기 오류: ' + typeError.message)
-      return
-    }
-  
-    // member level 이하만 필터링 (ex. Level 1, Level 2)
-    const allowedTypes = (workoutTypes ?? []).filter(t => {
-      const typeLevel = parseInt(t.level.replace(/\D/g, ''))
-      return typeLevel <= levelNumber
-    })
-  
-    // target + workout 기준으로 중복 제거 (level 높은 것이 우선)
-    const typeMap = new Map<string, typeof allowedTypes[number]>()
-    for (const type of allowedTypes) {
-      const key = `${type.target}||${type.workout}`
-      const existing = typeMap.get(key)
-      if (!existing || parseInt(type.level.replace(/\D/g, '')) > parseInt(existing.level.replace(/\D/g, ''))) {
-        typeMap.set(key, type)
-      }
-    }
-  
-    const filteredTypes = Array.from(typeMap.values())
-  
     if (onUpdateLogs) onUpdateLogs(logs ?? [])
   
     const uniqueDates = Array.from(new Set((logs ?? []).map(l => l.workout_date))).sort()
   
-    const orderMap = new Map<string, { order_target: number; order_workout: number }>()
-    for (const type of filteredTypes) {
-      orderMap.set(`${type.target}||${type.workout}`, {
-        order_target: type.order_target,
-        order_workout: type.order_workout
-      })
-    }
-  
-    const rows = filteredTypes.sort((a, b) => {
-      const levelA = parseInt(a.level.replace(/\D/g, '')) || 999
-      const levelB = parseInt(b.level.replace(/\D/g, '')) || 999
-    
-      // if (levelA !== levelB) return levelA - levelB //오름차순
-      if (levelA !== levelB) return levelB - levelA  //내림차순
-    
-      const orderA = orderMap.get(`${a.target}||${a.workout}`) || { order_target: 999, order_workout: 999 }
-      const orderB = orderMap.get(`${b.target}||${b.workout}`) || { order_target: 999, order_workout: 999 }
-    
-      if (orderA.order_target !== orderB.order_target) {
-        return orderA.order_target - orderB.order_target
-      }
-      return orderA.order_workout - orderB.order_workout
-    })
-  
+    // logMap 생성 (기존처럼)
     const newLogMap: typeof logMap = {}
     for (const l of logs ?? []) {
       const rowKey = `${l.target}||${l.workout}`
@@ -345,11 +297,67 @@ export default function WorkoutLogManager({
     }
   
     setDates(uniqueDates)
-    setRows(rows.map(r => ({ target: r.target, workout: r.workout, level: r.level })))
-    setAllTypes(workoutTypes ?? [])
     setLogMap(newLogMap)
     setIsEmptyLog((logs ?? []).length === 0)
   }
+  
+  useEffect(() => {
+    const myLevelNumber = parseInt(member.level?.replace(/\D/g, '') ?? '') || 999
+  
+    // 1. 내 레벨 이하인 모든 항목만 추출
+    const withinMyLevel = allTypes.filter(t => {
+      const levelNum = parseInt(t.level?.replace(/\D/g, '') ?? '') || 999
+      return levelNum <= myLevelNumber
+    })
+  
+    // 2. workout 기준으로 가장 높은 level 항목만 남기기
+    const workoutMap = new Map<string, WorkoutType>()
+  
+    for (const item of withinMyLevel) {
+      const key = `${item.target}||${item.workout}`
+      const current = workoutMap.get(key)
+  
+      const itemLevel = parseInt(item.level?.replace(/\D/g, '') ?? '') || 999
+      const currentLevel = current ? (parseInt(current.level?.replace(/\D/g, '') ?? '') || 999) : -1
+  
+      if (!current || itemLevel > currentLevel) {
+        workoutMap.set(key, item)
+      }
+    }
+  
+    const dedupedTypes = Array.from(workoutMap.values())
+  
+    // 3. 정렬 기준: level (desc) → order_target → order_workout
+    const sortedRows = [...dedupedTypes].sort((a, b) => {
+      const levelA = parseInt(a.level?.replace(/\D/g, '') ?? '') || 999
+      const levelB = parseInt(b.level?.replace(/\D/g, '') ?? '') || 999
+  
+      if (levelA !== levelB) return levelB - levelA
+  
+      const orderA = {
+        order_target: a.order_target ?? 999,
+        order_workout: a.order_workout ?? 999,
+      }
+      const orderB = {
+        order_target: b.order_target ?? 999,
+        order_workout: b.order_workout ?? 999,
+      }
+  
+      if (orderA.order_target !== orderB.order_target) {
+        return orderA.order_target - orderB.order_target
+      }
+      return orderA.order_workout - orderB.order_workout
+    })
+  
+    // 4. rows 세팅
+    setRows(
+      sortedRows.map(r => ({
+        target: r.target,
+        workout: r.workout,
+        level: r.level ?? '',
+      }))
+    )
+  }, [allTypes, member.level])
 
   const isDateWithinLast7Days = (dateStr: string): boolean => {
     const inputDate = new Date(dateStr)
@@ -518,30 +526,26 @@ export default function WorkoutLogManager({
   
     setLoadingManage(true)
   
-    // === Step 1: target 처리 ===
+    // === Step 1: order_target 계산 ===
     const existingTarget = allTypes.find(t => t.target === newTarget)
     let order_target: number
   
     if (existingTarget) {
-      order_target = existingTarget.order_target
+      order_target = existingTarget.order_target ?? 0
     } else {
       const maxOrder = allTypes.reduce((max, t) => Math.max(max, t.order_target ?? 0), 0)
       order_target = maxOrder + 1
     }
   
-    // === Step 2: order_workout 처리 ===
+    // === Step 2: order_workout 계산 ===
     const sameTargetWorkouts = allTypes.filter(t => t.target === newTarget)
-  
-    // 동일한 target + workout 조합이 이미 존재하는가?
     const existingWorkout = sameTargetWorkouts.find(t => t.workout === newWorkout)
   
     let order_workout: number
   
     if (existingWorkout) {
-      // 기존 workout이면 기존 order_workout 재사용
-      order_workout = existingWorkout.order_workout
+      order_workout = existingWorkout.order_workout ?? 0
     } else {
-      // 새로운 workout이면 해당 target 내 최대 order_workout + 1
       const maxOrderWorkout = sameTargetWorkouts.reduce((max, t) => Math.max(max, t.order_workout ?? 0), 0)
       order_workout = maxOrderWorkout + 1
     }
@@ -563,7 +567,10 @@ export default function WorkoutLogManager({
       setNewTarget('')
       setNewWorkout('')
       setNewLevel('')
-      fetchLogs()
+      
+      // NOTE: 이 시점에서 allTypes는 갱신되지 않음
+      // 상위 컴포넌트에서 allTypes를 refetch하거나 prop을 다시 내려주도록 구성 필요
+      if (onFavoritesChange) onFavoritesChange()  // 예: 부모에서 refetch 트리거
     }
   
     setLoadingManage(false)

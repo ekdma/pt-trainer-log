@@ -6,14 +6,15 @@ import {
   LineChart, Line, XAxis, YAxis, CartesianGrid, ResponsiveContainer
 } from 'recharts';
 import { HealthMetric, Member, HealthMetricType } from '@/types/healthMetricTypes';
-import HealthMetricManager from './HealthMetricManager' 
-import OrderHealthMetricModal from './OrderHealthMetricModal'
-import { getHealthMetricTypes } from '../../lib/supabase' 
+// import HealthMetricManager from './HealthMetricManager' 
+// import OrderHealthMetricModal from './OrderHealthMetricModal'
+// import { getHealthMetricTypes } from '../../lib/supabase' 
 
 interface Props {
   healthLogs: HealthMetric[];
   member: Member;
   onBack: () => void;
+  allTypes: HealthMetricType[];
 }
 
 // metric 별로 날짜별 값만 뽑아서 배열로 리턴
@@ -57,14 +58,14 @@ const colorMap: { [key: string]: string } = {
   'Lower Body Strength': '#c0392b',        // 강렬한 빨강 (Weight와 비슷 톤)
 };
 
-const MemberHealthGraphsClient: React.FC<Props> = ({ healthLogs, member }) => {
+const MemberHealthGraphsClient: React.FC<Props> = ({ healthLogs, member, allTypes, onBack }) => {
   const [logs, setLogs] = useState<HealthMetric[]>([]);
   const [selectedTarget, setSelectedTarget] = useState<string | null>(null);
   // const [isAddOpen, setIsAddOpen] = useState(false);
   // const [isListOpen, setIsListOpen] = useState(false);
-  const [isHealthMetricManagerOpen, setIsHealthMetricManagerOpen] = useState(false)
-  const [isOrderModalOpen, setIsOrderModalOpen] = useState(false)
-  const [allTypes, setAllTypes] = useState<HealthMetricType[]>([]);
+  // const [isHealthMetricManagerOpen, setIsHealthMetricManagerOpen] = useState(false)
+  // const [isOrderModalOpen, setIsOrderModalOpen] = useState(false)
+  // const [allTypes, setAllTypes] = useState<HealthMetricType[]>([]);
   const [viewMode, setViewMode] = useState<'daily' | 'monthly'>('daily');
 
   const useIsMobile = () => {
@@ -83,25 +84,25 @@ const MemberHealthGraphsClient: React.FC<Props> = ({ healthLogs, member }) => {
     setLogs(healthLogs);
   }, [healthLogs]);
 
-  useEffect(() => {
-    getHealthMetricTypes()
-      .then(types => {
-        setAllTypes(types)
-      })
-      .catch(console.error)
-  }, [])
+  // useEffect(() => {
+  //   getHealthMetricTypes()
+  //     .then(types => {
+  //       setAllTypes(types)
+  //     })
+  //     .catch(console.error)
+  // }, [])
 
-  function fetchHealthMetricTypes() {
-    getHealthMetricTypes()
-      .then(types => setAllTypes(types))
-      .catch(console.error);
-  }
+  // function fetchHealthMetricTypes() {
+  //   getHealthMetricTypes()
+  //     .then(types => setAllTypes(types))
+  //     .catch(console.error);
+  // }
 
-  useEffect(() => {
-    if (isOrderModalOpen) {
-      fetchHealthMetricTypes();
-    }
-  }, [isOrderModalOpen]);
+  // useEffect(() => {
+  //   if (isOrderModalOpen) {
+  //     fetchHealthMetricTypes();
+  //   }
+  // }, [isOrderModalOpen]);
   
   if (!member || !member.name) {
     return <p className="text-center text-gray-500 mt-8">회원 정보가 없습니다.</p>;
@@ -304,23 +305,23 @@ const MemberHealthGraphsClient: React.FC<Props> = ({ healthLogs, member }) => {
         )}
 
 
-        {isOrderModalOpen && (
+        {/* {isOrderModalOpen && (
           <OrderHealthMetricModal
             isOpen={isOrderModalOpen}
             onClose={() => setIsOrderModalOpen(false)}
             allTypes={allTypes}
             onRefreshAllTypes={fetchHealthMetricTypes}  // ✅ 여기 추가
           />
-        )}
+        )} */}
 
-        {isHealthMetricManagerOpen && (
+        {/* {isHealthMetricManagerOpen && (
           <HealthMetricManager
             member={member}
             logs={logs}
             onClose={() => setIsHealthMetricManagerOpen(false)}
             onUpdateLogs={(updatedLogs) => setLogs(updatedLogs)}
           />
-        )}
+        )} */}
       </div>
     </div>
   );

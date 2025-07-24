@@ -10,7 +10,7 @@ import { Member } from './types'
 import MemberCalendar from './MemberCalendar'
 import { SupabaseClient } from '@supabase/supabase-js'
 import 'react-calendar/dist/Calendar.css'
-import {  UsersIcon, UserRoundPen, UserRoundMinus, Calendar as CalendarIcon, User } from 'lucide-react';
+import {  Dumbbell, UsersIcon, UserRoundPen, UserRoundMinus, Calendar as CalendarIcon, User } from 'lucide-react';
 import { Button } from '@/components/ui/button'
 // import { useRouter } from 'next/navigation'  
 
@@ -414,7 +414,7 @@ export default function MemberSearch({
                         setSelectedMemberId(member.member_id);
                       }}
                     >
-                      <User size={13} />
+                      <Dumbbell size={13} />
                       {sessionProgress[member.member_id]?.pt.used ?? 0}/{sessionProgress[member.member_id]?.pt.total ?? 0}회
                     </span>
                     <span 
@@ -424,7 +424,7 @@ export default function MemberSearch({
                         setSelectedMemberId(member.member_id);
                       }}
                     >
-                      <UsersIcon size={13} />
+                      <User size={13} />
                       {sessionProgress[member.member_id]?.self.used ?? 0}/{sessionProgress[member.member_id]?.self.total ?? 0}회
                     </span>
                     <span 

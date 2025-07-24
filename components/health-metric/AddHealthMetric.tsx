@@ -2,6 +2,7 @@
 
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog"
 import { Button } from "@/components/ui/button"
+import { useRouter } from 'next/navigation'
 
 interface HealthMetricType {
   health_metric_type_id: number
@@ -36,6 +37,12 @@ export default function AddHealthMetric({
   onAdd,
   onDelete,
 }: AddHealthMetricProps) {
+  const router = useRouter();
+
+  const handleAdd = async () => {
+    await onAdd();    // 저장 함수 호출 (서버 저장 로직 포함)
+    router.refresh(); // 저장 후 페이지 새로고침 (data 다시 fetch)
+  }
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="max-w-xl">
@@ -76,7 +83,7 @@ export default function AddHealthMetric({
               추가
             </button> */}
             <Button
-              onClick={onAdd}
+              onClick={handleAdd}
               disabled={loading}
               variant="darkGray" 
               className="text-sm"

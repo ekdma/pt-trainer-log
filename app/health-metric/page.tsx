@@ -6,21 +6,25 @@ import Header from '@/components/layout/Header'
 import TrainerHeader from '@/components/layout/TrainerHeader'
 import MemberHealthGraphs from '@/components/health-metric/MemberHealthGraphs'
 import HealthMetricManager from '@/components/health-metric/HealthMetricManager'
-import type { Member, HealthMetric } from '@/components/members/types'
+import type { Member, HealthMetric, HealthMetricType } from '@/components/members/types'
 import { fetchHealthLogs } from '@/utils/fetchLogs'
 import { getSupabaseClient } from '@/lib/supabase'
 import { Button } from '@/components/ui/button'
+import OrderHealthMetricModal from '@/components/health-metric/OrderHealthMetricModal' 
+
 
 export default function MembersHealthPage() {
   useAuthGuard()
   const supabase = getSupabaseClient()
-
+  
   const [userRole, setUserRole] = useState<'member' | 'trainer' | null>(null)
   const [members, setMembers] = useState<Member[]>([])
   const [selectedMember, setSelectedMember] = useState<Member | null>(null)
-
+  
   const [healthLogs, setHealthLogs] = useState<HealthMetric[]>([])
   const [activeTab, setActiveTab] = useState<'records' | 'graphs'>('records')
+  const [showGlobalOrderModal, setShowGlobalOrderModal] = useState(false);
+  const [allTypes, setAllTypes] = useState<HealthMetricType[]>([])
 
   useEffect(() => {
     const raw = localStorage.getItem('litpt_member')
@@ -52,6 +56,23 @@ export default function MembersHealthPage() {
     if (activeTab === 'graphs') fetchLogs()
   }, [activeTab, selectedMember])
 
+  const fetchAllTypes = async () => {
+    const { data, error } = await supabase
+      .from('health_metric_types')
+      .select('*')
+  
+    if (!error && data) {
+      setAllTypes(data)
+    }
+  }
+
+  useEffect(() => {
+    if (selectedMember) {
+      fetchAllTypes()
+    }
+  }, [selectedMember])
+  
+  
   return (
     <div className="min-h-screen bg-gray-50">
       {userRole === 'trainer' ? <TrainerHeader /> : <Header />}
@@ -83,7 +104,23 @@ export default function MembersHealthPage() {
 
         {selectedMember ? (
           <>
-            <h2 className="text-lg font-semibold text-gray-800 mb-6">건강기록 관리</h2>
+            <div className="flex items-center gap-3 mb-6">
+              <h2 className="text-lg font-semibold text-gray-800">건강기록 관리</h2>
+
+              <button
+                onClick={() => setShowGlobalOrderModal(true)}
+                className="flex items-center gap-2 px-3 py-1.5 rounded-full text-sm font-medium transition bg-gray-200 text-gray-800 hover:bg-gray-300"
+              >
+                순서
+              </button>
+
+              <OrderHealthMetricModal
+                isOpen={showGlobalOrderModal}
+                onClose={() => setShowGlobalOrderModal(false)}
+                allTypes={allTypes}
+                onRefreshAllTypes={fetchAllTypes}
+              />
+            </div>
 
             <div className="flex gap-3 mb-6">
               <Button
@@ -107,6 +144,7 @@ export default function MembersHealthPage() {
               <MemberHealthGraphs
                 member={selectedMember}
                 healthLogs={healthLogs}  // ✅ 수정: logs → healthLogs
+                allTypes={allTypes}   
                 onBack={() => setActiveTab('records')} // ✅ onBack prop도 필요
               />
             )}
@@ -115,6 +153,7 @@ export default function MembersHealthPage() {
               <HealthMetricManager
                 member={selectedMember}
                 logs={healthLogs}
+                allTypes={allTypes}   
                 onUpdateLogs={setHealthLogs}
               />
             )}

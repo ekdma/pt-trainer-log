@@ -74,6 +74,7 @@ export type WorkoutRecord = NewWorkoutRecord & {
 
 // 사용자가 입력할 때 사용하는 타입 → ID는 없음
 export type NewHealthMetric = {
+  health_id: number;
   member_id: number;
   measure_date: string;
   metric_target: string;
@@ -91,17 +92,17 @@ export type WorkoutType = {
   workout_type_id: number;
   target: string;
   workout: string;
-  order_target?: number;
-  order_workout?: number;
-  level?: string;
+  order_target: number;
+  order_workout: number;
+  level: string;
 };
 
 export type HealthMetricType = {
   health_metric_type_id: number;
   metric_target: string;
   metric_type: string;
-  order_target?: number;
-  order_type?: number;
+  order_target: number;
+  order_type: number;
 };
 
 export interface FoodLog {

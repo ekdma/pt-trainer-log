@@ -8,24 +8,12 @@ import { normalizeDateInput, handleKeyNavigation } from '@/utils/inputUtils';
 import { useHorizontalDragScroll } from '@/utils/useHorizontalDragScroll';
 import AddHealthMetric from '@/components/health-metric/AddHealthMetric'
 import { Button } from '@/components/ui/button'
-
-type Member = {
-  member_id: number
-  name: string
-}
-
-type HealthMetric = {
-  health_id: number
-  member_id: number
-  measure_date: string
-  metric_target: string
-  metric_type: string
-  metric_value: number
-}
+import type { Member, HealthMetric, HealthMetricType } from '@/components/members/types'
 
 interface HealthMetricManagerProps {
   member: Member
   logs: HealthMetric[]
+  allTypes: HealthMetricType[]
   onClose?: () => void
   onUpdateLogs?: (updatedLogs: HealthMetric[]) => void
 }
@@ -45,6 +33,7 @@ type UpdateLog = {
 
 export default function HealthMetricManager({
   member,
+  allTypes, 
   onUpdateLogs,
 }: HealthMetricManagerProps) {
   const [isTrainer, setIsTrainer] = useState(false)
@@ -65,9 +54,9 @@ export default function HealthMetricManager({
   const supabase = getSupabaseClient()
   const [isEmptyLog, setIsEmptyLog] = useState(false) // 로그 비었는지 여부
   const [loadingManage, setLoadingManage] = useState(false)
-  const [allTypes, setAllTypes] = useState<
-    { health_metric_type_id: number; metric_target: string; metric_type: string; order_target: number; order_type: number }[]
-  >([])
+  // const [allTypes, setAllTypes] = useState<
+  //   { health_metric_type_id: number; metric_target: string; metric_type: string; order_target: number; order_type: number }[]
+  // >([])
   const inputRefs = useRef<Record<string, HTMLInputElement | null>>({}); 
   
   const [yy, mm, dd] = today.split('-'); // year = "2025", month = "06", day = "20"
@@ -82,8 +71,8 @@ export default function HealthMetricManager({
   const [openAddMetric, setOpenAddMetric] = React.useState(false)
 
   useEffect(() => {
-    fetchLogs()
-  }, [member.member_id])
+    fetchLogs();
+  }, [member.member_id, allTypes]);
 
   useEffect(() => {
     try {
@@ -112,77 +101,57 @@ export default function HealthMetricManager({
   }
 
   const fetchLogs = async () => {
-    const { data: logs, error: logError } = await supabase
+    const { data: logsData, error: logError } = await supabase
       .from('health_metrics')
       .select('*')
-      .eq('member_id', member.member_id)
+      .eq('member_id', member.member_id);
   
     if (logError) {
-      alert('불러오기 오류: ' + logError.message)
-      return
+      alert('불러오기 오류: ' + logError.message);
+      return;
     }
   
-    const { data: healthmetricTypes, error: typeError } = await supabase
-      .from('health_metric_types')
-      .select('health_metric_type_id, metric_target, metric_type, order_target, order_type')
+    if (onUpdateLogs) onUpdateLogs(logsData ?? []);
   
-    if (typeError) {
-      alert('건강지표 타입 불러오기 오류: ' + typeError.message)
-      return
-    }
+    // 고유 날짜 추출 및 정렬
+    const uniqueDates = Array.from(new Set((logsData ?? []).map(l => l.measure_date))).sort();
   
-    // Map: 'target||workout' → type
-    const typeMap = new Map<string, typeof healthmetricTypes[number]>()
-    for (const type of healthmetricTypes) {
-      const key = `${type.metric_target}||${type.metric_type}`
-      typeMap.set(key, type)
-    }
-  
-    const filteredTypes = Array.from(typeMap.values())
-  
-    if (onUpdateLogs) onUpdateLogs(logs ?? [])
-  
-    const uniqueDates = Array.from(new Set((logs ?? []).map(l => l.measure_date))).sort()
-  
-    // Map for ordering
-    const orderMap = new Map<string, { order_target: number; order_type: number }>()
-    for (const type of filteredTypes) {
+    // orderMap 생성 (상위에서 받은 allTypes 사용)
+    const orderMap = new Map<string, { order_target: number; order_type: number }>();
+    for (const type of allTypes) {
       orderMap.set(`${type.metric_target}||${type.metric_type}`, {
-        order_target: type.order_target,
-        order_type: type.order_type
-      })
+        order_target: type.order_target ?? 999,
+        order_type: type.order_type ?? 999,
+      });
     }
   
-    // Sort rows by order_target > order_type
-    const sortedRows = filteredTypes.sort((a, b) => {
-      const orderA = orderMap.get(`${a.metric_target}||${a.metric_type}`) || { order_target: 999, order_type: 999 }
-      const orderB = orderMap.get(`${b.metric_target}||${b.metric_type}`) || { order_target: 999, order_type: 999 }
+    // 정렬된 행 생성
+    const sortedRows = allTypes.slice().sort((a, b) => {
+      const orderA = orderMap.get(`${a.metric_target}||${a.metric_type}`) || { order_target: 999, order_type: 999 };
+      const orderB = orderMap.get(`${b.metric_target}||${b.metric_type}`) || { order_target: 999, order_type: 999 };
   
       if (orderA.order_target !== orderB.order_target) {
-        return orderA.order_target - orderB.order_target
+        return orderA.order_target - orderB.order_target;
       }
-      return orderA.order_type - orderB.order_type
-    })
+      return orderA.order_type - orderB.order_type;
+    });
   
-    const newLogMap: typeof logMap = {}
-    for (const l of logs ?? []) {
-      const rowKey = `${l.metric_target}||${l.metric_type}`
-      if (!newLogMap[rowKey]) newLogMap[rowKey] = {}
+    // logMap 생성
+    const newLogMap: Record<string, Record<string, { metric_value: number; id?: number }>> = {};
+    for (const l of logsData ?? []) {
+      const rowKey = `${l.metric_target}||${l.metric_type}`;
+      if (!newLogMap[rowKey]) newLogMap[rowKey] = {};
       newLogMap[rowKey][l.measure_date] = {
         metric_value: l.metric_value,
         id: l.health_id,
-      }
+      };
     }
   
-    setDates(uniqueDates)
-    setRows(sortedRows.map(r => ({
-      metric_target: r.metric_target,
-      metric_type: r.metric_type
-    })))
-    setAllTypes(healthmetricTypes ?? [])
-    setLogMap(newLogMap)
-    setIsEmptyLog((logs ?? []).length === 0)
-  }
+    setDates(uniqueDates);
+    setRows(sortedRows.map(r => ({ metric_target: r.metric_target, metric_type: r.metric_type })));
+    setLogMap(newLogMap);
+    setIsEmptyLog((logsData ?? []).length === 0);
+  };
   
   const startAddingDate = () => {
     if (addingDate !== null) return;
@@ -722,7 +691,7 @@ export default function HealthMetricManager({
             <AddHealthMetric
               open={openAddMetric}
               onOpenChange={setOpenAddMetric}
-              allTypes={allTypes}
+              allTypes={allTypes ?? []}
               newTarget={newTarget}
               newWorkout={newWorkout}
               loading={loadingManage}
