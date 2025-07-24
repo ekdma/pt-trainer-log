@@ -302,7 +302,7 @@ export default function FoodDiaryMemberView({ memberId, memberName }: Props) {
                 onClick={() =>
                   setHydrationLevel((prev) => (prev === index ? index - 1 : index))
                 }
-                className="relative w-20 h-24 cursor-pointer"
+                className="relative w-14 h-16 cursor-pointer"
               >
                 {/* 물 채우기 */}
                 <div

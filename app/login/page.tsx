@@ -20,6 +20,7 @@ export default function LoginPage() {
       .select('*')
       .eq('name', name)
       .eq('birth_date', birthDate)
+      .eq('status', 'active')
       .single()
 
     if (error || !member) {

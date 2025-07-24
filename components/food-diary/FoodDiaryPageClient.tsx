@@ -70,7 +70,11 @@ export default function FoodDiaryPageClient() {
               뒤로
             </Button>
           </div> */}
-          <FoodDiaryMemberView memberId={user.member_id!} memberName={user.nickname || ''} />
+          <FoodDiaryMemberView 
+            memberId={user.member_id!} 
+            memberName={(user.nickname || user.name)!}
+          />
+
         </div>
       </main>
     )

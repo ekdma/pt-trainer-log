@@ -47,7 +47,10 @@ export default function MembersPage() {
   }, [selectedMember])
 
   const fetchMembers = async () => {
-    const { data, error } = await supabase.from('members').select('*')
+    const { data, error } = await supabase
+      .from('members')
+      .select('*')
+      .eq('status', 'active');
     if (!error) setFilteredMembers(data ?? [])
     else console.error('패키지 불러오기 실패:', error.message)
   }
@@ -65,6 +68,7 @@ export default function MembersPage() {
     const { data, error } = await supabase
       .from('members')
       .select('*')
+      .eq('status', 'active')
       .ilike('name', `%${trimmedKeyword}%`);
   
     if (error) {

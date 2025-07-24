@@ -46,7 +46,7 @@ export default function MemberSearch({
 }) {
   // const router = useRouter()  
   const [supabase, setSupabase] = useState<SupabaseClient | null>(null)
-  const filteredMembers = useMemo(() => members, [members]);
+  // const filteredMembers = useMemo(() => members, [members]);
   const [registrationCountMap, setRegistrationCountMap] = useState<{ [memberId: number]: number }>({});
 
   const [showSessionList, setShowSessionList] = useState(false);
@@ -73,11 +73,23 @@ export default function MemberSearch({
     setSupabase(getSupabaseClient())
   }, [])
 
+  const [internalMembers, setInternalMembers] = useState<Member[]>(members);
+
+  useEffect(() => {
+    setInternalMembers(members); // 외부 props가 바뀔 때 반영
+  }, [members]);
+  
+
   const fetchMembers = async () => {
     if (!supabase) return
-    const { data, error } = await supabase.from('members').select('*')
-    if (!error && data) {
-      // setFilteredMembers(data);
+    // const { data, error } = await supabase.from('members').select('*')
+    const { data, error } = await supabase
+      .from('members')
+      .select('*')
+      .eq('status', 'active');
+
+      if (!error && data) {
+      setInternalMembers(data);
       fetchSessionProgress(data); 
       // fetchRegistrationCounts(data); 
       fetchMemberPackageData(data); 
@@ -126,7 +138,12 @@ export default function MemberSearch({
     const confirmDelete = confirm('정말로 이 회원을 삭제하시겠습니까?');
     if (!confirmDelete) return;
   
-    const { error } = await supabase.from('members').delete().eq('member_id', memberId);
+    // const { error } = await supabase.from('members').delete().eq('member_id', memberId);
+    const { error } = await supabase
+      .from('members')
+      .update({ status: 'delete' })
+      .eq('member_id', memberId);
+
     if (error) {
       alert('회원 삭제 중 문제가 발생했어요 😥');
       return;
@@ -317,6 +334,7 @@ export default function MemberSearch({
     setSessionDates(sessionDatesMap);  // 날짜 정보
   };
   
+  const filteredMembers = useMemo(() => internalMembers, [internalMembers]);
   const sortedMembers = [...filteredMembers].sort((a, b) => {
     // // 1. 역할 우선순위: TRAINER 먼저
     // if (a.role !== b.role) {

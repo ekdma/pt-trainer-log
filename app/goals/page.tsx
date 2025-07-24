@@ -87,7 +87,10 @@ export default function GoalsPage() {
 
   // 트레이너: 회원 목록 조회
   const fetchAllMembers = async () => {
-    const { data, error } = await supabase.from('members').select('*')
+    const { data, error } = await supabase
+      .from('members')
+      .select('*')
+      .eq('status', 'active')
     if (!error && data) setMembers(data)
   }
 

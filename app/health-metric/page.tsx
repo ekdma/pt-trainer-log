@@ -36,7 +36,10 @@ export default function MembersHealthPage() {
   }, [])
 
   const fetchAllMembers = async () => {
-    const { data, error } = await supabase.from('members').select('*')
+    const { data, error } = await supabase
+      .from('members')
+      .select('*')
+      .eq('status', 'active')
     if (!error && data) setMembers(data)
   }
 

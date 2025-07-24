@@ -30,6 +30,7 @@ export default function Home() {
       .select('*')
       .eq('nickname', name)
       .eq('role', role)
+      .eq('status', 'active')
       .single()
   
     let loginBy = 'nickname'
@@ -41,6 +42,7 @@ export default function Home() {
         .select('*')
         .eq('name', name)
         .eq('role', role)
+        .eq('status', 'active')
         .single()
   
       member = res.data

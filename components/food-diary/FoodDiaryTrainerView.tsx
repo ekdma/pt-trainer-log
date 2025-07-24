@@ -54,7 +54,10 @@ export default function FoodDiaryTrainerView({ initialSelectedMember = null }: F
   }
 
   const fetchMembers = async () => {
-    const { data } = await supabase.from('members').select('*')
+    const { data } = await supabase
+      .from('members')
+      .select('*')
+      .eq('status', 'active')
     setMembers(data || [])
   }
 
