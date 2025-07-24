@@ -41,6 +41,12 @@ export default function AddWorkout({
   handleDeleteType,
   loadingManage,
 }: AddWorkoutProps) {
+  const handleAdd = async () => {
+    await handleAddType();    // 저장 함수 호출
+    // router.refresh(); // page.tsx가 서버에서 다시 fetch
+    // window.location.reload()
+    onOpenChange(false); // 모달 닫기 선택사항
+  }
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="max-w-2xl p-6">
@@ -97,7 +103,7 @@ export default function AddWorkout({
               추가
             </button> */}
             <Button
-              onClick={handleAddType}
+              onClick={handleAdd}
               disabled={loadingManage}
               variant="darkGray" 
               className="text-sm"

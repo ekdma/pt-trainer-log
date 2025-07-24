@@ -16,6 +16,7 @@ interface HealthMetricManagerProps {
   allTypes: HealthMetricType[]
   onClose?: () => void
   onUpdateLogs?: (updatedLogs: HealthMetric[]) => void
+  onRefreshAllTypes?: () => void
 }
 
 type InsertLog = {
@@ -35,6 +36,7 @@ export default function HealthMetricManager({
   member,
   allTypes, 
   onUpdateLogs,
+  onRefreshAllTypes,
 }: HealthMetricManagerProps) {
   const [isTrainer, setIsTrainer] = useState(false)
 
@@ -58,7 +60,8 @@ export default function HealthMetricManager({
   //   { health_metric_type_id: number; metric_target: string; metric_type: string; order_target: number; order_type: number }[]
   // >([])
   const inputRefs = useRef<Record<string, HTMLInputElement | null>>({}); 
-  
+  const [localAllTypes, setLocalAllTypes] = useState<HealthMetricType[]>(allTypes ?? [])
+
   const [yy, mm, dd] = today.split('-'); // year = "2025", month = "06", day = "20"
 
   const [year, setYear] = useState(yy.slice(2)); // "25"
@@ -70,9 +73,21 @@ export default function HealthMetricManager({
   const dateInputRef = useRef<HTMLInputElement | null>(null);
   const [openAddMetric, setOpenAddMetric] = React.useState(false)
 
+  // useEffect(() => {
+  //   fetchLogs();
+  // }, [member.member_id, allTypes]);
+  // 처음 allTypes 값으로 localAllTypes 초기화
   useEffect(() => {
-    fetchLogs();
-  }, [member.member_id, allTypes]);
+    setLocalAllTypes(allTypes ?? [])
+  }, [allTypes])
+
+  // localAllTypes가 준비되었을 때만 fetchLogs 실행
+  useEffect(() => {
+    if (member.member_id && localAllTypes.length > 0) {
+      fetchLogs(localAllTypes)
+    }
+  }, [member.member_id, localAllTypes])
+
 
   useEffect(() => {
     try {
@@ -85,6 +100,12 @@ export default function HealthMetricManager({
       console.error('Failed to read login info:', e)
     }
   }, [])
+
+  useEffect(() => {
+    if (openAddMetric) {
+      fetchAllTypes()
+    }
+  }, [openAddMetric])
 
   const isDateWithinLast7Days = (dateStr: string): boolean => {
     const inputDate = new Date(dateStr)
@@ -100,7 +121,7 @@ export default function HealthMetricManager({
     return inputDate >= sevenDaysAgo && inputDate <= today
   }
 
-  const fetchLogs = async () => {
+  const fetchLogs = async (typesOverride?: HealthMetricType[]) => {
     const { data: logsData, error: logError } = await supabase
       .from('health_metrics')
       .select('*')
@@ -112,13 +133,14 @@ export default function HealthMetricManager({
     }
   
     if (onUpdateLogs) onUpdateLogs(logsData ?? []);
+    const typeList = typesOverride ?? localAllTypes
   
     // 고유 날짜 추출 및 정렬
-    const uniqueDates = Array.from(new Set((logsData ?? []).map(l => l.measure_date))).sort();
+    // const uniqueDates = Array.from(new Set((logsData ?? []).map(l => l.measure_date))).sort();
   
     // orderMap 생성 (상위에서 받은 allTypes 사용)
     const orderMap = new Map<string, { order_target: number; order_type: number }>();
-    for (const type of allTypes) {
+    for (const type of typeList) { // allTypes
       orderMap.set(`${type.metric_target}||${type.metric_type}`, {
         order_target: type.order_target ?? 999,
         order_type: type.order_type ?? 999,
@@ -126,7 +148,8 @@ export default function HealthMetricManager({
     }
   
     // 정렬된 행 생성
-    const sortedRows = allTypes.slice().sort((a, b) => {
+    // const sortedRows = allTypes.slice().sort((a, b) => {
+    const sortedRows = typeList.slice().sort((a, b) => {
       const orderA = orderMap.get(`${a.metric_target}||${a.metric_type}`) || { order_target: 999, order_type: 999 };
       const orderB = orderMap.get(`${b.metric_target}||${b.metric_type}`) || { order_target: 999, order_type: 999 };
   
@@ -147,11 +170,27 @@ export default function HealthMetricManager({
       };
     }
   
-    setDates(uniqueDates);
-    setRows(sortedRows.map(r => ({ metric_target: r.metric_target, metric_type: r.metric_type })));
-    setLogMap(newLogMap);
-    setIsEmptyLog((logsData ?? []).length === 0);
+    setDates([...new Set(logsData?.map(l => l.measure_date) ?? [])].sort())
+    setRows(sortedRows.map(r => ({ metric_target: r.metric_target, metric_type: r.metric_type })))
+    setLogMap(newLogMap)
+    setIsEmptyLog((logsData ?? []).length === 0)
   };
+
+  const fetchAllTypes = async () => {
+    const { data, error } = await supabase
+      .from('health_metric_types')
+      .select('health_metric_type_id, metric_target, metric_type, order_target, order_type')
+      .order('order_target', { ascending: true })
+      .order('order_type', { ascending: true })
+  
+    if (error) {
+      console.error('지표 유형 불러오기 실패:', error)
+      return
+    }
+  
+    setLocalAllTypes(data ?? [])
+    return data ?? []  
+  }
   
   const startAddingDate = () => {
     if (addingDate !== null) return;
@@ -341,9 +380,13 @@ export default function HealthMetricManager({
       setNewTarget('')
       setNewWorkout('')
       // setNewLevel('')
-      fetchLogs()
+      const newTypes = await fetchAllTypes() // ✅ 최신 데이터 받아옴
+      await fetchLogs(newTypes)  
+      if (onRefreshAllTypes) {
+        await onRefreshAllTypes()
+      } 
     }
-  
+    
     setLoadingManage(false)
   }
   
@@ -359,7 +402,11 @@ export default function HealthMetricManager({
     if (error) alert('삭제 실패: ' + error.message)
     else {
       alert('건강지표 삭제를 완료하였습니다 😊')
+      await fetchAllTypes()
       fetchLogs()
+      if (onRefreshAllTypes) {
+        await onRefreshAllTypes()
+      }
     }
   }
     
@@ -630,13 +677,15 @@ export default function HealthMetricManager({
           )}          
 
           <div className="mt-6 flex flex-wrap justify-end gap-2 sm:gap-3">
-            <button 
-              onClick={() => setOpenAddMetric(true)}
-              className="h-9 px-4 text-sm flex items-center gap-1.5 text-gray-600 border-gray-500 hover:bg-gray-100"
-            >
-              + 지표추가
-            </button>
-
+            {isTrainer && (
+              <button 
+                onClick={() => setOpenAddMetric(true)}
+                className="h-9 px-4 text-sm flex items-center gap-1.5 text-gray-600 border-gray-500 hover:bg-gray-100"
+              >
+                + 지표추가
+              </button>
+            )}
+            
             {/* 날짜 추가 */}
             {addingDate === null && !addingRow && (
               <button
@@ -691,7 +740,7 @@ export default function HealthMetricManager({
             <AddHealthMetric
               open={openAddMetric}
               onOpenChange={setOpenAddMetric}
-              allTypes={allTypes ?? []}
+              allTypes={localAllTypes}
               newTarget={newTarget}
               newWorkout={newWorkout}
               loading={loadingManage}

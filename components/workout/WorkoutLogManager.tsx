@@ -9,25 +9,7 @@ import { useHorizontalDragScroll } from '@/utils/useHorizontalDragScroll';
 import { FaStar, FaRegStar } from 'react-icons/fa';
 import AddWorkout from '@/components/workout/AddWorkout'
 import { Button } from '@/components/ui/button'
-import { WorkoutType } from '@/components/members/types'
-
-type Member = {
-  member_id: number
-  name: string
-  level: string
-  before_level: string
-  modified_dt: string
-}
-
-type WorkoutRecord = {
-  workout_id: number
-  member_id: number
-  target: string
-  workout: string
-  reps: number
-  weight: number
-  workout_date: string
-}
+import { Member, WorkoutRecord, WorkoutType } from '@/components/members/types'
 
 interface WorkoutLogManagerProps {
   member: Member
@@ -39,7 +21,8 @@ interface WorkoutLogManagerProps {
   setFavorites?: React.Dispatch<React.SetStateAction<Set<string>>>
   favoritesWithOrder?: { key: string; order: number }[] 
   onFavoritesChange?: () => void
-  allTypes: WorkoutType[];
+  allTypes: WorkoutType[]
+  onRefreshAllTypes?: () => void
 }
 
 type InsertLog = {
@@ -64,7 +47,8 @@ export default function WorkoutLogManager({
   favoritesWithOrder = [], 
   setFavorites = () => {},
   onFavoritesChange,
-  allTypes
+  allTypes,
+  onRefreshAllTypes,
 }: WorkoutLogManagerProps) {
   const [isTrainer, setIsTrainer] = useState(false)
 
@@ -89,6 +73,7 @@ export default function WorkoutLogManager({
   //   { workout_type_id: number; target: string; workout: string; level: string; order_target: number; order_workout: number }[]
   // >([])
   const inputRefs = useRef<Record<string, HTMLInputElement | null>>({}); 
+  const [localAllTypes, setLocalAllTypes] = useState<WorkoutType[]>([])
 
   const [yy, mm, dd] = today.split('-'); // year = "2025", month = "06", day = "20"
 
@@ -198,6 +183,10 @@ export default function WorkoutLogManager({
     }
   }, [])
   
+  useEffect(() => {
+    setLocalAllTypes(allTypes)
+  }, [allTypes])
+
   // const displayedRows = showFavoritesOnly
   //   ? rows.filter(({ target, workout }) =>
   //       favorites.has(`${target}||${workout}`)
@@ -305,7 +294,8 @@ export default function WorkoutLogManager({
     const myLevelNumber = parseInt(member.level?.replace(/\D/g, '') ?? '') || 999
   
     // 1. 내 레벨 이하인 모든 항목만 추출
-    const withinMyLevel = allTypes.filter(t => {
+    // const withinMyLevel = allTypes.filter(t => {
+    const withinMyLevel = localAllTypes.filter(t => {
       const levelNum = parseInt(t.level?.replace(/\D/g, '') ?? '') || 999
       return levelNum <= myLevelNumber
     })
@@ -357,7 +347,8 @@ export default function WorkoutLogManager({
         level: r.level ?? '',
       }))
     )
-  }, [allTypes, member.level])
+  // }, [allTypes, member.level])
+  }, [localAllTypes, member.level])
 
   const isDateWithinLast7Days = (dateStr: string): boolean => {
     const inputDate = new Date(dateStr)
@@ -568,8 +559,16 @@ export default function WorkoutLogManager({
       setNewWorkout('')
       setNewLevel('')
       
-      // NOTE: 이 시점에서 allTypes는 갱신되지 않음
-      // 상위 컴포넌트에서 allTypes를 refetch하거나 prop을 다시 내려주도록 구성 필요
+      const { data: updatedTypes, error: fetchError } = await supabase
+        .from('workout_types')
+        .select('*')
+
+      if (!fetchError && updatedTypes) {
+        setLocalAllTypes(updatedTypes)
+      }
+      if (onRefreshAllTypes) {
+        await onRefreshAllTypes()
+      } 
       if (onFavoritesChange) onFavoritesChange()  // 예: 부모에서 refetch 트리거
     }
   
@@ -588,7 +587,18 @@ export default function WorkoutLogManager({
     if (error) alert('삭제 실패: ' + error.message)
     else {
       alert('운동 삭제를 완료하였습니다 😊')
+      const { data: updatedTypes, error: fetchError } = await supabase
+        .from('workout_types')
+        .select('*')
+
+      if (!fetchError && updatedTypes) {
+        setLocalAllTypes(updatedTypes)
+      }
+
       fetchLogs()
+      if (onRefreshAllTypes) {
+        await onRefreshAllTypes()
+      } 
     }
   }
   
@@ -935,12 +945,14 @@ export default function WorkoutLogManager({
         )}          
 
         <div className="mt-6 flex flex-wrap justify-end gap-2 sm:gap-3">
-          <button 
-            onClick={() => setIsAddWorkoutOpen(true)}
-            className="h-9 px-4 text-sm flex items-center gap-1.5 text-gray-600 border-gray-500 hover:bg-gray-100"
-          >
-            + 운동추가
-          </button>
+          {isTrainer && (
+            <button 
+              onClick={() => setIsAddWorkoutOpen(true)}
+              className="h-9 px-4 text-sm flex items-center gap-1.5 text-gray-600 border-gray-500 hover:bg-gray-100"
+            >
+              + 운동추가
+            </button>
+          )}
 
           {/* 날짜 추가 */}
           {addingDate === null && !addingRow && (

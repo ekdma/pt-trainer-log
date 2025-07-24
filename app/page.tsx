@@ -19,6 +19,8 @@ export default function Home() {
   const handleLogin = async () => {
     setError('')
   
+    const inputName = name.trim().toLowerCase()
+
     if (role === 'trainer' && adminCode !== ADMIN_CODE) {
       setError('관리자 코드를 올바르게 입력해주세요 😁')
       return
@@ -28,7 +30,7 @@ export default function Home() {
     let { data: member, error } = await supabase
       .from('members')
       .select('*')
-      .eq('nickname', name)
+      .ilike('nickname', inputName)
       .eq('role', role)
       .eq('status', 'active')
       .single()
@@ -40,7 +42,7 @@ export default function Home() {
       const res = await supabase
         .from('members')
         .select('*')
-        .eq('name', name)
+        .ilike('name', inputName)
         .eq('role', role)
         .eq('status', 'active')
         .single()

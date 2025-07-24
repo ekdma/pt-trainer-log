@@ -176,7 +176,7 @@ export default function OrderHealthMetricModal({ allTypes, isOpen, onClose, onRe
           <button
             onClick={() => setActiveTab("metric_target")}
             className={`px-3 py-2 rounded text-sm ${
-              activeTab === "metric_target" ? "bg-indigo-500 text-white" : "bg-gray-100 text-gray-700"
+              activeTab === "metric_target" ? "bg-gray-500 text-white" : "bg-gray-100 text-gray-700"
             }`}
           >
             Target 순서
@@ -184,7 +184,7 @@ export default function OrderHealthMetricModal({ allTypes, isOpen, onClose, onRe
           <button
             onClick={() => setActiveTab("metric_type")}
             className={`px-3 py-2 rounded text-sm ${
-              activeTab === "metric_type" ? "bg-indigo-500 text-white" : "bg-gray-100 text-gray-700"
+              activeTab === "metric_type" ? "bg-gray-500 text-white" : "bg-gray-100 text-gray-700"
             }`}
           >
             Health Metric 순서
@@ -223,21 +223,20 @@ export default function OrderHealthMetricModal({ allTypes, isOpen, onClose, onRe
         </DndContext>
 
         <div className="flex justify-end space-x-2 pt-2">
+          <Button 
+            variant="ghost"
+            className="text-sm"
+            onClick={onClose}
+          >
+            닫기
+          </Button>
           <Button
             onClick={handleSave}
             disabled={loading}
-            variant="outline"
-            className="px-4 py-2 rounded bg-indigo-600 text-white hover:bg-indigo-700 text-sm"
+            variant="darkGray" 
+            className="text-sm"
           >
-            {loading ? "저장 중..." : "저장"}
-          </Button>
-          <Button
-            onClick={onClose}
-            type="button"
-            variant="outline"
-            className="px-4 py-2 text-sm"
-          >
-            닫기
+            {loading ? '저장 중...' : '저장'}
           </Button>
         </div>
       </div>

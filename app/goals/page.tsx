@@ -438,7 +438,7 @@ export default function GoalsPage() {
                   
                 <div className="flex items-center gap-2">
                   <span className="text-gray-400 text-lg">•</span>
-                  <span>근육량</span>
+                  <span>매달 근육량</span>
                   <input
                     type="number"
                     value={muscleGain}
@@ -462,7 +462,7 @@ export default function GoalsPage() {
                 </div>
                 <div className="flex items-center gap-2">
                   <span className="text-gray-400 text-lg">•</span>
-                  <span>체지방량</span>
+                  <span>매달 체지방량</span>
                   <input
                     type="number"
                     value={fatLoss}

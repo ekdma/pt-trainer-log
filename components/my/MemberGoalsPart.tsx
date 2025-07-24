@@ -162,8 +162,8 @@ export default function MemberGoalsPart() {
           <div className="bg-white rounded-2xl shadow p-4 border">
             <div className="text-lg font-semibold text-emerald-600 mb-2">📈 체성분 목표</div>
             <ul className="text-sm text-gray-700 list-disc pl-5 space-y-1">
-              <li>근육량 <span className="font-medium">{goals.body.muscle_gain_kg}</span>kg 증량</li>
-              <li>체지방량 <span className="font-medium">{goals.body.fat_loss_kg}</span>kg 감량</li>
+              <li>매달 근육량 <span className="font-medium">{goals.body.muscle_gain_kg}</span>kg 증량</li>
+              <li>매달 체지방량 <span className="font-medium">{goals.body.fat_loss_kg}</span>kg 감량</li>
             </ul>
           </div>
         )}

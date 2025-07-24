@@ -72,9 +72,9 @@ export default function EmptyStomachWeightChart() {
 
   const labels = dataPoints.map((d) => {
     const date = new Date(d.measure_date)
-    const weekday = date.toLocaleDateString('en-US', { weekday: 'short' })
-    const day = date.toLocaleDateString(undefined, { month: 'numeric', day: 'numeric' }) // ex: 7/23
-    return `${day} (${weekday})`
+    const day = date.toLocaleDateString(undefined, { month: 'numeric', day: 'numeric' }) // ex: 7/26
+    const weekday = date.toLocaleDateString('en-US', { weekday: 'short' }).toUpperCase() // SAT
+    return [`${day}`, `(${weekday})`]  // <- 2줄 배열로 반환
   })
 
   const chartData = {

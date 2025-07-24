@@ -106,13 +106,14 @@ export default function MembersHealthPage() {
           <>
             <div className="flex items-center gap-3 mb-6">
               <h2 className="text-lg font-semibold text-gray-800">건강기록 관리</h2>
-
-              <button
-                onClick={() => setShowGlobalOrderModal(true)}
-                className="flex items-center gap-2 px-3 py-1.5 rounded-full text-sm font-medium transition bg-gray-200 text-gray-800 hover:bg-gray-300"
-              >
-                순서
-              </button>
+              {userRole === 'trainer' && (
+                <button
+                  onClick={() => setShowGlobalOrderModal(true)}
+                  className="flex items-center gap-2 px-3 py-1.5 rounded-full text-sm font-medium transition bg-gray-200 text-gray-800 hover:bg-gray-300"
+                >
+                  순서
+                </button>
+              )}
 
               <OrderHealthMetricModal
                 isOpen={showGlobalOrderModal}
@@ -155,6 +156,7 @@ export default function MembersHealthPage() {
                 logs={healthLogs}
                 allTypes={allTypes}   
                 onUpdateLogs={setHealthLogs}
+                onRefreshAllTypes={fetchAllTypes}
               />
             )}
           </>

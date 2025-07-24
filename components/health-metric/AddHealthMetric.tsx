@@ -2,15 +2,8 @@
 
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog"
 import { Button } from "@/components/ui/button"
-import { useRouter } from 'next/navigation'
+import type { HealthMetricType } from '@/components/members/types'
 
-interface HealthMetricType {
-  health_metric_type_id: number
-  metric_target: string
-  metric_type: string
-  order_target: number
-  order_type: number
-}
 
 interface AddHealthMetricProps {
   open: boolean
@@ -21,7 +14,7 @@ interface AddHealthMetricProps {
   loading: boolean
   onChangeTarget: (val: string) => void
   onChangeWorkout: (val: string) => void
-  onAdd: () => void
+  onAdd: () => Promise<void>
   onDelete: (id: number) => void
 }
 
@@ -37,12 +30,13 @@ export default function AddHealthMetric({
   onAdd,
   onDelete,
 }: AddHealthMetricProps) {
-  const router = useRouter();
-
   const handleAdd = async () => {
-    await onAdd();    // 저장 함수 호출 (서버 저장 로직 포함)
-    router.refresh(); // 저장 후 페이지 새로고침 (data 다시 fetch)
+    await onAdd();    // 저장 함수 호출
+    // router.refresh(); // page.tsx가 서버에서 다시 fetch
+    // window.location.reload()
+    onOpenChange(false); // 모달 닫기 선택사항
   }
+  
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="max-w-xl">

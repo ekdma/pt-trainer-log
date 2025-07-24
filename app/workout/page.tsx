@@ -235,20 +235,22 @@ export default function MembersPage() {
                     </>
                   )}
                 </button>
-
-                <button
-                  onClick={() => {
-                    if (showFavoritesOnly) {
-                      setShowOrderModal(true);  // 👉 OrderWorkout 모달
-                    } else {
-                      setShowGlobalOrderModal(true); // 👉 OrderManagementModal 모달
-                    }
-                  }}
-                  className={`flex items-center gap-2 px-3 py-1.5 rounded-full text-sm font-medium transition 
-                    ${showFavoritesOnly ? 'bg-yellow-200 text-white hover:bg-yellow-400' : 'bg-gray-200 text-gray-800 hover:bg-gray-300'}`}
-                >
-                  순서
-                </button>
+                
+                {userRole === 'trainer' && (       
+                  <button
+                    onClick={() => {
+                      if (showFavoritesOnly) {
+                        setShowOrderModal(true);  // 👉 OrderWorkout 모달
+                      } else {
+                        setShowGlobalOrderModal(true); // 👉 OrderManagementModal 모달
+                      }
+                    }}
+                    className={`flex items-center gap-2 px-3 py-1.5 rounded-full text-sm font-medium transition 
+                      ${showFavoritesOnly ? 'bg-yellow-200 text-white hover:bg-yellow-400' : 'bg-gray-200 text-gray-800 hover:bg-gray-300'}`}
+                  >
+                    순서
+                  </button>
+                )}
 
                 {showOrderModal && selectedMember && (
                   <OrderFavoriteWorkout
@@ -348,6 +350,7 @@ export default function MembersPage() {
                 setFavorites={setFavorites}
                 onFavoritesChange={fetchFavorites}
                 allTypes={allTypes}
+                onRefreshAllTypes={fetchAllTypes}
               />
             )}
           </>
