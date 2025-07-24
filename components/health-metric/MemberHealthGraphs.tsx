@@ -58,7 +58,7 @@ const colorMap: { [key: string]: string } = {
   'Lower Body Strength': '#c0392b',        // 강렬한 빨강 (Weight와 비슷 톤)
 };
 
-const MemberHealthGraphsClient: React.FC<Props> = ({ healthLogs, member, allTypes, onBack }) => {
+const MemberHealthGraphsClient: React.FC<Props> = ({ healthLogs, member, allTypes }) => {
   const [logs, setLogs] = useState<HealthMetric[]>([]);
   const [selectedTarget, setSelectedTarget] = useState<string | null>(null);
   // const [isAddOpen, setIsAddOpen] = useState(false);

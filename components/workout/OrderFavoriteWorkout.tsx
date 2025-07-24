@@ -3,7 +3,7 @@
 import { useEffect, useState } from 'react'
 import { getSupabaseClient } from '@/lib/supabase'
 import { Button } from '@/components/ui/button'
-import { DndContext, closestCenter } from '@dnd-kit/core'
+import { DndContext, closestCenter, DragEndEvent } from '@dnd-kit/core'
 import {
   SortableContext,
   verticalListSortingStrategy,
@@ -44,9 +44,9 @@ export default function OrderFavoriteWorkout({
     fetchData()
   }, [memberId])
 
-  const handleDragEnd = (event: any) => {
+  const handleDragEnd = (event: DragEndEvent) => {
     const { active, over } = event
-    if (active.id !== over.id) {
+    if (over && active.id !== over.id) {
       const oldIndex = items.findIndex((item) => item.id === active.id)
       const newIndex = items.findIndex((item) => item.id === over.id)
       setItems((prev) => arrayMove(prev, oldIndex, newIndex))
