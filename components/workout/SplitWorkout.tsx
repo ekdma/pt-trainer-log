@@ -30,7 +30,7 @@ export default function SplitWorkout({ member, allTypes, onClose }: SplitWorkout
   // ✅ 초기 분할 불러오기
   useEffect(() => {
     const init = async () => {
-      const { data, error } = await supabase
+      const { data } = await supabase
         .from('split_workouts')
         .select('target, workout, split_index, split_name')
         .eq('member_id', member.member_id)

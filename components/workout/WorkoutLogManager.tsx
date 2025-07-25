@@ -153,13 +153,11 @@ export default function WorkoutLogManager({
     })
   
     // 각 주별로 split_index 순환 배정
-    Object.entries(weekGroups).forEach(([weekStart, weekDates]) => {
-      weekDates
-        .sort() // 날짜 순
-        .forEach((date, idx) => {
-          const split = distinctSplits[idx % distinctSplits.length]
-          if (split) newMap[date] = split.split_name
-        })
+    Object.values(weekGroups).forEach((weekDates) => {
+      weekDates.sort().forEach((date, idx) => {
+        const split = distinctSplits[idx % distinctSplits.length]
+        if (split) newMap[date] = split.split_name
+      })
     })
   
     // 추가 중인 날짜도 처리
@@ -978,11 +976,10 @@ export default function WorkoutLogManager({
                       
 
                       return (
-                        // <td 
-                        //   key={date} 
-                        //   className="border px-1 py-1 text-center w-[80px]"
-                        // >
-                        <td className={`border px-1 py-1 text-center w-[80px] ${getSplitColor(date, rowKey)}`}>
+                        <td
+                          key={date}  
+                          className={`border px-1 py-1 text-center w-[80px] ${getSplitColor(date, rowKey)}`}
+                        >
                           <input
                             type="number"
                             className={`
