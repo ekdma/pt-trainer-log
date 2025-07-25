@@ -1,7 +1,7 @@
 'use client'
 
 import { CalendarPlus} from 'lucide-react'
-import React, { useEffect, useState, useRef } from 'react'
+import React, { useMemo, useEffect, useState, useRef } from 'react'
 import { getSupabaseClient } from '@/lib/supabase'
 import dayjs from 'dayjs';
 import { normalizeDateInput, handleKeyNavigation } from '@/utils/inputUtils';
@@ -23,6 +23,12 @@ interface WorkoutLogManagerProps {
   onFavoritesChange?: () => void
   allTypes: WorkoutType[]
   onRefreshAllTypes?: () => void
+  splitWorkouts: {
+    target: string
+    workout: string
+    split_name: string
+    split_index: number
+  }[]
 }
 
 type InsertLog = {
@@ -49,6 +55,7 @@ export default function WorkoutLogManager({
   onFavoritesChange,
   allTypes,
   onRefreshAllTypes,
+  splitWorkouts,
 }: WorkoutLogManagerProps) {
   const [isTrainer, setIsTrainer] = useState(false)
 
@@ -94,7 +101,97 @@ export default function WorkoutLogManager({
   const headerRefs = useRef<Record<string, HTMLTableCellElement | null>>({});
   const longPressTimeout = useRef<NodeJS.Timeout | null>(null);
   const [isAddWorkoutOpen, setIsAddWorkoutOpen] = React.useState(false)
+  // const [splitWorkouts, setSplitWorkouts] = useState<{ target: String, workout: String, split_name: string, split_index: number }[]>([])
+
+  // useEffect(() => {
+  //   const fetchSplitWorkouts = async () => {
+  //     const { data, error } = await supabase
+  //       .from('split_workouts')
+  //       .select('*')
+  //       .eq('member_id', member.member_id)
+  //       .order('split_index', { ascending: true })
+  //     if (!error) setSplitWorkouts(data ?? [])
+  //   }
+
+  //   fetchSplitWorkouts()
+  // }, [])
+
+  const distinctSplitList = useMemo(() => {
+    const seen = new Set<number>()
+    return splitWorkouts
+      .filter(w => {
+        if (seen.has(w.split_index)) return false
+        seen.add(w.split_index)
+        return true
+      })
+      .sort((a, b) => a.split_index - b.split_index)
+      .map(w => ({ split_index: w.split_index, split_name: w.split_name }))
+  }, [splitWorkouts])
   
+  const getWeekStart = (dateStr: string) => {
+    const date = new Date(dateStr)
+    const day = date.getDay()
+    const diff = date.getDate() - day + (day === 0 ? -6 : 1) // 월요일 시작
+    const monday = new Date(date.setDate(diff))
+    return monday.toISOString().slice(0, 10) // 'YYYY-MM-DD' 형태
+  }
+  
+  const [dateToSplitName, setDateToSplitName] = useState<{ [date: string]: string }>({})
+
+  useEffect(() => {
+    if (!splitWorkouts.length || !dates.length) return;
+  
+    const newMap: Record<string, string> = {}
+    const distinctSplits = distinctSplitList
+  
+    // 주별로 날짜를 그룹화
+    const weekGroups: Record<string, string[]> = {}
+    dates.forEach(date => {
+      const weekStart = getWeekStart(date)
+      if (!weekGroups[weekStart]) weekGroups[weekStart] = []
+      weekGroups[weekStart].push(date)
+    })
+  
+    // 각 주별로 split_index 순환 배정
+    Object.entries(weekGroups).forEach(([weekStart, weekDates]) => {
+      weekDates
+        .sort() // 날짜 순
+        .forEach((date, idx) => {
+          const split = distinctSplits[idx % distinctSplits.length]
+          if (split) newMap[date] = split.split_name
+        })
+    })
+  
+    // 추가 중인 날짜도 처리
+    if (addingDate) {
+      const weekStart = getWeekStart(addingDate)
+      const countThisWeek = weekGroups[weekStart]?.length ?? 0
+      const split = distinctSplits[countThisWeek % distinctSplits.length]
+      if (split) newMap[addingDate] = split.split_name
+    }
+  
+    setDateToSplitName(newMap)
+  }, [splitWorkouts, dates, addingDate, distinctSplitList])
+  
+  const splitNameToWorkouts = useMemo(() => {
+    const mapping: Record<string, Set<string>> = {}
+    for (const split of splitWorkouts) {
+      const key = `${split.target}||${split.workout}`
+      if (!mapping[split.split_name]) {
+        mapping[split.split_name] = new Set()
+      }
+      mapping[split.split_name].add(key)
+    }
+    return mapping
+  }, [splitWorkouts])
+  
+  const getSplitColor = (date: string, rowKey: string) => {
+    const splitName = dateToSplitName[date]
+    if (!splitName) return ''
+    const isMatch = splitNameToWorkouts[splitName]?.has(rowKey)
+    return isMatch ? 'bg-purple-100' : ''
+  }
+
   const handleLongPressStart = (e: React.TouchEvent | React.MouseEvent, date: string) => {
     const target = headerRefs.current[date];
     if (!target) return;
@@ -687,98 +784,126 @@ export default function WorkoutLogManager({
                       border px-1 py-1 text-center text-xs font-semibold md:sticky top-0 bg-gray-100 z-10 w-[80px] whitespace-nowrap overflow-hidden text-ellipsis
                       ${ptSessionDates.has(date) ? 'bg-red-100' : ''}
                     `}
+                  >
+                    <div className="text-xs font-semibold truncate">{dayjs(date).format('YY.MM.DD')}</div>
+                    <select
+                      value={dateToSplitName[date] ?? ''}
+                      onChange={(e) => {
+                        setDateToSplitName(prev => ({ ...prev, [date]: e.target.value }))
+                      }}
+                      className="text-xs mt-1 text-center rounded border border-gray-300 w-full bg-white"
                     >
-                    {dayjs(date).format('YY.MM.DD')}
+                      {distinctSplitList.map(({ split_index, split_name }) => (
+                        <option key={split_index} value={split_name}>
+                          {split_name}
+                        </option>
+                      ))}
+                    </select>
                   </th>
                 ))}
 
                 {/* 추가 날짜 입력 열 */}
                 {addingDate !== null && (
                   <th className="border px-1 py-1 text-center text-xs font-semibold md:sticky top-0 bg-yellow-50 z-10 w-[100px]">
-                    <div className="flex gap-[2px]">
-                      <input
-                        ref={yearRef}
-                        type="text"
-                        value={year}
-                        onChange={(e) => setYear(e.target.value)}
-                        onKeyDown={(e) => {
-                          if (e.key === 'Tab' && !e.shiftKey) {
-                            e.preventDefault();
-                            monthRef.current?.focus();
-                            monthRef.current?.select();
-                          }
-                        }}
-                        className="w-[20px] text-center border rounded text-[12px]"
-                        placeholder="yy"
-                        maxLength={2}
-                      />
-                      .
-                      <input
-                        ref={monthRef}
-                        type="text"
-                        value={month}
-                        onChange={(e) => setMonth(e.target.value)}
-                        onKeyDown={(e) => {
-                          if (e.key === 'Tab' && !e.shiftKey) {
-                            e.preventDefault();
-                            dayRef.current?.focus();
-                            dayRef.current?.select();
-                          }
-                        }}
-                        className="w-[20px] text-center border rounded text-[12px]"
-                        placeholder="mm"
-                        maxLength={2}
-                      />
-                      .
-                      <input
-                        ref={dayRef}
-                        type="text"
-                        value={day}
-                        onChange={(e) => setDay(e.target.value)}
-                        onKeyDown={(e) => {
-                          if (e.key === 'Enter' || e.key === 'Tab') {
-                            e.preventDefault();
-                            const fullDate = `${year}.${month}.${day}`;
-                            const normalized = normalizeDateInput(fullDate);
-                            if (normalized) {
-                              if (!isTrainer && !isDateWithinLast7Days(normalized)) {
-                                alert('7일 이내의 날짜만 추가할 수 있습니다 😥');
-                                return;
-                              }
-                            
-                              if (dates.includes(normalized)) {
-                                alert(`이미 존재하는 날짜입니다: ${normalized} ☹`);
-                                return;
-                              }
-                            
-                              setAddingDate(normalized);
-                        
-                              // focus 다음 weight 입력칸으로 이동
-                              setTimeout(() => {
-                                const colIndex = dates.length; // 신규 열은 마지막 index
-                                let targetRow = 0;
-                        
-                                while (
-                                  targetRow < rows.length &&
-                                  inputRefs.current[`${targetRow}-${colIndex}`]?.disabled
-                                ) {
-                                  targetRow += 1;
-                                }
-                        
-                                const nextInput = inputRefs.current[`${targetRow}-${colIndex}`];
-                                if (nextInput && !nextInput.disabled) {
-                                  nextInput.focus();
-                                  nextInput.select?.();
-                                }
-                              }, 50);
+                    <div className="flex flex-col items-center gap-1">
+                      <div className="flex gap-[2px]">
+                        <input
+                          ref={yearRef}
+                          type="text"
+                          value={year}
+                          onChange={(e) => setYear(e.target.value)}
+                          onKeyDown={(e) => {
+                            if (e.key === 'Tab' && !e.shiftKey) {
+                              e.preventDefault();
+                              monthRef.current?.focus();
+                              monthRef.current?.select();
                             }
-                          }
+                          }}
+                          className="w-[20px] text-center border rounded text-[12px]"
+                          placeholder="yy"
+                          maxLength={2}
+                        />
+                        .
+                        <input
+                          ref={monthRef}
+                          type="text"
+                          value={month}
+                          onChange={(e) => setMonth(e.target.value)}
+                          onKeyDown={(e) => {
+                            if (e.key === 'Tab' && !e.shiftKey) {
+                              e.preventDefault();
+                              dayRef.current?.focus();
+                              dayRef.current?.select();
+                            }
+                          }}
+                          className="w-[20px] text-center border rounded text-[12px]"
+                          placeholder="mm"
+                          maxLength={2}
+                        />
+                        .
+                        <input
+                          ref={dayRef}
+                          type="text"
+                          value={day}
+                          onChange={(e) => setDay(e.target.value)}
+                          onKeyDown={(e) => {
+                            if (e.key === 'Enter' || e.key === 'Tab') {
+                              e.preventDefault();
+                              const fullDate = `${year}.${month}.${day}`;
+                              const normalized = normalizeDateInput(fullDate);
+                              if (normalized) {
+                                if (!isTrainer && !isDateWithinLast7Days(normalized)) {
+                                  alert('7일 이내의 날짜만 추가할 수 있습니다 😥');
+                                  return;
+                                }
+                              
+                                if (dates.includes(normalized)) {
+                                  alert(`이미 존재하는 날짜입니다: ${normalized} ☹`);
+                                  return;
+                                }
+                              
+                                setAddingDate(normalized);
+                          
+                                // focus 다음 weight 입력칸으로 이동
+                                setTimeout(() => {
+                                  const colIndex = dates.length; // 신규 열은 마지막 index
+                                  let targetRow = 0;
+                          
+                                  while (
+                                    targetRow < rows.length &&
+                                    inputRefs.current[`${targetRow}-${colIndex}`]?.disabled
+                                  ) {
+                                    targetRow += 1;
+                                  }
+                          
+                                  const nextInput = inputRefs.current[`${targetRow}-${colIndex}`];
+                                  if (nextInput && !nextInput.disabled) {
+                                    nextInput.focus();
+                                    nextInput.select?.();
+                                  }
+                                }, 50);
+                              }
+                            }
+                          }}
+                          
+                          className="w-[20px] text-center border rounded text-[12px]"
+                          placeholder="dd"
+                          maxLength={2}
+                        />
+                      </div>
+                      <select
+                        value={dateToSplitName[addingDate] ?? ''}
+                        onChange={(e) => {
+                          setDateToSplitName(prev => ({ ...prev, [addingDate]: e.target.value }))
                         }}
-                        
-                        className="w-[20px] text-center border rounded text-[12px]"
-                        placeholder="dd"
-                        maxLength={2}
-                      />
+                        className="text-xs w-[70px] text-center border border-gray-300 rounded"
+                      >
+                        {distinctSplitList.map(({ split_index, split_name }) => (
+                          <option key={split_index} value={split_name}>
+                            {split_name}
+                          </option>
+                        ))}
+                      </select>
                     </div>
                   </th>
                 )}
@@ -853,10 +978,11 @@ export default function WorkoutLogManager({
                       
 
                       return (
-                        <td 
-                          key={date} 
-                          className="border px-1 py-1 text-center w-[80px]"
-                        >
+                        // <td 
+                        //   key={date} 
+                        //   className="border px-1 py-1 text-center w-[80px]"
+                        // >
+                        <td className={`border px-1 py-1 text-center w-[80px] ${getSplitColor(date, rowKey)}`}>
                           <input
                             type="number"
                             className={`
@@ -904,9 +1030,10 @@ export default function WorkoutLogManager({
                       );
 
                       const isDisabled = isPtSessionOccupied || isLevelRestricted;
-
+                      const splitColorClass = getSplitColor(addingDate, rowKey);
                       return (
-                        <td className="border px-1 py-1 text-center bg-yellow-50 w-[80px]">
+                        // <td className="border px-1 py-1 text-center bg-yellow-50 w-[80px]">
+                        <td className={`border px-1 py-1 text-center w-[80px] ${splitColorClass}`}>
                           <input
                             type="number"
                             min={0}

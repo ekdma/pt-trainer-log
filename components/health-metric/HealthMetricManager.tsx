@@ -413,6 +413,21 @@ export default function HealthMetricManager({
   const scrollRef = useRef<HTMLDivElement>(null);
   useHorizontalDragScroll(scrollRef);
 
+  useEffect(() => {
+    if (dates.length === 0) return;
+    
+    const timeout = setTimeout(() => {
+      if (scrollRef.current) {
+        scrollRef.current.scrollTo({
+          left: scrollRef.current.scrollWidth,
+          behavior: 'smooth',
+        });
+      }
+    }, 50);
+  
+    return () => clearTimeout(timeout);
+  }, [dates]);
+  
   // 열 추가시 오른쪽 끝으로 자동 스크롤
   useEffect(() => {
     if (addingDate && scrollRef.current) {
@@ -540,7 +555,11 @@ export default function HealthMetricManager({
                                   alert('7일 이내의 날짜만 추가할 수 있습니다 😥');
                                   return;
                                 }
-                                if (dates.includes(normalized)) {
+                                // if (dates.includes(normalized)) {
+                                //   alert(`이미 존재하는 날짜입니다: ${normalized} ☹`);
+                                //   return;
+                                // }
+                                if (dates.some(date => dayjs(date).format('YYYY-MM-DD') === normalized)) {
                                   alert(`이미 존재하는 날짜입니다: ${normalized} ☹`);
                                   return;
                                 }

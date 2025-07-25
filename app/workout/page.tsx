@@ -6,6 +6,7 @@ import Header from '@/components/layout/Header'
 import TrainerHeader from '@/components/layout/TrainerHeader'
 import MemberGraphs from '@/components/workout/MemberGraphs'
 import WorkoutLogManager from '@/components/workout/WorkoutLogManager'
+import SplitWorkout from '@/components/workout/SplitWorkout'
 import OrderFavoriteWorkout from '@/components/workout/OrderFavoriteWorkout'
 import OrderManagementModal from '@/components/workout/OrderManagementModal'
 import type { Member, WorkoutRecord, WorkoutType } from '@/components/members/types'
@@ -23,6 +24,7 @@ export default function MembersPage() {
   const [selectedMember, setSelectedMember] = useState<Member | null>(null)
 
   const [workoutLogs, setWorkoutLogs] = useState<WorkoutRecord[]>([])
+  const [splitWorkouts, setSplitWorkouts] = useState<{ target: string, workout: string, split_name: string, split_index: number }[]>([])
   const [activeTab, setActiveTab] = useState<'records' | 'graphs'>('records')
   const [showFavoritesOnly, setShowFavoritesOnly] = useState(false)
   const [favorites, setFavorites] = useState<Set<string>>(new Set())
@@ -31,6 +33,7 @@ export default function MembersPage() {
   const [favoritesWithOrder, setFavoritesWithOrder] = useState<{ key: string, order: number }[]>([])
   const [showGlobalOrderModal, setShowGlobalOrderModal] = useState(false); // 전체 운동용
   const [allTypes, setAllTypes] = useState<WorkoutType[]>([]);
+  const [showSplitModal, setShowSplitModal] = useState(false)
 
   // 사용자 정보 초기화
   useEffect(() => {
@@ -49,6 +52,7 @@ export default function MembersPage() {
   useEffect(() => {
     if (selectedMember) {
       setDescription(selectedMember.description || '')
+      fetchSplitWorkouts()
     } else {
       setDescription('')
     }
@@ -141,7 +145,7 @@ export default function MembersPage() {
     const { data, error } = await supabase
       .from('workout_types')
       .select('workout_type_id, target, workout, order_target, order_workout, level')
-      // order_target 기준으로 정렬하고, 그 다음 order_workout 기준 정렬 (필요시)
+      .neq('level', 'GROUP') 
       .order('order_target', { ascending: true })
       .order('order_workout', { ascending: true })
   
@@ -157,7 +161,16 @@ export default function MembersPage() {
       fetchAllTypes()
     }
   }, [showFavoritesOnly])
-  
+
+  const fetchSplitWorkouts = async () => {
+    if (!selectedMember) return
+    const { data, error } = await supabase
+      .from('split_workouts')
+      .select('*')
+      .eq('member_id', selectedMember.member_id)
+      .order('split_index', { ascending: true })
+    if (!error && data) setSplitWorkouts(data)
+  }
 
   return (
     <div className="min-h-screen bg-gray-50">
@@ -324,7 +337,26 @@ export default function MembersPage() {
               >
                 그래프
               </Button>
+
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={() => setShowSplitModal(true)}
+              >
+                + 분할
+              </Button>
             </div>
+
+            {showSplitModal && (
+              <SplitWorkout
+                member={selectedMember}
+                allTypes={allTypes}
+                onClose={() => {
+                  setShowSplitModal(false)
+                  fetchSplitWorkouts() // ✅ 닫을 때 최신 데이터 다시 불러오기
+                }}
+              />
+            )}
 
             {/* 본문 */}
             {activeTab === 'graphs' && (
@@ -351,6 +383,7 @@ export default function MembersPage() {
                 onFavoritesChange={fetchFavorites}
                 allTypes={allTypes}
                 onRefreshAllTypes={fetchAllTypes}
+                splitWorkouts={splitWorkouts}
               />
             )}
           </>

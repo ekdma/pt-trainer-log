@@ -299,7 +299,7 @@ export default function GoalsPage() {
 
               {/* 식단 목표 카드 */}
               <section className="bg-white rounded-2xl shadow-md p-6 border border-gray-200 hover:shadow-lg transition flex flex-col">
-                <h3 className="text-xl font-semibold text-gray-600 mb-4 flex items-center gap-2">
+                <h3 className="text-lg font-semibold text-gray-600 mb-4 flex items-center gap-2">
                   <span>🥗</span> 식단 목표
                 </h3>
 
@@ -309,9 +309,9 @@ export default function GoalsPage() {
                   {/* 1. 끼 수 */}
                   <div className="flex items-center gap-2">
                     <span className="text-gray-400 text-lg">•</span>
-                    <span>하루</span>
+                    <span className="text-sm">하루</span>
                     <select
-                      className="form-select w-12 rounded border border-gray-300 px-2 py-1"
+                      className="text-sm form-select w-12 rounded border border-gray-300 px-2 py-1"
                       value={mealsPerDay}
                       onChange={(e) => setMealsPerDay(Number(e.target.value))}
                     >
@@ -319,14 +319,14 @@ export default function GoalsPage() {
                         <option key={n}>{n}</option>
                       ))}
                     </select>
-                    <span>끼 챙겨먹기</span>
+                    <span className="text-sm">끼 챙겨먹기</span>
                   </div>
 
                   {/* 2. 중요한 끼니 */}
                   <div className="flex items-center gap-2">
                     <span className="text-gray-400 text-lg">•</span>
                     <select
-                      className="form-select w-18 rounded border border-gray-300 px-2 py-1"
+                      className="text-sm form-select w-18 rounded border border-gray-300 px-2 py-1"
                       value={importantMeal}
                       onChange={(e) => setImportantMeal(e.target.value)}
                     >
@@ -334,14 +334,14 @@ export default function GoalsPage() {
                         <option key={meal}>{meal}</option>
                       ))}
                     </select>
-                    <span>챙겨먹기</span>
+                    <span className="text-sm">챙겨먹기</span>
                   </div>
 
                   {/* 3. 마감 시간 */}
                   <div className="flex items-center gap-2">
                     <span className="text-gray-400 text-lg">•</span>
                     <select
-                      className="form-select w-18 rounded border border-gray-300 px-2 py-1"
+                      className="text-sm form-select w-18 rounded border border-gray-300 px-2 py-1"
                       value={finishByHour}
                       onChange={(e) => setFinishByHour(Number(e.target.value))}
                     >
@@ -349,7 +349,7 @@ export default function GoalsPage() {
                         <option key={h}>{h}</option>
                       ))}
                     </select>
-                    <span>시 이전에 하루 식사 종료하기</span>
+                    <span className="text-sm">시 이전에 하루 식사 종료하기</span>
                   </div>
                 </div>
 
@@ -392,13 +392,13 @@ export default function GoalsPage() {
 
               {/* 수분 섭취 카드 */}
               <section className="bg-white rounded-2xl shadow-md p-6 border border-gray-200 hover:shadow-lg transition">
-                <h3 className="text-xl font-semibold text-gray-600 mb-4 flex items-center gap-2">
+                <h3 className="text-lg font-semibold text-gray-600 mb-4 flex items-center gap-2">
                   <span>💧</span> 수분 섭취
                 </h3>
                 <div className="flex items-center gap-2">
-                  <span>하루</span>
+                  <span className="text-sm">하루</span>
                   <select
-                    className="form-select w-18 rounded border border-gray-300 px-2 py-1"
+                    className="text-sm form-select w-18 rounded border border-gray-300 px-2 py-1"
                     value={cupsPerDay}
                     onChange={(e) => setCupsPerDay(Number(e.target.value))}
                   >
@@ -406,19 +406,19 @@ export default function GoalsPage() {
                       <option key={n}>{n}</option>
                     ))}
                   </select>
-                  <span>잔 마시기 (500ml 기준)</span>
+                  <span className="text-sm">잔 마시기 (500ml 기준)</span>
                 </div>
               </section>
 
               {/* 수면 패턴 카드 */}
               <section className="bg-white rounded-2xl shadow-md p-6 border border-gray-200 hover:shadow-lg transition">
-                <h3 className="text-xl font-semibold text-gray-600 mb-4 flex items-center gap-2">
+                <h3 className="text-lg font-semibold text-gray-600 mb-4 flex items-center gap-2">
                   <span>🛌</span> 수면 패턴
                 </h3>
                 <div className="flex items-center gap-2">
-                  <span>하루</span>
+                  <span className="text-sm">하루</span>
                   <select
-                    className="form-select w-18 rounded border border-gray-300 px-2 py-1"
+                    className="text-sm form-select w-18 rounded border border-gray-300 px-2 py-1"
                     value={sleepHours}
                     onChange={(e) => setSleepHours(Number(e.target.value))}
                   >
@@ -426,19 +426,19 @@ export default function GoalsPage() {
                       <option key={h}>{h}</option>
                     ))}
                   </select>
-                  <span>시간 수면하기</span>
+                  <span className="text-sm">시간 수면하기</span>
                 </div>
               </section>
 
               {/* 체성분 목표 카드 */}
               <section className="bg-white rounded-2xl shadow-md p-6 border border-gray-200 hover:shadow-lg transition">
-                <h3 className="text-xl font-semibold text-gray-600 mb-4 flex items-center gap-2">
+                <h3 className="text-lg font-semibold text-gray-600 mb-4 flex items-center gap-2">
                   <span>📈</span> 체성분 목표
                 </h3>
                   
                 <div className="flex items-center gap-2">
                   <span className="text-gray-400 text-lg">•</span>
-                  <span>매달 근육량</span>
+                  <span className="text-sm">매달 근육량</span>
                   <input
                     type="number"
                     value={muscleGain}
@@ -458,11 +458,11 @@ export default function GoalsPage() {
                       -moz-appearance: textfield;
                     }
                   `}</style>
-                  <span>kg 증량하기</span>
+                  <span className="text-sm">kg 증량하기</span>
                 </div>
                 <div className="flex items-center gap-2">
                   <span className="text-gray-400 text-lg">•</span>
-                  <span>매달 체지방량</span>
+                  <span className="text-sm">매달 체지방량</span>
                   <input
                     type="number"
                     value={fatLoss}
@@ -482,7 +482,7 @@ export default function GoalsPage() {
                       -moz-appearance: textfield;
                     }
                   `}</style>
-                  <span>kg 감량하기</span>
+                  <span className="text-sm">kg 감량하기</span>
                 </div>
               </section>
             </div>
