@@ -3,7 +3,6 @@
 import { useState, useEffect } from 'react'
 import { Button } from '@/components/ui/button'
 import { getSupabaseClient } from '@/lib/supabase'
-import { ArrowLeft } from 'lucide-react'
 import { useRouter } from 'next/navigation'
 
 interface SurveyDetailProps {

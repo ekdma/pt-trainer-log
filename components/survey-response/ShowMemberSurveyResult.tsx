@@ -20,6 +20,13 @@ interface SurveyAnswer {
   survey_questions: SurveyQuestion
 }
 
+interface RawSurveyAnswer {
+  question_id: string
+  answer_text: string | null
+  selected_option_ids: string[] | null
+  survey_questions: SurveyQuestion | SurveyQuestion[]
+}
+
 interface MemberCounsel {
   member_counsel_id: number
   name: string
@@ -97,8 +104,10 @@ export default function ShowMemberSurveyResult({ selectedMemberId }: Props) {
       console.error('답변 로드 실패:', error)
       alert('결과를 불러오는 중 오류 발생')
     } else if (data) {
-      const normalizedData = data.map((item: any) => ({
-        ...item,
+      const normalizedData = data.map((item: RawSurveyAnswer): SurveyAnswer => ({
+        question_id: item.question_id,
+        answer_text: item.answer_text,
+        selected_option_ids: item.selected_option_ids,
         survey_questions: Array.isArray(item.survey_questions)
           ? item.survey_questions[0]
           : item.survey_questions,

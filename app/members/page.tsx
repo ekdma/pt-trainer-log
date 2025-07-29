@@ -12,7 +12,6 @@ import { Search, UserRoundPlus, UserRoundSearch } from 'lucide-react';
 import { Button } from '@/components/ui/button'
 import AddMemberOpen from '@/components/members/AddMemberOpen'
 import EditMemberModal from '@/components/members/EditMemberModal'
-import { useRouter } from 'next/navigation' 
 
 export default function MembersPage() {
   // const [supabase, setSupabase] = useState<SupabaseClient | null>(null)
@@ -28,7 +27,6 @@ export default function MembersPage() {
   // const [activeTab, setActiveTab] = useState<'workout' | 'health' | 'food'>('workout')
   // const [workoutTypes, setWorkoutTypes] = useState<WorkoutType[]>([]);
 
-  const router = useRouter()
   useAuthGuard()
   
   useEffect(() => {
