@@ -61,6 +61,33 @@ export default function ShowMemberSurveyResult({ selectedMemberId }: Props) {
   const [loading, setLoading] = useState(true)
   const [memberLoading, setMemberLoading] = useState(true)
 
+  const [surveyTitle, setSurveyTitle] = useState<string | null>(null)
+  const [surveyDescription, setSurveyDescription] = useState<string | null>(null)
+
+  const today = new Date().toLocaleDateString()
+  const [signatureData, setSignatureData] = useState<string | null>(null)
+
+  useEffect(() => {
+    if (!surveyIdFromUrl) return
+  
+    const fetchSurveyInfo = async () => {
+      const { data, error } = await supabase
+        .from('surveys')
+        .select('title, description')
+        .eq('id', surveyIdFromUrl)
+        .single()
+  
+      if (error) {
+        console.error('설문 정보 조회 실패:', error)
+      } else {
+        setSurveyTitle(data.title)
+        setSurveyDescription(data.description)
+      }
+    }
+  
+    fetchSurveyInfo()
+  }, [surveyIdFromUrl])
+  
   const fetchResult = async (targetMemberCounselId: string) => {
     setLoading(true)
   
@@ -147,6 +174,12 @@ export default function ShowMemberSurveyResult({ selectedMemberId }: Props) {
     fetchMember()
   }, [memberCounselIdFromUrl, selectedMemberId])
 
+  useEffect(() => {
+    const sig = localStorage.getItem('signature')
+    setSignatureData(sig)
+  }, [])
+
+
   if (loading || memberLoading) {
     return (
       <div className="p-6 text-center text-gray-500">결과 불러오는 중...</div>
@@ -160,12 +193,11 @@ export default function ShowMemberSurveyResult({ selectedMemberId }: Props) {
   }
 
   return (
-    <div className="space-y-10 max-w-3xl mx-auto bg-white p-8 rounded-3xl shadow-lg">
-      <h2 className="text-2xl font-extrabold mb-8 text-center text-gray-700">📝 응답 결과</h2>
-
+    <div className="p-4 sm:p-8 lg:px-24 lg:py-12 bg-gray-50 min-h-screen max-w-3xl mx-auto">
+      <h2 className="text-xl sm:text-xl font-bold mb-8 text-gray-800 text-center">📝 응답 결과</h2>
       {member && (
-        <div className="mb-10 border border-gray-300 rounded-xl bg-gray-100 p-6 shadow-sm">
-          <h3 className="text-xl font-semibold text-gray-700 mb-4 border-b border-gray-300 pb-2">회원 기본 정보</h3>
+        <div className="mb-10 bg-gray-100 p-6 rounded-2xl shadow-md border border-gray-200">
+          <h3 className="text-xl font-semibold text-gray-800 mb-4 border-b border-gray-200 pb-2">회원 기본 정보</h3>
           <ul className="space-y-2 text-gray-900 text-lg">
             <li><strong>이름:</strong> {member.name}</li>
             <li><strong>생년월일:</strong> {member.birth_date}</li>
@@ -177,83 +209,121 @@ export default function ShowMemberSurveyResult({ selectedMemberId }: Props) {
           </ul>
         </div>
       )}
+      
+      {surveyTitle && (
+        <div className="mb-8 bg-white p-6 rounded-2xl shadow-md border border-gray-200 space-y-4">
+          <h2 className="text-2xl sm:text-3xl font-bold text-gray-800">{surveyTitle}</h2>
+          {surveyDescription && (
+            <p className="text-gray-600 mt-2 whitespace-pre-line">{surveyDescription}</p>
+          )}
+        </div>
+      )}
 
-      {result.map((item, idx) => {
-        const { survey_questions, selected_option_ids, answer_text } = item
-        const { question_text, question_type, survey_options } = survey_questions
 
-        return (
-          <div
-            key={idx}
-            className="space-y-4 border border-gray-300 rounded-xl shadow-inner p-6 bg-gray-50 hover:bg-gray-100 transition"
-          >
-            <p className="font-semibold text-xl text-gray-800 flex items-center gap-3">
-              <span className="text-gray-600 font-extrabold">{idx + 1}.</span>
-              {question_text}
-            </p>
 
-            {/* 객관식(single) */}
-            {question_type === 'single' && (
-              <div className="space-y-3 pl-4">
-                {survey_options.map((opt) => {
-                  const isSelected = selected_option_ids?.includes(opt.id) ?? false
-                  return (
-                    <label
-                      key={opt.id}
-                      className={`flex items-center gap-3 cursor-default select-none ${
-                        isSelected ? 'font-semibold text-gray-700' : 'text-gray-400'
-                      }`}
-                    >
-                      <input
-                        type="radio"
-                        checked={isSelected}
-                        readOnly
-                        className="accent-gray-600 cursor-default"
-                      />
-                      <span>{opt.option_text}</span>
-                    </label>
-                  )
-                })}
-              </div>
-            )}
+      <div className='space-y-6'>
+        {result.map((item, idx) => {
+          const { survey_questions, selected_option_ids, answer_text } = item
+          const { question_text, question_type, survey_options } = survey_questions
 
-            {/* 객관식(multiple) */}
-            {question_type === 'multiple' && (
-              <div className="space-y-3 pl-4">
-                {survey_options.map((opt) => {
-                  const isSelected = selected_option_ids?.includes(opt.id) ?? false
-                  return (
-                    <label
-                      key={opt.id}
-                      className={`flex items-center gap-3 cursor-default select-none ${
-                        isSelected ? 'font-semibold text-gray-700' : 'text-gray-400'
-                      }`}
-                    >
-                      <input
-                        type="checkbox"
-                        checked={isSelected}
-                        readOnly
-                        className="accent-gray-600 cursor-default"
-                      />
-                      <span>{opt.option_text}</span>
-                    </label>
-                  )
-                })}
-              </div>
-            )}
+          return (
+            <div
+              key={idx}
+              className="bg-white p-6 rounded-2xl shadow-md border border-gray-200 space-y-4 hover:bg-rose-50 transition"
+            >
+              <p className="text-lg font-semibold text-gray-800 flex items-center gap-3">
+                <span className="text-gray-600 font-extrabold">{idx + 1}.</span>
+                {question_text}
+              </p>
 
-            {/* 주관식(text) */}
-            {question_type === 'text' && (
-              <textarea
-                readOnly
-                value={answer_text || ''}
-                className="w-full border border-gray-300 rounded-lg p-4 bg-white text-gray-900 resize-none shadow-inner focus:outline-none"
-                rows={5}
+              {/* 객관식(single) */}
+              {question_type === 'single' && (
+                <div className="space-y-2">
+                  {survey_options.map((opt) => {
+                    const isSelected = selected_option_ids?.includes(opt.id) ?? false
+                    return (
+                      <label
+                        key={opt.id}
+                        className={`flex items-center gap-3 p-2 border rounded-lg cursor-default select-none ${
+                          isSelected ? 'font-semibold text-gray-700' : 'text-gray-400'
+                        }`}
+                      >
+                        <input
+                          type="radio"
+                          checked={isSelected}
+                          readOnly
+                          className="accent-gray-600 cursor-default"
+                        />
+                        <span>{opt.option_text}</span>
+                      </label>
+                    )
+                  })}
+                </div>
+              )}
+
+              {/* 객관식(multiple) */}
+              {question_type === 'multiple' && (
+                <div className="space-y-2">
+                  {survey_options.map((opt) => {
+                    const isSelected = selected_option_ids?.includes(opt.id) ?? false
+                    return (
+                      <label
+                        key={opt.id}
+                        className={`flex items-center gap-3 p-2 border rounded-lg cursor-default select-none ${
+                          isSelected ? 'font-semibold text-gray-700' : 'text-gray-400'
+                        }`}
+                      >
+                        <input
+                          type="checkbox"
+                          checked={isSelected}
+                          readOnly
+                          className="accent-gray-600 cursor-default"
+                        />
+                        <span>{opt.option_text}</span>
+                      </label>
+                    )
+                  })}
+                </div>
+              )}
+
+              {/* 주관식(text) */}
+              {question_type === 'text' && (
+                <textarea
+                  readOnly
+                  value={answer_text || ''}
+                  className="w-full border rounded-lg px-4 py-2 text-gray-800 focus:outline-none focus:ring-2 focus:ring-rose-500 resize-none"
+                  rows={5}
+                />
+              )}
+            </div>
+          )
+        })}
+
+        <div
+          className="bg-white border border-gray-300 rounded-2xl p-4 shadow-md flex items-center justify-center gap-x-8"
+        >
+          {/* 오늘 날짜 */}
+          <div className="text-gray-700 text-xl whitespace-nowrap">
+            <strong>{today}</strong>
+          </div>
+
+          {/* 서명 영역 */}
+          <div className="flex flex-col items-center">
+            <p className="text-gray-700 font-semibold mb-2">서명</p>
+            {signatureData ? (
+              <img
+                src={signatureData}
+                alt="서명 이미지"
+                className="border border-gray-400 rounded-lg bg-gray-100 w-[300px] h-[100px] object-contain"
               />
+            ) : (
+              <p className="text-sm text-gray-400 italic">서명이 없습니다.</p>
             )}
           </div>
-        )
-      })}
+
+        </div>
+      </div>
     </div>
+
   )
 }

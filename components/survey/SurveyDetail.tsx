@@ -264,7 +264,7 @@ export default function SurveyDetail({
 
       <h2 className="text-2xl font-semibold mb-2">{survey.title}</h2>
       {survey.description && (
-        <p className="mb-6 text-gray-600">{survey.description}</p>
+        <p className="mb-6 text text-gray-600 mt-1 whitespace-pre-line">{survey.description}</p>
       )}
 
       <form

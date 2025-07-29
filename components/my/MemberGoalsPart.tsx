@@ -42,6 +42,7 @@ export default function MemberGoalsPart() {
   const [goals, setGoals] = useState<MemberGoals>({})
   const [templates, setTemplates] = useState<HashtagTemplate[]>([])
   const latestGoals: MemberGoals = {}
+  const [hashtagCounts, setHashtagCounts] = useState<Record<string, number>>({})
 
   const fetchGoals = async () => {
     const raw = localStorage.getItem('litpt_member')
@@ -81,6 +82,37 @@ export default function MemberGoalsPart() {
     }
   }
 
+  const fetchHashtagCounts = async (memberId: string, hashtags: string[]) => {
+    const fromDate = new Date()
+    fromDate.setDate(fromDate.getDate() - 7)
+    const { data, error } = await supabase
+      .from('food_hashtags')
+      .select('hashtags')
+      .eq('member_id', memberId)
+      .gte('created_at', fromDate.toISOString())
+
+    if (error || !data) return
+
+    // hashtags 컬럼은 객체 형태 (예: {"Lunch": ["#단백질보충", "#저칼로리"], ...})
+    // 모든 배열을 합쳐서 하나의 배열로 만들기
+    const allHashtags: string[] = []
+    data.forEach(row => {
+      const obj = row.hashtags || {}
+      Object.values(obj).forEach(value => {
+        if (Array.isArray(value)) {
+          allHashtags.push(...(value as string[]))
+        }
+      })
+    })
+
+    // 관심있는 해시태그별 카운트 계산
+    const counts: Record<string, number> = {}
+    hashtags.forEach(tag => {
+      counts[tag] = allHashtags.filter(h => h === tag).length
+    })
+    setHashtagCounts(counts)
+  }
+
   useEffect(() => {
     fetchGoals()
     fetchTemplates()
@@ -99,26 +131,41 @@ export default function MemberGoalsPart() {
     }
   }, [])
 
+  useEffect(() => {
+    const raw = localStorage.getItem('litpt_member')
+    const member = raw ? JSON.parse(raw) : null
+    if (!member || !goals.diet?.hashtags) return
+
+    fetchHashtagCounts(member.member_id, goals.diet.hashtags)
+  }, [goals.diet?.hashtags])
+
   const renderHashtags = () => {
     if (!goals.diet?.hashtags || templates.length === 0) return null
   
     return (
       <div className="mt-4 border-t pt-3">
         <div className="text-sm text-gray-500 mb-2">📌 해시태그 목표</div>
-        <div className="flex flex-wrap gap-2">
+        <div className="flex flex-col gap-2">
           {goals.diet.hashtags.map((tag: string) => {
             const template = templates.find(t => t.hashtag_content === tag)
             return (
-              <span
-                key={tag}
-                className="bg-blue-100 text-blue-800 px-3 py-1 text-sm rounded-full"
-              >
-                {tag}{template?.description ? ` - ${template.description}` : ''}
-              </span>
+              <div key={tag} className="bg-gray-100 text-gray-800 px-3 py-2 text-sm rounded-lg">
+                <div className="font-semibold">
+                  {tag}{template?.description ? ` - ${template.description}` : ''}
+                </div>
+                <div className="text-xs mt-2 text-rose-600 whitespace-pre-line bg-rose-50 p-2 rounded">
+                  {hashtagCounts[tag] != null ? (
+                    <div>💬 {`${tag}은 최근 7일 동안 ${hashtagCounts[tag]}번 챙겼어요!`}</div>
+                  ) : (
+                    <div>💬 로딩 중...</div>
+                  )}
+                </div>
+              </div>
             )
           })}
         </div>
       </div>
+
     )
   }
 

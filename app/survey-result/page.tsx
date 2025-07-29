@@ -3,8 +3,10 @@ import SurveyResultPageClient from './SurveyResultPageClient' // useSearchParams
 
 export default function SurveyResponsePage() {
   return (
-    <Suspense fallback={<div>로딩 중...</div>}>
-      <SurveyResultPageClient />
-    </Suspense>
+    <main className="flex flex-col min-h-screen bg-gray-50 p-6">
+      <Suspense fallback={<div>로딩 중...</div>}>
+        <SurveyResultPageClient />
+      </Suspense>
+    </main>
   )
 }

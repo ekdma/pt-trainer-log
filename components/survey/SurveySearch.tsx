@@ -46,7 +46,7 @@ export default function SurveySearch({
             >
               <h3 className="text-gray-800 font-bold text-lg">{survey.title}</h3>
               {survey.description && (
-                <p className="text text-gray-600 mt-1">{survey.description}</p>
+                <p className="text-left text-gray-600 mt-1 whitespace-pre-line">{survey.description}</p>
               )}
               <p className="text-sm text-gray-600 mt-1">
                 생성일: {new Date(survey.created_at).toLocaleDateString()}
