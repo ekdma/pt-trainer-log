@@ -53,7 +53,7 @@ export default function ShowMemberSurveyResult({ selectedMemberId }: Props) {
   const isBrowser = typeof window !== 'undefined'
   const surveyIdFromUrl = isBrowser ? searchParams.get('surveyID') : null
   const memberCounselIdFromUrl = isBrowser ? searchParams.get('member_counsel_id') : null
-  const memberCounselId = memberCounselIdFromUrl || selectedMemberId?.toString()
+  // const memberCounselId = memberCounselIdFromUrl || selectedMemberId?.toString()
 
   const [result, setResult] = useState<SurveyAnswer[]>([])
   const [member, setMember] = useState<MemberCounsel | null>(null)
