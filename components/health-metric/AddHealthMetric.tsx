@@ -52,7 +52,7 @@ export default function AddHealthMetric({
               value={newTarget}
               onChange={(e) => onChangeTarget(e.target.value)}
               placeholder="예: Body Composition"
-              className="w-full border rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-300"
+              className="w-full border rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-gray-300"
             />
           </div>
 
@@ -63,7 +63,7 @@ export default function AddHealthMetric({
               value={newWorkout}
               onChange={(e) => onChangeWorkout(e.target.value)}
               placeholder="예: Weight"
-              className="w-full border rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-300"
+              className="w-full border rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-gray-300"
             />
           </div>
 
@@ -72,7 +72,7 @@ export default function AddHealthMetric({
               type="button"
               onClick={onAdd}
               disabled={loading}
-              className="w-full bg-indigo-600 text-white px-3 py-2 rounded-lg text-xs font-medium hover:bg-indigo-700 transition disabled:opacity-50"
+              className="w-full bg-gray-600 text-white px-3 py-2 rounded-lg text-xs font-medium hover:bg-gray-700 transition disabled:opacity-50"
             >
               추가
             </button> */}

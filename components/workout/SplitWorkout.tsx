@@ -144,7 +144,7 @@ export default function SplitWorkout({ member, allTypes, onClose }: SplitWorkout
 
   return (
     <Dialog open onOpenChange={onClose}>
-      <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
+      <DialogContent className="!max-w-[1000px] w-full max-h-[90vh] overflow-y-auto">
         <DialogHeader>
           <DialogTitle className="text-lg font-semibold text-gray-800">
             운동 분할 설정

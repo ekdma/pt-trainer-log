@@ -310,7 +310,7 @@ export default function MembersPage() {
                       value={description}
                       onChange={(e) => setDescription(e.target.value)}
                       rows={2}
-                      className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-gray-500 resize-none min-w-0"
+                      className="text-sm w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-gray-500 resize-none min-w-0"
                       placeholder="예: 디스크 있음, 병원 다녀옴 등 회원 상태를 기록하세요."
                     />
                   </div>
@@ -338,13 +338,16 @@ export default function MembersPage() {
                 그래프
               </Button>
 
-              <Button
-                variant="ghost"
-                size="sm"
-                onClick={() => setShowSplitModal(true)}
-              >
-                + 분할
-              </Button>
+              {userRole === 'trainer' && (
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={() => setShowSplitModal(true)}
+                >
+                  + 분할
+                </Button>
+              )}
+
             </div>
 
             {showSplitModal && (

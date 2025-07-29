@@ -147,32 +147,31 @@ export default function GroupSessionPage() {
           setIsEditOpen={setIsEditOpen}
         />
       </main>
-        {/* 모달들 */}
-        {isAddOpen && (
-          <AddGroupSessionOpen
-            open={isAddOpen}
-            onClose={() => setIsAddOpen(false)}
-            onSessionAdded={() => {
-              fetchSessions()
-              setIsAddOpen(false)
-            }}
-          />
-        )}
+      {isAddOpen && (
+        <AddGroupSessionOpen
+          open={isAddOpen}
+          onClose={() => setIsAddOpen(false)}
+          onSessionAdded={() => {
+            fetchSessions()
+            setIsAddOpen(false)
+          }}
+        />
+      )}
 
-        {isEditOpen && selectedSession && (
-          <EditGroupSessionModal
-            open={isEditOpen}
-            session={selectedSession}
-            supabase={supabase}
-            onClose={() => setIsEditOpen(false)}
-            onUpdate={() => {
-              fetchSessions()
-              setIsEditOpen(false)
-            }}
-          />
-        )}
+      {isEditOpen && selectedSession && (
+        <EditGroupSessionModal
+          open={isEditOpen}
+          session={selectedSession}
+          supabase={supabase}
+          onClose={() => setIsEditOpen(false)}
+          onUpdate={() => {
+            fetchSessions()
+            setIsEditOpen(false)
+          }}
+        />
+      )}
 
-        {showAll && <ViewTotalGroupSessionModal onClose={() => setShowAll(false)} />}
+      {showAll && <ViewTotalGroupSessionModal onClose={() => setShowAll(false)} />}
     </div>
   )
 }

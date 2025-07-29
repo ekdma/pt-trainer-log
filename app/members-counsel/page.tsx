@@ -2,33 +2,31 @@
 
 import { useState, useEffect } from 'react'
 import TrainerHeader from '@/components/layout/TrainerHeader'
-import MemberSearch from '../../components/members/MemberSearch'
+import MemberCounselSearch from '../../components/members-counsel/MemberCounselSearch'
 // import type { Member, WorkoutRecord, HealthMetric } from '@/components/members/types'
-import type { Member } from '@/components/members/types'
+import type { MemberCounsel } from '@/components/members/types'
 // import { fetchWorkoutLogs, fetchHealthLogs } from '../../utils/fetchLogs'
 import { useAuthGuard } from '@/hooks/useAuthGuard'
 import { getSupabaseClient } from '@/lib/supabase'
-import { Search, UserRoundPlus, UserRoundSearch } from 'lucide-react';
+import { Search, UserRoundSearch } from 'lucide-react';
 import { Button } from '@/components/ui/button'
-import AddMemberOpen from '@/components/members/AddMemberOpen'
-import EditMemberModal from '@/components/members/EditMemberModal'
-import { useRouter } from 'next/navigation' 
+// import AddMemberOpen from '@/components/members/AddMemberOpen'
+// import EditMemberModal from '@/components/members/EditMemberModal'
 
 export default function MembersPage() {
   // const [supabase, setSupabase] = useState<SupabaseClient | null>(null)
   const [keyword, setKeyword] = useState('')
-  const [filteredMembers, setFilteredMembers] = useState<Member[]>([])
-  const [isAddMemberOpen, setIsAddMemberOpen] = useState(false)
-  const [editingMember, setEditingMember] = useState<Member | null>(null)
+  const [filteredMembers, setFilteredMembers] = useState<MemberCounsel[]>([])
+  // const [isAddMemberOpen, setIsAddMemberOpen] = useState(false)
+  // const [editingMember, setEditingMember] = useState<MemberCounsel | null>(null)
   const supabase = getSupabaseClient()
 
-  const [selectedMember, setSelectedMember] = useState<Member | null>(null)
+  const [selectedMember, setSelectedMember] = useState<MemberCounsel | null>(null)
   // const [workoutLogs, setWorkoutLogs] = useState<WorkoutRecord[]>([])
   // const [healthLogs, setHealthLogs] = useState<HealthMetric[]>([])
   // const [activeTab, setActiveTab] = useState<'workout' | 'health' | 'food'>('workout')
   // const [workoutTypes, setWorkoutTypes] = useState<WorkoutType[]>([]);
 
-  const router = useRouter()
   useAuthGuard()
   
   useEffect(() => {
@@ -50,9 +48,9 @@ export default function MembersPage() {
 
   const fetchMembers = async () => {
     const { data, error } = await supabase
-      .from('members')
+      .from('members_counsel')
       .select('*')
-      .eq('status', 'active');
+    //   .eq('status', 'active');
     if (!error) setFilteredMembers(data ?? [])
     else console.error('패키지 불러오기 실패:', error.message)
   }
@@ -68,9 +66,9 @@ export default function MembersPage() {
     }
   
     const { data, error } = await supabase
-      .from('members')
+      .from('members_counsel')
       .select('*')
-      .eq('status', 'active')
+    //   .eq('status', 'active')
       .ilike('name', `%${trimmedKeyword}%`);
   
     if (error) {
@@ -90,7 +88,7 @@ export default function MembersPage() {
       <main className="max-w-6xl mx-auto px-4 py-8 space-y-6">
         <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-6 w-full">
           {/* 좌측: 제목 */}
-          <h2 className="text-lg font-semibold text-gray-800">회원 관리</h2>
+          <h2 className="text-lg font-semibold text-gray-800">상담회원 관리</h2>
 
           {/* 우측: 검색창 + 버튼들 */}
           <div className="flex flex-col sm:flex-row items-center gap-2 sm:gap-3 w-full sm:w-auto">
@@ -118,28 +116,25 @@ export default function MembersPage() {
               <UserRoundSearch size={20} /> 검색
             </Button>
 
-            <Button
+            {/* <Button
               onClick={() => setIsAddMemberOpen(true)}
               variant="click"
               className="text-sm"
             >
-              <UserRoundPlus size={20} /> 회원 추가
-            </Button>
+              <UserRoundPlus size={20} /> 상담회원 추가
+            </Button> */}
           </div>
         </div>
-        <MemberSearch
+        <MemberCounselSearch
           members={filteredMembers} // ✅ 전달
           onSelectMember={(member) => {
             setSelectedMember(member)
-            // setActiveTab('workout')
           }}
-          // onSetLogs={setWorkoutLogs}
-          // onSetHealthLogs={setHealthLogs}
-          setEditingMember={setEditingMember}
+          // setEditingMember={setEditingMember}
         />
       </main>
 
-      {editingMember && (
+      {/* {editingMember && (
         <EditMemberModal
           member={editingMember}
           onClose={() => setEditingMember(null)}
@@ -154,7 +149,7 @@ export default function MembersPage() {
           onClose={() => setIsAddMemberOpen(false)}
           onMemberAdded={() => fetchMembers()}
         />
-      )}
+      )} */}
           
     </div>
   )

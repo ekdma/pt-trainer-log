@@ -51,7 +51,7 @@ export default function AddWorkout({
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="max-w-2xl p-6">
         <DialogHeader>
-          <DialogTitle className="text-lg font-semibold text-indigo-600">측정 항목 추가/삭제</DialogTitle>
+          <DialogTitle className="text-lg font-semibold text-gray-600">측정 항목 추가/삭제</DialogTitle>
         </DialogHeader>
 
         <div className="grid grid-cols-1 sm:grid-cols-[1.5fr_1.5fr_1fr_auto] gap-4 items-end mt-4 text-sm">
@@ -62,7 +62,7 @@ export default function AddWorkout({
               value={newTarget}
               onChange={(e) => setNewTarget(e.target.value)}
               placeholder="예: Leg"
-              className="w-full border rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-indigo-300"
+              className="w-full border rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-gray-300"
             />
           </div>
 
@@ -73,7 +73,7 @@ export default function AddWorkout({
               value={newWorkout}
               onChange={(e) => setNewWorkout(e.target.value)}
               placeholder="예: Squat"
-              className="w-full border rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-indigo-300"
+              className="w-full border rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-gray-300"
             />
           </div>
 
@@ -82,7 +82,7 @@ export default function AddWorkout({
             <select
               value={newLevel}
               onChange={(e) => setNewLevel(e.target.value)}
-              className="w-full border rounded-lg px-3 py-2 text-center focus:outline-none focus:ring-2 focus:ring-indigo-300"
+              className="w-full border rounded-lg px-3 py-2 text-center focus:outline-none focus:ring-2 focus:ring-gray-300"
             >
               <option value="">선택</option>
               <option value="Level 1">Level 1</option>
@@ -98,7 +98,7 @@ export default function AddWorkout({
               type="button"
               onClick={handleAddType}
               disabled={loadingManage}
-              className="w-full bg-indigo-600 text-white px-3 py-2 rounded-lg text-xs font-medium hover:bg-indigo-700 transition disabled:opacity-50"
+              className="w-full bg-gray-600 text-white px-3 py-2 rounded-lg text-xs font-medium hover:bg-gray-700 transition disabled:opacity-50"
             >
               추가
             </button> */}

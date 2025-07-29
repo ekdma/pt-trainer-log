@@ -14,6 +14,15 @@ export type Member = {
   nickname: string
 }
 
+export type MemberCounsel = {
+  member_counsel_id: number
+  name: string
+  birth_date: string | null
+  phone: string
+  gender: string
+  creation_dt: string
+}
+
 export type MemberPackage = {
   member_package_id: number;
   member_id: number;

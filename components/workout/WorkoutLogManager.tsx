@@ -757,10 +757,11 @@ export default function WorkoutLogManager({
           <table className="table-fixed min-w-max text-sm border-collapse border border-gray-300 bg-gray-50">
             <thead className="bg-gray-100 text-gray-700 select-none">
               <tr>
-                <th className="border px-2 py-2 text-center font-semibold w-[100px] md:sticky top-0 md:left-0 bg-gray-200 md:z-40">
-                  LEVEL
+                <th className="border px-2 py-2 text-center font-semibold w-[20px] md:w-[100px] md:sticky top-0 md:left-0 bg-gray-200 md:z-40">
+                  <span className="block md:hidden">{''}</span>
+                  <span className="hidden md:block">LEVEL</span>
                 </th>
-                <th className="border px-2 py-2 text-center font-semibold w-[90px] md:sticky top-0 md:left-[100px] bg-gray-200 md:z-30">
+                <th className="hidden md:table-cell border px-2 py-2 text-center font-semibold w-[90px] md:sticky top-0 md:left-[100px] bg-gray-200 md:z-30">
                   TARGET
                 </th>
                 <th className="border px-2 py-2 text-center font-semibold w-[120px] md:sticky top-0 md:left-[190px] bg-gray-200 md:z-20">
@@ -937,12 +938,12 @@ export default function WorkoutLogManager({
                       </button>
 
                       {/* 난이도 색깔 점 */}
-                      <span className={`absolute left-7 top-1/2 -translate-y-1/2 w-3 h-3 rounded-full ${levelColor}`} />
+                      <span className={`hidden md:inline-block absolute left-7 top-1/2 -translate-y-1/2 w-3 h-3 rounded-full ${levelColor}`} />
                       
                       {/* 난이도 텍스트 */}
-                      <span className="pl-5">{level}</span>
+                      <span className="hidden md:inline-block pl-5">{level}</span>
                     </td>
-                    <td className="border px-2 py-1 md:sticky left-[100px] bg-gray-50 z-20 font-semibold whitespace-normal">
+                    <td className="hidden md:table-cell border px-2 py-1 md:sticky left-[100px] bg-gray-50 z-20 font-semibold whitespace-normal">
                       {target}
                     </td>
                     <td className="border px-2 py-1 md:sticky left-[190px] bg-gray-50 z-10 font-semibold text-sm whitespace-normal">
