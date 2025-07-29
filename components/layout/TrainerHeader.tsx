@@ -3,11 +3,13 @@
 import Link from 'next/link'
 import { useEffect, useState, useRef } from 'react'
 import { usePathname } from 'next/navigation'
+import { Menu, X } from 'lucide-react' // 아이콘 사용
 
 export default function Header() {
   const [memberName, setMemberName] = useState<string | null>(null)
   const pathname = usePathname()
   const [showDropdown, setShowDropdown] = useState(false)
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false)
   const dropdownRef = useRef<HTMLDivElement>(null)
 
   useEffect(() => {
@@ -22,7 +24,6 @@ export default function Header() {
     }
   }, [])
 
-  // 외부 클릭 시 드롭다운 닫기
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
       if (
@@ -47,20 +48,33 @@ export default function Header() {
   ]
 
   return (
-    <header className="bg-white shadow-sm border-b sticky top-0 z-10">
-      <div className="max-w-7xl mx-auto px-4 py-3 flex items-center justify-between overflow-x-visible">
+    <header className="bg-white shadow-sm border-b sticky top-0 z-10 w-full">
+      <div className="max-w-7xl mx-auto px-4 py-3 flex items-center justify-between">
+        {/* Logo & Name */}
         <Link
           href="/trainer"
-          className="text-xl font-bold text-rose-600 flex items-center flex-shrink-0"
+          className="text-xl font-bold text-rose-600 flex items-center"
         >
           <span>Lit</span>
           <span style={{ color: '#595959' }} className="ml-1">PT</span>
           {memberName && (
-            <span className="text-base font-semibold text-gray-800 ml-3 whitespace-nowrap">| {memberName}</span>
+            <span className="text-base font-semibold text-gray-800 ml-3 whitespace-nowrap">
+              | {memberName}
+            </span>
           )}
         </Link>
 
-        <nav className="flex text-sm text-gray-700 whitespace-nowrap scrollbar-hide relative z-50">
+        {/* Mobile Hamburger Button */}
+        <button
+          className="sm:hidden p-2"
+          onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
+        >
+          {mobileMenuOpen ? <X size={24} /> : <Menu size={24} />}
+        </button>
+
+        {/* Desktop Nav */}
+        <nav className="hidden sm:flex gap-2 items-center text-sm text-gray-700">
+          {/* 회원 드롭다운 */}
           <div className="relative" ref={dropdownRef}>
             <button
               onClick={() => setShowDropdown((prev) => !prev)}
@@ -72,7 +86,6 @@ export default function Header() {
             >
               회원
             </button>
-
             {showDropdown && (
               <div className="absolute left-0 mt-2 bg-white border border-gray-200 rounded-md shadow-lg z-50 w-36">
                 <Link
@@ -113,7 +126,46 @@ export default function Header() {
           })}
         </nav>
       </div>
+
+      {/* Mobile Nav */}
+      {mobileMenuOpen && (
+        <div className="sm:hidden bg-white border-t border-gray-200 px-4 pb-3">
+          <div className="py-2">
+            <Link
+              href="/members"
+              className={`block px-2 py-2 rounded-md ${
+                pathname === '/members' ? 'bg-rose-100 text-rose-600 font-semibold' : ''
+              }`}
+            >
+              일반회원
+            </Link>
+            <Link
+              href="/members-counsel"
+              className={`block px-2 py-2 rounded-md ${
+                pathname === '/members-counsel' ? 'bg-rose-100 text-rose-600 font-semibold' : ''
+              }`}
+            >
+              상담회원
+            </Link>
+            {navItems.map((item) => {
+              const isActive = pathname === item.href
+              return (
+                <Link
+                  key={item.href}
+                  href={item.href}
+                  className={`block px-2 py-2 rounded-md ${
+                    isActive
+                      ? 'bg-rose-100 text-rose-600 font-semibold'
+                      : 'hover:bg-gray-100'
+                  }`}
+                >
+                  {item.label}
+                </Link>
+              )
+            })}
+          </div>
+        </div>
+      )}
     </header>
   )
 }
-
