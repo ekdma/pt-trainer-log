@@ -53,36 +53,38 @@ export default function SurveyResultPage() {
     <>
       <TrainerHeader />
       <div className="w-full max-w-screen-lg mx-auto">
-        <div className="space-y-6 p-4 md:p-6 bg-white rounded-lg shadow-md mb-8">
-          <select
-            value={selectedMember?.member_counsel_id || ''}
-            onChange={(e) => {
-              const selectedId = e.target.value
-              const m = members.find(
-                (m) => String(m.member_counsel_id) === selectedId
-              )
-              setSelectedMember(m || null)
-            }}
-            className="
-              block w-full max-w-md px-4 py-2 text-base
-              border border-gray-300 rounded-md bg-white text-gray-700
-              focus:outline-none focus:ring-2 focus:ring-rose-500 focus:border-transparent
-              transition duration-200 hover:border-rose-400 cursor-pointer
-            "
-          >
-            <option value="">회원 선택</option>
-            {members
-              .slice()
-              .sort((a, b) =>
-                a.name.localeCompare(b.name, undefined, { sensitivity: 'base' })
-              )
-              .map((m) => (
-                <option key={m.member_counsel_id} value={m.member_counsel_id}>
-                  {m.name}
-                </option>
-              ))}
-          </select>
-        </div>
+        {!memberCounselIdFromUrl && (
+          <div className="space-y-6 p-4 md:p-6 bg-white rounded-lg shadow-md mb-8">
+            <select
+              value={selectedMember?.member_counsel_id || ''}
+              onChange={(e) => {
+                const selectedId = e.target.value
+                const m = members.find(
+                  (m) => String(m.member_counsel_id) === selectedId
+                )
+                setSelectedMember(m || null)
+              }}
+              className="
+                block w-full max-w-md px-4 py-2 text-base
+                border border-gray-300 rounded-md bg-white text-gray-700
+                focus:outline-none focus:ring-2 focus:ring-rose-500 focus:border-transparent
+                transition duration-200 hover:border-rose-400 cursor-pointer
+              "
+            >
+              <option value="">회원 선택</option>
+              {members
+                .slice()
+                .sort((a, b) =>
+                  a.name.localeCompare(b.name, undefined, { sensitivity: 'base' })
+                )
+                .map((m) => (
+                  <option key={m.member_counsel_id} value={m.member_counsel_id}>
+                    {m.name}
+                  </option>
+                ))}
+            </select>
+          </div>
+        )}
 
         {selectedMember && (
           <ShowMemberSurveyResult selectedMemberId={selectedMember.member_counsel_id} />

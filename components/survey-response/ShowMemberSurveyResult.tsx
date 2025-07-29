@@ -61,15 +61,14 @@ export default function ShowMemberSurveyResult({ selectedMemberId }: Props) {
   const [loading, setLoading] = useState(true)
   const [memberLoading, setMemberLoading] = useState(true)
 
-  const fetchResult = async () => {
+  const fetchResult = async (targetMemberCounselId: string) => {
     setLoading(true)
   
-    // 1. 먼저 response_id 와 submitted_at 찾기 (submitted_at 추가)
     const { data: response, error: responseError } = await supabase
       .from('survey_responses')
       .select('id, submitted_at')
       .eq('survey_id', surveyIdFromUrl)
-      .eq('member_counsel_id', memberCounselId)
+      .eq('member_counsel_id', targetMemberCounselId)  // 수정됨
       .single()
   
     if (responseError || !response) {
@@ -80,9 +79,8 @@ export default function ShowMemberSurveyResult({ selectedMemberId }: Props) {
     }
   
     const responseId = response.id
-    setSubmittedAt(response.submitted_at)  // 응답 제출 일시 상태에 저장
+    setSubmittedAt(response.submitted_at)
   
-    // 2. survey_answers 불러오기
     const { data, error } = await supabase
       .from('survey_answers')
       .select(`
@@ -119,19 +117,22 @@ export default function ShowMemberSurveyResult({ selectedMemberId }: Props) {
   }
   
   useEffect(() => {
-    if (!surveyIdFromUrl || !memberCounselId) return
-    fetchResult()
-  }, [surveyIdFromUrl, memberCounselId])
+    const finalMemberCounselId = memberCounselIdFromUrl || selectedMemberId?.toString()
+    if (!surveyIdFromUrl || !finalMemberCounselId) return
+  
+    fetchResult(finalMemberCounselId)
+  }, [surveyIdFromUrl, memberCounselIdFromUrl, selectedMemberId])
 
   useEffect(() => {
-    if (!memberCounselId) return
+    const finalMemberCounselId = memberCounselIdFromUrl || selectedMemberId?.toString()
+    if (!finalMemberCounselId) return
   
     const fetchMember = async () => {
       setMemberLoading(true)
       const { data, error } = await supabase
         .from('members_counsel')
         .select('member_counsel_id, name, birth_date, phone, gender')
-        .eq('member_counsel_id', memberCounselId)
+        .eq('member_counsel_id', finalMemberCounselId)  // 수정됨
         .single()
   
       if (error) {
@@ -144,7 +145,7 @@ export default function ShowMemberSurveyResult({ selectedMemberId }: Props) {
     }
   
     fetchMember()
-  }, [memberCounselId])
+  }, [memberCounselIdFromUrl, selectedMemberId])
 
   if (loading || memberLoading) {
     return (
