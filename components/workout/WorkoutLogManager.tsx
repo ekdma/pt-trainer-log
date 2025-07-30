@@ -923,7 +923,7 @@ export default function WorkoutLogManager({
 
                 return (
                   <tr key={rowKey} className="hover:bg-blue-50 text-sm">
-                    <td className="border px-2 py-1 sticky left-0 font-semibold relative pl-6 whitespace-normal bg-gray-100 z-4">
+                    <td className="border px-2 py-1 sticky left-0 font-semibold relative pl-6 whitespace-normal bg-gray-100 z-10">
                       {/* 즐겨찾기 버튼 (⭐) */}
                       <button
                         onClick={() => toggleFavorite(rowKey)}
@@ -943,10 +943,10 @@ export default function WorkoutLogManager({
                       {/* 난이도 텍스트 */}
                       <span className="hidden md:inline-block pl-5">{level}</span>
                     </td>
-                    <td className="hidden md:table-cell border px-2 py-1 md:sticky left-[100px] bg-gray-100 font-semibold whitespace-normal z-4">
+                    <td className="hidden md:table-cell border px-2 py-1 md:sticky left-[100px] bg-gray-100 font-semibold whitespace-normal z-10">
                       {target}
                     </td>
-                    <td className="border px-2 py-1 sticky left-[35px] md:left-[190px] bg-gray-100 z-4 font-semibold text-sm whitespace-normal">
+                    <td className="border px-2 py-1 sticky left-[35px] md:left-[190px] bg-gray-100 z-10 font-semibold text-sm whitespace-normal">
                       {workout}
                     </td>
                     
