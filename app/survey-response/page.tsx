@@ -1,10 +1,14 @@
 import { Suspense } from 'react'
-import SurveyResponsePageClient from './SurveyResponsePageClient' // useSearchParams 사용하는 컴포넌트
+import SurveyResponsePageClient from './SurveyResponsePageClient' 
+import TrainerHeader from '@/components/layout/TrainerHeader'
 
 export default function SurveyResponsePage() {
   return (
-    <Suspense fallback={<div>로딩 중...</div>}>
-      <SurveyResponsePageClient />
-    </Suspense>
+    <div className="min-h-screen bg-gray-50">
+      <TrainerHeader /> 
+        <Suspense fallback={<div>로딩 중...</div>}>
+          <SurveyResponsePageClient />
+        </Suspense>
+    </div>
   )
 }

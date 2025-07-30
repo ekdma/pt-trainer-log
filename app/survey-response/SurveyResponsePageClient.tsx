@@ -1,7 +1,7 @@
 'use client'
 
 import { useEffect, useState } from 'react'
-import TrainerHeader from '@/components/layout/TrainerHeader'
+// import TrainerHeader from '@/components/layout/TrainerHeader'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { toast } from 'sonner'
@@ -100,7 +100,7 @@ export default function SurveyResponsePage() {
   // ✅ 초기 상태: 정보 입력 폼
   return (
     <div className="min-h-screen bg-gray-100 flex flex-col">
-      <TrainerHeader />
+      {/* <TrainerHeader /> */}
       <main className="flex-grow flex items-center justify-center px-4 py-10">
         <div className="w-full max-w-md bg-white rounded-2xl shadow-lg p-8">
           <h2 className="text-2xl font-bold mb-6 text-gray-800 text-center">

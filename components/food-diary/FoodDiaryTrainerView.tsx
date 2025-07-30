@@ -320,7 +320,8 @@ export default function FoodDiaryTrainerView({ initialSelectedMember = null }: F
   }, [members, initialSelectedMember])
 
   return (
-    <div className="space-y-6 p-4 md:p-6 bg-white rounded-lg shadow-md">
+    // <div className="space-y-6 p-4 md:p-6 bg-white rounded-lg shadow-md">
+    <div className="space-y-6"> 
       <select
         value={selectedMember?.member_id || ''}
         onChange={(e) => {

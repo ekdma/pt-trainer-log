@@ -55,21 +55,8 @@ export default function FoodDiaryPageClient() {
 
   if (user.role === 'member') {
     return (
-      <main className="flex flex-col min-h-screen bg-gray-50 p-6">
-        <div className="w-full max-w-screen-lg mx-auto">
-          {/* <div className="flex items-center justify-between mb-4">
-            <h1 className="flex items-center gap-2 text-2xl font-bold text-rose-700">
-              <Utensils size={25} />
-              Food Diary
-            </h1>
-            <Button
-              onClick={() => router.back()}
-              className="flex items-center gap-1 text-sm text-rose-600 border border-rose-600 px-3 py-1.5 rounded-lg hover:bg-rose-100 transition duration-200"
-            >
-              <ArrowLeft size={16} />
-              뒤로
-            </Button>
-          </div> */}
+      <main className="flex flex-col min-h-screen bg-gray-50 ">
+        <div className="w-full max-w-screen-lg mx-auto p-6">
           <FoodDiaryMemberView 
             memberId={user.member_id!} 
             memberName={(user.nickname || user.name)!}
@@ -85,21 +72,8 @@ export default function FoodDiaryPageClient() {
     : null
 
   return (
-    <main className="flex flex-col min-h-screen bg-gray-50 p-6">
-      <div className="w-full max-w-screen-lg mx-auto">
-        {/* <div className="flex items-center justify-between mb-4">
-          <h1 className="flex items-center gap-2 text-2xl font-bold text-rose-700">
-            <Utensils size={25} />
-            Food Diary
-          </h1>
-          <Button
-            onClick={() => router.back()}
-            className="flex items-center gap-1 text-sm text-rose-600 border border-rose-600 px-3 py-1.5 rounded-lg hover:bg-rose-100 transition duration-200"
-          >
-            <ArrowLeft size={16} />
-            뒤로
-          </Button>
-        </div> */}
+    <main className="flex flex-col min-h-screen bg-gray-50">
+      <div className="w-full max-w-screen-lg mx-auto p-6">
         <FoodDiaryTrainerView initialSelectedMember={initialSelectedMember} />
       </div>
     </main>

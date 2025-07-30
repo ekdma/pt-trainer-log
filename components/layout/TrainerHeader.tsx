@@ -45,6 +45,7 @@ export default function Header() {
     { href: '/workout', label: '운동' },
     { href: '/health-metric', label: '건강' },
     { href: '/goals', label: '목표설정' },
+    { href: '/before-after', label: '비포애프터' },
   ]
 
   return (

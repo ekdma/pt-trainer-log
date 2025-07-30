@@ -17,11 +17,11 @@ export default function FoodDiaryPage() {
   if (!role) return <div className="p-6">로딩 중...</div>
 
   return (
-    <>
+    <div className="bg-gray-50">
       {role === 'trainer' ? <TrainerHeader /> : <Header />}
       <Suspense fallback={<div className="p-6">로딩 중...</div>}>
         <FoodDiaryPageClient />
       </Suspense>
-    </>
+    </div>
   )
 }
