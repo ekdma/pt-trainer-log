@@ -755,16 +755,16 @@ export default function WorkoutLogManager({
         {/* overflow-x-auto로 좌우 스크롤 가능하게 래핑 */}
         <div ref={scrollRef} className="overflow-x-auto overflow-y-visible bg-gray-50 border-2 border-gray-200 max-h-[80vh] z-0">
           <table className="table-fixed min-w-max text-sm border-collapse border border-gray-300 bg-gray-50">
-            <thead className="bg-gray-100 text-gray-700 select-none relative z-[50]">
+            <thead className="bg-gray-100 text-gray-700 select-none relative z-[60]">
               <tr>
-                <th className="sticky top-0 left-0 bg-gray-200 z-40 border px-2 py-2 text-center font-semibold w-[35px] md:w-[100px]">
+                <th className="sticky top-0 left-0 bg-gray-200 z-50 border px-2 py-2 text-center font-semibold w-[35px] md:w-[100px]">
                   <span className="block md:hidden">{''}</span>
                   <span className="hidden md:block">LEVEL</span>
                 </th>
-                <th className="hidden md:table-cell border px-2 py-2 text-center font-semibold w-[90px] md:sticky top-0 md:left-[100px] bg-gray-200 z-30">
+                <th className="hidden md:table-cell border px-2 py-2 text-center font-semibold w-[90px] md:sticky top-0 md:left-[100px] bg-gray-200 z-40">
                   TARGET
                 </th>
-                <th className="border px-2 py-2 text-center font-semibold w-[120px] sticky top-0 left-[35px] md:left-[190px] bg-gray-200 z-20">
+                <th className="border px-2 py-2 text-center font-semibold w-[120px] sticky top-0 left-[35px] md:left-[190px] bg-gray-200 z-30">
                   WORKOUT
                 </th>
 
@@ -923,7 +923,7 @@ export default function WorkoutLogManager({
 
                 return (
                   <tr key={rowKey} className="hover:bg-blue-50 text-sm">
-                    <td className="sticky left-0 z-40 bg-gray-100 border px-2 py-1 font-semibold text-sm pl-6">
+                    <td className="sticky left-0 z-10 bg-gray-100 border px-2 py-1 font-semibold text-sm pl-6">
                       {/* 즐겨찾기 버튼 (⭐) */}
                       <button
                         onClick={() => toggleFavorite(rowKey)}
@@ -943,10 +943,10 @@ export default function WorkoutLogManager({
                       {/* 난이도 텍스트 */}
                       <span className="hidden md:inline-block pl-5">{level}</span>
                     </td>
-                    <td className="hidden md:table-cell sticky left-[100px] z-30 bg-gray-100 border px-2 py-1 font-semibold">
+                    <td className="hidden md:table-cell sticky left-[100px] z-5 bg-gray-100 border px-2 py-1 font-semibold">
                       {target}
                     </td>
-                    <td className="sticky left-[35px] md:left-[190px] z-20 bg-gray-100 border px-2 py-1 font-semibold">
+                    <td className="sticky left-[35px] md:left-[190px] z-0 bg-gray-100 border px-2 py-1 font-semibold">
                       {workout}
                     </td>
                     
