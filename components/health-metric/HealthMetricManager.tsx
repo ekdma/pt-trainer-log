@@ -604,12 +604,12 @@ export default function HealthMetricManager({
                   return (
                     <tr key={rowKey} className="hover:bg-blue-50 text-sm">
                       {/* TARGET */}
-                      <td className="border px-2 py-1 md:sticky left-0 z-30 font-semibold relative whitespace-normal bg-gray-50">
+                      <td className="border px-2 py-1 md:sticky left-0 z-30 font-semibold relative whitespace-normal bg-gray-100">
                         {metric_target}
                       </td>
 
                       {/* TYPE */}
-                      <td className="border px-2 py-1 md:sticky left-[120px] bg-gray-50 z-20 font-semibold whitespace-normal">
+                      <td className="border px-2 py-1 md:sticky left-[120px] bg-gray-100 z-20 font-semibold whitespace-normal">
                         {metric_type}
                       </td>
 
