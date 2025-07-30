@@ -757,14 +757,14 @@ export default function WorkoutLogManager({
           <table className="table-fixed min-w-max text-sm border-collapse border border-gray-300 bg-gray-50">
             <thead className="bg-gray-100 text-gray-700 select-none">
               <tr>
-                <th className="sticky top-0 left-0 bg-gray-200 z-[5] border px-2 py-2 text-center font-semibold w-[35px] md:w-[100px]">
+                <th className="sticky top-0 left-0 bg-gray-200 z-10 border px-2 py-2 text-center font-semibold w-[35px] md:w-[100px]">
                   <span className="block md:hidden">{''}</span>
                   <span className="hidden md:block">LEVEL</span>
                 </th>
-                <th className="hidden md:table-cell border px-2 py-2 text-center font-semibold w-[90px] md:sticky top-0 md:left-[100px] bg-gray-200 md:z-30 z-5">
+                <th className="hidden md:table-cell border px-2 py-2 text-center font-semibold w-[90px] md:sticky top-0 md:left-[100px] bg-gray-200 md:z-30 z-10">
                   TARGET
                 </th>
-                <th className="border px-2 py-2 text-center font-semibold w-[120px] sticky top-0 left-[35px] md:left-[190px] bg-gray-200 z-[4]">
+                <th className="border px-2 py-2 text-center font-semibold w-[120px] sticky top-0 left-[35px] md:left-[190px] bg-gray-200 z-10">
                   WORKOUT
                 </th>
 
@@ -803,7 +803,7 @@ export default function WorkoutLogManager({
 
                 {/* 추가 날짜 입력 열 */}
                 {addingDate !== null && (
-                  <th className="border px-1 py-1 text-center text-xs font-semibold md:sticky top-0 bg-yellow-50 z-5 w-[100px]">
+                  <th className="border px-1 py-1 text-center text-xs font-semibold md:sticky top-0 bg-yellow-50 z-10 w-[100px]">
                     <div className="flex flex-col items-center gap-1">
                       <div className="flex gap-[2px]">
                         <input
