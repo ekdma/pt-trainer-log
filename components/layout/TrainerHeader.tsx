@@ -130,11 +130,20 @@ export default function Header() {
 
       {/* Mobile Nav */}
       {mobileMenuOpen && (
-        <div className="sm:hidden bg-white border-t border-gray-200 px-4 pb-3">
-          <div className="py-2">
+        <div className="fixed inset-0 z-70 bg-white flex flex-col px-6 py-8 sm:hidden overflow-y-auto">
+          {/* 상단 닫기 버튼 */}
+          <div className="flex justify-end mb-6">
+            <button onClick={() => setMobileMenuOpen(false)}>
+              <X size={28} />
+            </button>
+          </div>
+
+          {/* 메뉴 항목들 */}
+          <div className="flex flex-col gap-3 text-lg font-medium text-gray-800">
             <Link
               href="/members"
-              className={`block px-2 py-2 rounded-md ${
+              onClick={() => setMobileMenuOpen(false)}
+              className={`px-2 py-2 rounded-md ${
                 pathname === '/members' ? 'bg-rose-100 text-rose-600 font-semibold' : ''
               }`}
             >
@@ -142,7 +151,8 @@ export default function Header() {
             </Link>
             <Link
               href="/members-counsel"
-              className={`block px-2 py-2 rounded-md ${
+              onClick={() => setMobileMenuOpen(false)}
+              className={`px-2 py-2 rounded-md ${
                 pathname === '/members-counsel' ? 'bg-rose-100 text-rose-600 font-semibold' : ''
               }`}
             >
@@ -154,7 +164,8 @@ export default function Header() {
                 <Link
                   key={item.href}
                   href={item.href}
-                  className={`block px-2 py-2 rounded-md ${
+                  onClick={() => setMobileMenuOpen(false)}
+                  className={`px-2 py-2 rounded-md ${
                     isActive
                       ? 'bg-rose-100 text-rose-600 font-semibold'
                       : 'hover:bg-gray-100'
@@ -167,6 +178,7 @@ export default function Header() {
           </div>
         </div>
       )}
+
     </header>
   )
 }

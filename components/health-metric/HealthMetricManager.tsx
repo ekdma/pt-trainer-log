@@ -482,7 +482,7 @@ export default function HealthMetricManager({
       <div className="max-w-6xl mx-auto text-gray-700">
           {/* overflow-x-auto로 좌우 스크롤 가능하게 래핑 */}
           <div ref = {scrollRef} className="overflow-auto bg-gray-50 border-2 border-gray-200">
-            <table className="table-fixed min-w-max text-sm border-collapse border border-gray-300 bg-gray-50">
+            <table className="table-fixed min-w-max text-sm border-separate border-spacing-0 border border-gray-300 bg-gray-50">
               <thead className="bg-gray-100 text-gray-700 select-none">
                 <tr>
                   <th className="border px-2 py-2 text-center font-semibold w-[120px] md:sticky top-0 md:left-0 bg-gray-200 md:z-40">
