@@ -986,7 +986,7 @@ export default function WorkoutLogManager({
                             className={`
                               w-full text-center border rounded text-sm
                               ${isDisabled
-                                ? 'bg-gray-200 text-gray-600 border-gray-300 cursor-not-allowed z-[0]'
+                                ? 'bg-gray-100 text-gray-600 border-gray-300 cursor-not-allowed z-[0]'
                                 : logMap[rowKey]?.[date]?.weight == null
                                   ? 'bg-sky-50 border-sky-100 z-[0]'
                                   : 'border-gray-200 z-[0]'
@@ -1042,7 +1042,7 @@ export default function WorkoutLogManager({
                             className={`
                               w-full text-center rounded border text-sm
                               ${isDisabled
-                                ? 'bg-gray-200 text-gray-600 border-gray-300 cursor-not-allowed'
+                                ? 'bg-gray-100 text-gray-600 border-gray-300 cursor-not-allowed'
                                 : 'bg-white border-yellow-400 focus:ring-1 focus:ring-yellow-500'}
                             `}
                             placeholder="-"
