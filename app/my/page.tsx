@@ -11,6 +11,7 @@ export default function HomePage() {
   useAuthGuard()
 
   useEffect(() => {
+    window.scrollTo({ top: 0, behavior: 'auto' })
     // fetchGoals() / fetchSchedules()
   }, [])
 

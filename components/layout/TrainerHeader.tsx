@@ -56,7 +56,7 @@ export default function Header() {
           href="/trainer"
           className="text-xl font-bold text-rose-600 flex items-center"
         >
-          <span>Lit</span>
+          <span>LiT</span>
           <span style={{ color: '#595959' }} className="ml-1">PT</span>
           {memberName && (
             <span className="text-base font-semibold text-gray-800 ml-3 whitespace-nowrap">
@@ -130,7 +130,11 @@ export default function Header() {
 
       {/* Mobile Nav */}
       {mobileMenuOpen && (
-        <div className="fixed inset-0 z-70 bg-white flex flex-col px-6 py-8 sm:hidden overflow-y-auto">
+        <div
+          className={`fixed inset-0 z-70 bg-white flex flex-col px-6 py-8 sm:hidden overflow-y-auto transform transition-all duration-300 ease-in-out ${
+            mobileMenuOpen ? 'translate-y-0 opacity-100' : '-translate-y-full opacity-0 pointer-events-none'
+          }`}
+        >
           {/* 상단 닫기 버튼 */}
           <div className="flex justify-end mb-6">
             <button onClick={() => setMobileMenuOpen(false)}>
@@ -143,8 +147,10 @@ export default function Header() {
             <Link
               href="/members"
               onClick={() => setMobileMenuOpen(false)}
-              className={`px-2 py-2 rounded-md ${
-                pathname === '/members' ? 'bg-rose-100 text-rose-600 font-semibold' : ''
+              className={`px-2 py-2 rounded-md transition active:scale-95 active:bg-gray-200 ${
+                pathname === '/members'
+                  ? 'bg-rose-100 text-rose-600 font-semibold'
+                  : 'hover:bg-gray-100'
               }`}
             >
               일반회원
@@ -152,8 +158,10 @@ export default function Header() {
             <Link
               href="/members-counsel"
               onClick={() => setMobileMenuOpen(false)}
-              className={`px-2 py-2 rounded-md ${
-                pathname === '/members-counsel' ? 'bg-rose-100 text-rose-600 font-semibold' : ''
+              className={`px-2 py-2 rounded-md transition active:scale-95 active:bg-gray-200 ${
+                pathname === '/members-counsel'
+                  ? 'bg-rose-100 text-rose-600 font-semibold'
+                  : 'hover:bg-gray-100'
               }`}
             >
               상담회원
@@ -165,7 +173,7 @@ export default function Header() {
                   key={item.href}
                   href={item.href}
                   onClick={() => setMobileMenuOpen(false)}
-                  className={`px-2 py-2 rounded-md ${
+                  className={`px-2 py-2 rounded-md transition active:scale-95 active:bg-gray-200 ${
                     isActive
                       ? 'bg-rose-100 text-rose-600 font-semibold'
                       : 'hover:bg-gray-100'

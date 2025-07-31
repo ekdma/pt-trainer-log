@@ -40,7 +40,7 @@ export default function Header() {
           href="/my"
           className="text-xl font-bold text-rose-600 flex items-center min-w-0"
         >
-          <span className="shrink-0">Lit</span>
+          <span className="shrink-0">LiT</span>
           <span style={{ color: '#595959' }} className="ml-1 shrink-0">
             PT
           </span>

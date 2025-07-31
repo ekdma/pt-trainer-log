@@ -923,7 +923,7 @@ export default function WorkoutLogManager({
 
                 return (
                   <tr key={rowKey} className="hover:bg-blue-50 text-sm">
-                    <td className="sticky left-0 z-15 bg-gray-100 border px-2 py-1 font-semibold text-sm pl-6">
+                    <td className="sticky left-0 z-15 bg-gray-100 border px-2 py-1 font-semibold text-sm pl-6 bg-opacity-100 style={{ willChange: 'transform' }}">
                       {/* 즐겨찾기 버튼 (⭐) */}
                       <button
                         onClick={() => toggleFavorite(rowKey)}
@@ -943,10 +943,10 @@ export default function WorkoutLogManager({
                       {/* 난이도 텍스트 */}
                       <span className="hidden md:inline-block pl-5">{level}</span>
                     </td>
-                    <td className="hidden md:table-cell sticky left-[100px] z-10 bg-gray-100 border px-2 py-1 font-semibold">
+                    <td className="hidden md:table-cell sticky left-[100px] z-10 bg-gray-100 border px-2 py-1 font-semibold bg-opacity-100 style={{ willChange: 'transform' }}">
                       {target}
                     </td>
-                    <td className="sticky left-[35px] md:left-[190px] z-5 bg-gray-100 border px-2 py-1 font-semibold">
+                    <td className="sticky left-[35px] md:left-[190px] z-5 bg-gray-100 border px-2 py-1 font-semibold bg-opacity-100 style={{ willChange: 'transform' }}">
                       {workout}
                     </td>
                     
@@ -986,10 +986,10 @@ export default function WorkoutLogManager({
                             className={`
                               w-full text-center border rounded text-sm
                               ${isDisabled
-                                ? 'bg-gray-100 text-gray-600 border-gray-300 cursor-not-allowed z-[0]'
+                                ? 'bg-gray-100 text-gray-600 border-gray-300 cursor-not-allowed z-0'
                                 : logMap[rowKey]?.[date]?.weight == null
-                                  ? 'bg-sky-50 border-sky-100 z-[0]'
-                                  : 'border-gray-200 z-[0]'
+                                  ? 'bg-sky-50 border-sky-100 z-0'
+                                  : 'border-gray-200 z-0'
                               }
                             `}
                             value={

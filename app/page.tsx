@@ -87,12 +87,12 @@ export default function Home() {
           className="w-24 h-24 sm:w-28 sm:h-28 md:w-36 md:h-36 mb-6"
         /> */}
         <h1 className="text-center text-3xl sm:text-4xl md:text-5xl font-montserrat font-bold drop-shadow mb-4 leading-tight">
-          <span className="text-[#FF6600]">Lit</span>{' '}
+          <span className="text-[#FF6600]">LiT</span>{' '}
           <span className="text-[#595959]">Personal Training Log</span>
         </h1>
 
         <p className="text-center text-sm sm:text-base md:text-lg text-gray-700 max-w-md leading-relaxed">
-          Lit PT 회원의 운동 데이터를 기록하고 시각화하여 <br />
+          LiT PT 회원의 운동 데이터를 기록하고 시각화하여 <br />
           건강한 피트니스 라이프를 돕는 시스템입니다 🙌
         </p>
       </section>
