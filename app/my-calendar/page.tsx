@@ -8,7 +8,6 @@ import ShowMemberSession from '@/components/my-calendar/ShowMemberSession'
 import { useAuthGuard } from '@/hooks/useAuthGuard'
 import Calendar from 'react-calendar'
 import 'react-calendar/dist/Calendar.css'
-import { addMonths } from 'date-fns'
 import { getSupabaseClient } from '@/lib/supabase'
 import { ChevronLeftIcon, ChevronRightIcon, ChevronDoubleLeftIcon, ChevronDoubleRightIcon } from '@heroicons/react/24/solid'
 import { formatInTimeZone } from 'date-fns-tz'
@@ -23,7 +22,6 @@ export default function MyCalendarPage() {
   const [selectedDate, setSelectedDate] = useState<Date>(new Date())
 
   const [memberId, setMemberId] = useState<string | null>(null)
-  const today = new Date()
   const [showSessionInfo, setShowSessionInfo] = useState(false)
   const [sessionMap, setSessionMap] = useState<SessionInfo>({})
 

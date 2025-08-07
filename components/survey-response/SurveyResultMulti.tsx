@@ -46,7 +46,7 @@ export default function SurveyResultMulti({
 
   const [loading, setLoading] = useState(true)
   const [member, setMember] = useState<MemberInfo | null>(null)
-  const [visibleSurveyIds, setVisibleSurveyIds] = useState<string[]>([])
+  // const [visibleSurveyIds, setVisibleSurveyIds] = useState<string[]>([])
   const [results, setResults] = useState<
     {
         survey: Survey
@@ -175,7 +175,7 @@ export default function SurveyResultMulti({
       <h2 className="text-2xl font-semibold mb-6 text-gray-900">제출된 설문 목록</h2>
       <div className="space-y-6">
         {results.map(({ survey, questions, answers, responseId, submittedAt }) => {
-          const isVisible = visibleSurveyIds.includes(survey.id)
+          // const isVisible = visibleSurveyIds.includes(survey.id)
   
           return (
             <div key={survey.id} className="border border-gray-200 rounded-xl p-6 bg-white shadow hover:shadow-md transition">
@@ -199,7 +199,7 @@ export default function SurveyResultMulti({
                 </Button>
               </div>
   
-              {isVisible && (
+              {/* {isVisible && (
                 <div className="mt-4 space-y-5">
                   {questions.map((q) => {
                     const answer = answers.find((a) => a.question_id === q.id)
@@ -233,7 +233,7 @@ export default function SurveyResultMulti({
                     )
                   })}
                 </div>
-              )}
+              )} */}
             </div>
           )
         })}
