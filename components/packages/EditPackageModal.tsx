@@ -12,6 +12,7 @@ import {
 } from '@/components/ui/dialog'
 import { Button } from '@/components/ui/button'
 import { PackagePlus } from 'lucide-react'
+import { toast } from 'sonner'
 
 type Package = {
   package_id: number
@@ -72,9 +73,11 @@ export default function EditPackageModal({
     setLoading(false)
 
     if (error) {
-      setErrorMsg('패키지 수정 중 문제가 발생했어요 😥')
+      // setErrorMsg('패키지 수정 중 문제가 발생했어요 😥')
+      toast.error('패키지 수정 중 문제가 발생했어요 😥')
     } else {
-      alert('패키지를 성공적으로 수정했어요 ✅')
+      // alert('패키지를 성공적으로 수정했어요 ✅')
+      toast.success('패키지를 성공적으로 수정했어요 ✅')
       onUpdate()
       onClose()
     }

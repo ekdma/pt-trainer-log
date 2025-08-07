@@ -5,6 +5,8 @@ import dayjs from 'dayjs'
 import { NotebookPen, X } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { deleteGroupSessionDeeply } from '@/lib/supabase'
+import { toast } from 'sonner'
+import ConfirmDeleteItem from '@/components/ui/ConfirmDeleteItem'
 
 interface Props {
   sessions: GroupSession[]
@@ -21,26 +23,61 @@ export default function GroupSessionSearch({
   setIsEditOpen,
 }: Props) {
 
-  const handleDelete = async (sessionId: number) => {
-    const password = prompt('비밀번호를 입력하세요 🤐')
-    if (password !== '2213') return alert('비밀번호가 일치하지 않습니다 ❌')
-    if (!confirm('정말로 이 세션을 삭제하시겠습니까?')) return
-
-    try {
-      console.log('삭제 시도 - sessionId:', sessionId)
-      await deleteGroupSessionDeeply(sessionId)
-      alert('세션 삭제를 완료하였습니다 🎉')
-      fetchSessions()
-    } catch (err: unknown) {
-      if (err instanceof Error) {
-        console.error('삭제 중 오류:', err)
-        alert('세션 삭제 중 문제가 발생했어요 😥\n\n' + err.message)
-      } else {
-        console.error('삭제 중 알 수 없는 오류:', err)
-        alert('알 수 없는 오류가 발생했어요 😥')
-      }
-    }
+  const handleDelete = (sessionId: number) => {
+    const toastId = crypto.randomUUID()
+  
+    toast.custom(
+      (id) => (
+        <ConfirmDeleteItem
+          title="정말로 이 세션을 삭제할까요?"
+          description="삭제된 세션은 복구할 수 없습니다."
+          onCancel={() => toast.dismiss(id)}
+          onConfirm={async () => {
+            toast.dismiss(id)
+            const password = prompt('비밀번호를 입력하세요 🤐')
+            if (password !== '2213') {
+              toast.error('비밀번호가 일치하지 않습니다 ❌')
+              return
+            }
+  
+            try {
+              await deleteGroupSessionDeeply(sessionId)
+              toast.success('세션이 삭제되었습니다.')
+              fetchSessions()
+            } catch (err: unknown) {
+              if (err instanceof Error) {
+                toast.error('세션 삭제 실패: ' + err.message)
+              } else {
+                toast.error('알 수 없는 오류가 발생했어요 😥')
+              }
+            }
+          }}
+        />
+      ),
+      { id: toastId }
+    )
   }
+  
+
+    // const password = prompt('비밀번호를 입력하세요 🤐')
+    // if (password !== '2213') return alert('비밀번호가 일치하지 않습니다 ❌')
+    // if (!confirm('정말로 이 세션을 삭제하시겠습니까?')) return
+
+    // try {
+    //   console.log('삭제 시도 - sessionId:', sessionId)
+    //   await deleteGroupSessionDeeply(sessionId)
+    //   alert('세션 삭제를 완료하였습니다 🎉')
+    //   fetchSessions()
+    // } catch (err: unknown) {
+    //   if (err instanceof Error) {
+    //     console.error('삭제 중 오류:', err)
+    //     alert('세션 삭제 중 문제가 발생했어요 😥\n\n' + err.message)
+    //   } else {
+    //     console.error('삭제 중 알 수 없는 오류:', err)
+    //     alert('알 수 없는 오류가 발생했어요 😥')
+    //   }
+    // }
+  // }
 
   return (
     <ul className="space-y-4 w-full max-w-3xl mx-auto">

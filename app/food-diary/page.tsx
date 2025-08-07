@@ -4,10 +4,11 @@ import { Suspense, useEffect, useState } from 'react'
 import FoodDiaryPageClient from '../../components/food-diary/FoodDiaryPageClient'
 import Header from '@/components/layout/Header'
 import TrainerHeader from '@/components/layout/TrainerHeader'
+import { useAuthGuard } from '@/hooks/useAuthGuard'
 
 export default function FoodDiaryPage() {
   const [role, setRole] = useState<'member' | 'trainer' | null>(null)
-
+  useAuthGuard()
   useEffect(() => {
     const raw = localStorage.getItem('litpt_member')
     const user = raw ? JSON.parse(raw) : null

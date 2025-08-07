@@ -3,6 +3,7 @@ import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
 import { Nanum_Gothic } from "next/font/google";
 import { Montserrat } from 'next/font/google'
+import { Toaster } from 'sonner'
 
 const montserrat = Montserrat({
   weight: ['700'], // Bold
@@ -42,6 +43,7 @@ export default function RootLayout({
         className={`${geistSans.variable} ${geistMono.variable} ${nanumGothic.variable} ${montserrat.variable} font-nanum antialiased`}
       >
         {children}
+        <Toaster position="top-right" richColors expand />
       </body>
     </html>
   );

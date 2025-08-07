@@ -5,6 +5,7 @@ import { Button } from '@/components/ui/button'
 import { getSupabaseClient } from '@/lib/supabase'
 import { ArrowLeft } from 'lucide-react'
 import { useRouter } from 'next/navigation'
+import { toast } from 'sonner'
 
 interface SurveyDetailProps {
   surveyId: string
@@ -70,7 +71,8 @@ export default function SurveyDetail({
   
         if (surveyError) {
           setLoading(false)
-          alert('설문 정보를 불러오는데 실패했습니다.')
+          // alert('설문 정보를 불러오는데 실패했습니다.')
+          toast.error('설문 정보를 불러오는데 실패했습니다.')
           onBack()
           return
         }
@@ -84,7 +86,8 @@ export default function SurveyDetail({
   
         if (questionsError) {
           setLoading(false)
-          alert('질문을 불러오는데 실패했습니다.')
+          // alert('질문을 불러오는데 실패했습니다.')
+          toast.error('질문을 불러오는데 실패했습니다.')
           onBack()
           return
         }
@@ -108,7 +111,8 @@ export default function SurveyDetail({
       } catch (error) {
         console.error(error)
         setLoading(false)
-        alert('데이터를 불러오는 중 오류가 발생했습니다.')
+        // alert('데이터를 불러오는 중 오류가 발생했습니다.')
+        toast.error('데이터를 불러오는 중 오류가 발생했습니다.')
         onBack()
       } finally {
         setLoading(false)
@@ -135,7 +139,8 @@ export default function SurveyDetail({
         answers[q.id] === '' ||
         (Array.isArray(answers[q.id]) && answers[q.id].length === 0)
       ) {
-        alert('모든 질문에 답변해 주세요.')
+        // alert('모든 질문에 답변해 주세요.')
+        toast.warning('모든 질문에 답변해 주세요.')
         return
       }
     }
@@ -184,11 +189,13 @@ export default function SurveyDetail({
 
       if (answerError) throw answerError
 
-      alert('설문이 성공적으로 제출되었습니다.')
+      // alert('설문이 성공적으로 제출되었습니다.')
+      toast.success('설문이 성공적으로 제출되었습니다.')
       onBack()
     } catch (e) {
       console.error(e)
-      alert('설문 제출 중 오류가 발생했습니다.')
+      // alert('설문 제출 중 오류가 발생했습니다.')
+      toast.error('설문 제출 중 오류가 발생했습니다.')
     } finally {
       setLoading(false)
     }
@@ -262,9 +269,19 @@ export default function SurveyDetail({
         </div>
       </div>
 
-      <h2 className="text-2xl font-semibold mb-2">{survey.title}</h2>
+      {/* <h2 className="text-2xl font-semibold mb-2">{survey.title}</h2>
       {survey.description && (
         <p className="mb-6 text text-gray-600 mt-1 whitespace-pre-line">{survey.description}</p>
+      )} */}
+
+      {survey.title && (
+        <div className="mb-8 bg-white p-6 rounded-2xl shadow-md border border-gray-200 space-y-4">
+          <h3 className="text-xl font-semibold text-gray-800 mb-4 border-b border-gray-200 pb-2">{survey.title}</h3>
+          {survey.description && (
+            // <p className="text-gray-600 mt-2 whitespace-pre-line">{surveyDescription}</p>
+            <h3 className="text-sm text-gray-700 mb-4 pb-2 whitespace-pre-line">{survey.description}</h3>
+          )}
+        </div>
       )}
 
       <form

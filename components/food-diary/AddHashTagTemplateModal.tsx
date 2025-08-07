@@ -13,6 +13,7 @@ import {
 } from '@/components/ui/dialog'
 import { getSupabaseClient } from '@/lib/supabase'
 import { X } from 'lucide-react'
+import { toast } from 'sonner'
 
 interface AddHashTagTemplateModalProps {
   trainerId: string
@@ -48,11 +49,13 @@ export default function AddHashTagTemplateModal({
     const tag = newTagText.trim()
     const desc = newDescription.trim()
     if (!tag) {
-      alert('해시태그를 입력해주세요')
+      toast.warning('해시태그를 입력해주세요')      
+      // alert('해시태그를 입력해주세요')
       return
     }
     if (tagList.some(t => t.hashtag_content === tag)) {
-      alert('이미 존재하는 해시태그입니다')
+      toast.warning('이미 존재하는 해시태그입니다.')     
+      // alert('이미 존재하는 해시태그입니다')
       return
     }
 
@@ -70,7 +73,8 @@ export default function AddHashTagTemplateModal({
 
     if (error) {
       console.error('해시태그 저장 오류:', error)
-      alert(`저장에 실패했습니다. 에러: ${error.message}`)
+      toast.error(`저장에 실패했습니다. 에러: ${error.message}`)
+      // alert(`저장에 실패했습니다. 에러: ${error.message}`)
       return
     }
 

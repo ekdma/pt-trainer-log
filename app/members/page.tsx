@@ -12,6 +12,10 @@ import { Search, UserRoundPlus, UserRoundSearch } from 'lucide-react';
 import { Button } from '@/components/ui/button'
 import AddMemberOpen from '@/components/members/AddMemberOpen'
 import EditMemberModal from '@/components/members/EditMemberModal'
+import {
+  ToggleGroup,
+  ToggleGroupItem,
+} from '@/components/ui/toggle-group'
 
 export default function MembersPage() {
   // const [supabase, setSupabase] = useState<SupabaseClient | null>(null)
@@ -22,6 +26,7 @@ export default function MembersPage() {
   const supabase = getSupabaseClient()
 
   const [selectedMember, setSelectedMember] = useState<Member | null>(null)
+  const [memberTab, setMemberTab] = useState<'all' | 'active'>('active')
   // const [workoutLogs, setWorkoutLogs] = useState<WorkoutRecord[]>([])
   // const [healthLogs, setHealthLogs] = useState<HealthMetric[]>([])
   // const [activeTab, setActiveTab] = useState<'workout' | 'health' | 'food'>('workout')
@@ -47,12 +52,18 @@ export default function MembersPage() {
   }, [selectedMember])
 
   const fetchMembers = async () => {
-    const { data, error } = await supabase
-      .from('members')
-      .select('*')
-      .eq('status', 'active');
+    const query = supabase.from('members').select('*')
+  
+    if (memberTab === 'active') {
+      query.eq('status', 'active')
+    } else if (memberTab === 'all') {
+      query.neq('status', 'delete') // 'delete' 제외
+    }
+  
+    const { data, error } = await query
+  
     if (!error) setFilteredMembers(data ?? [])
-    else console.error('패키지 불러오기 실패:', error.message)
+    else console.error('회원 불러오기 실패:', error.message)
   }
 
   const handleSearch = async () => {
@@ -80,7 +91,7 @@ export default function MembersPage() {
 
   useEffect(() => {
     fetchMembers()
-  }, []) 
+  }, [memberTab])
 
   return (
     <div className="min-h-screen bg-gray-50">
@@ -91,7 +102,29 @@ export default function MembersPage() {
           <h2 className="text-lg font-semibold text-gray-800">회원 관리</h2>
 
           {/* 우측: 검색창 + 버튼들 */}
-          <div className="flex flex-col sm:flex-row items-center gap-2 sm:gap-3 w-full sm:w-auto">
+          <div className="flex flex-col sm:flex-row items-start sm:items-center gap-2 sm:gap-3 w-full sm:w-auto">
+            {/* 회원 구분 탭 */}
+            <ToggleGroup
+              type="single"
+              value={memberTab}
+              onValueChange={(value) => {
+                if (value) setMemberTab(value as 'all' | 'active')
+              }}
+            >
+              <ToggleGroupItem
+                value="all"
+                className="text-sm px-4 py-2"
+              >
+                전체회원
+              </ToggleGroupItem>
+              <ToggleGroupItem
+                value="active"
+                className="text-sm px-4 py-2"
+              >
+                현재회원
+              </ToggleGroupItem>
+            </ToggleGroup>
+
             {/* 검색창 */}
             <div className="relative w-full sm:w-64">
               <input
@@ -108,23 +141,17 @@ export default function MembersPage() {
             </div>
 
             {/* 버튼들 */}
-            <Button
-              onClick={handleSearch}
-              variant="click"
-              className="text-sm"
-            >
+            <Button onClick={handleSearch} variant="click" className="text-sm">
               <UserRoundSearch size={20} /> 검색
             </Button>
 
-            <Button
-              onClick={() => setIsAddMemberOpen(true)}
-              variant="click"
-              className="text-sm"
-            >
+            <Button onClick={() => setIsAddMemberOpen(true)} variant="click" className="text-sm">
               <UserRoundPlus size={20} /> 회원 추가
             </Button>
           </div>
+
         </div>
+
         <MemberSearch
           members={filteredMembers} // ✅ 전달
           onSelectMember={(member) => {

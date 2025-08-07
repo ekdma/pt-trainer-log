@@ -13,6 +13,7 @@ import {
 } from "@dnd-kit/sortable";
 import { CSS } from "@dnd-kit/utilities";
 import { createClient } from "@supabase/supabase-js";
+import { toast } from 'sonner'
 
 // Supabase client 설정
 const supabase = createClient(
@@ -165,9 +166,11 @@ export default function OrderManagementModal({ allTypes, isOpen, onClose, onRefr
   
     setLoading(false);
     if (error) {
-      alert("순서 저장 중 오류 발생: " + error.message);
+      // alert("순서 저장 중 오류 발생: " + error.message);
+      toast.error("순서 저장 중 오류 발생: " + error.message)
     } else {
-      alert("순서가 저장되었습니다 😊");
+      // alert("순서가 저장되었습니다 😊");
+      toast.success('순서가 저장되었습니다 😊')
       onClose();
       onRefreshAllTypes();
     }

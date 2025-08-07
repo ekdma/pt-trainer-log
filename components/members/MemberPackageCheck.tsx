@@ -4,6 +4,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/u
 import { Button } from '@/components/ui/button';
 import { SupabaseClient } from '@supabase/supabase-js';
 import { MemberPackage } from '@/components/members/types';
+import { toast } from 'sonner'
 
 interface Props {
   isEditPackageOpen: boolean;
@@ -66,9 +67,11 @@ export default function MemberPackageCheck({
 
     setLoading(false);
     if (error) {
-      alert('패키지 수정 실패: ' + error.message);
+      // alert('패키지 수정 실패: ' + error.message);
+      toast.error('패키지 수정 실패: ' + error.message)
     } else {
-      alert('패키지 정보가 수정되었습니다.');
+      // alert('패키지 정보가 수정되었습니다.');
+      toast.success('패키지 정보가 수정되었습니다.')
       setIsEditPackageOpen(false);
       fetchMemberPackages();
     }

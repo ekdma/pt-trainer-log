@@ -7,6 +7,7 @@ import {
 } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { SupabaseClient } from '@supabase/supabase-js';
+import { toast } from 'sonner'
 
 type Trainer = {
   trainer_id: number;
@@ -92,9 +93,11 @@ export default function EditMemberPackage({
       .eq("member_package_id", currentPackage.member_package_id);
 
     if (error) {
-      alert("패키지 수정 실패: " + error.message);
+      // alert("패키지 수정 실패: " + error.message);
+      toast.error("패키지 수정 실패: " + error.message)
     } else {
-      alert("패키지 정보가 수정되었습니다.");
+      // alert("패키지 정보가 수정되었습니다.");
+      toast.success('패키지 정보가 수정되었습니다.')
       setIsOpen(false);
       fetchMemberPackages();
     }

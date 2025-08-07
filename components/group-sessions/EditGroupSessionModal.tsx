@@ -12,6 +12,7 @@ import {
   DialogHeader,
   DialogTitle,
 } from '@/components/ui/dialog'
+import { toast } from 'sonner'
 
 type GroupSession = {
   group_session_id: number
@@ -174,7 +175,8 @@ export default function EditGroupSessionModal({ session, onClose, onUpdate, supa
         if (partErr) throw partErr
       }
 
-      alert('그룹 세션을 성공적으로 수정했어요 ✅')
+      // alert('그룹 세션을 성공적으로 수정했어요 ✅')
+      toast.success('그룹 세션을 성공적으로 수정했어요 ✅')
       onUpdate()
       onClose()
     } catch (err) {

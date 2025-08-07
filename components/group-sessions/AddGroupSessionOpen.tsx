@@ -8,6 +8,7 @@ import { Users } from 'lucide-react'
 import AddGroupWorkoutModal from './AddGroupWorkoutModal' 
 import AddGroupThemeModal from './AddGroupThemeModal'  
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog'
+import { toast } from 'sonner'
 
 type Props = {
   open: boolean
@@ -90,7 +91,8 @@ export default function AddGroupSessionDialog({ open, onClose, onSessionAdded }:
       await supabase.from('group_session_workouts').insert(selectedWorkouts.map(w => ({ group_session_id: groupSessionId, workout_name: w })))
       await supabase.from('group_session_participants').insert(selectedMembers.map(m => ({ group_session_id: groupSessionId, member_id: Number(m) })))
       await supabase.from('pt_sessions').insert(selectedMembers.map(m => ({ member_id: Number(m), session_date: date, session_type: 'GROUP', created_at: new Date().toISOString() })))
-      alert('그룹 세션 추가를 완료하였습니다 😎')
+      // alert('그룹 세션 추가를 완료하였습니다 😎')
+      toast.success('그룹 세션 추가를 완료하였습니다 😎')
       onSessionAdded()
       onClose()
     } catch (err) {

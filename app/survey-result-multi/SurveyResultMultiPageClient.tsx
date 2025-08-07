@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from 'react'
 // import TrainerHeader from '@/components/layout/TrainerHeader'
-import ShowMemberSurveyResult from '@/components/survey-response/ShowMemberSurveyResult'
+import SurveyResultMulti from '@/components/survey-response/SurveyResultMulti'
 import { getSupabaseClient } from '@/lib/supabase'
 import { useSearchParams } from 'next/navigation'
 import { useAuthGuard } from '@/hooks/useAuthGuard'
@@ -12,18 +12,12 @@ interface MemberCounsel {
   name: string
 }
 
-type SurveyResponseWithMember = {
-  member_counsel_id: number
-  members_counsel: {
-    name: string
-  } | null  // 조인된 값이 없을 수도 있으므로 null 허용
-}
-
 export default function SurveyResultPage() {
   const supabase = getSupabaseClient()
   const searchParams = useSearchParams()
+  const surveyIds = searchParams.getAll('surveyID')
   const memberCounselIdFromUrl = searchParams.get('member_counsel_id')
-
+  const memberCounselId = memberCounselIdFromUrl ? Number(memberCounselIdFromUrl) : null
   const [members, setMembers] = useState<MemberCounsel[]>([])
   const [selectedMember, setSelectedMember] = useState<MemberCounsel | null>(null)
 
@@ -31,28 +25,20 @@ export default function SurveyResultPage() {
   // 회원 목록 불러오기
   useEffect(() => {
     const fetchMembers = async () => {
-      if (!memberCounselIdFromUrl && !searchParams.get('surveyID')) return
-  
-      const surveyId = searchParams.get('surveyID')
-  
       const { data, error } = await supabase
-        .from('survey_responses')
-        .select('member_counsel_id, members_counsel(name)')
-        .eq('survey_id', surveyId)
+        .from('members_counsel')
+        .select('member_counsel_id, name')
 
-      const typedData = data as unknown as SurveyResponseWithMember[]
+      if (error) {
+        console.error('회원 목록 불러오기 실패:', error)
+        return
+      }
 
-      const formatted = typedData.map((item) => ({
-        member_counsel_id: item.member_counsel_id,
-        name: item.members_counsel?.name || '(이름 없음)',
-      }))
-        
+      setMembers(data || [])
 
-      setMembers(formatted)
-  
-      // URL에 member_counsel_id가 있으면 초기 선택
-      if (memberCounselIdFromUrl) {
-        const memberFromUrl = formatted.find(
+      // URL 쿼리에 member_counsel_id가 있으면 초기 선택
+      if (memberCounselIdFromUrl && data) {
+        const memberFromUrl = data.find(
           (m) => String(m.member_counsel_id) === memberCounselIdFromUrl
         )
         if (memberFromUrl) {
@@ -60,18 +46,16 @@ export default function SurveyResultPage() {
         }
       }
     }
-  
+
     fetchMembers()
-  }, [memberCounselIdFromUrl, searchParams])
-  
+  }, [memberCounselIdFromUrl]) // 검색 파라미터 바뀌면 다시 체크
 
   return (
     <>
       {/* <TrainerHeader /> */}
       <div className="w-full max-w-screen-lg mx-auto">
         <main className="max-w-6xl mx-auto px-4 py-8">
-          {!memberCounselIdFromUrl && (
-            // <div className="space-y-6 p-4 md:p-6 bg-white rounded-lg shadow-md mb-8">
+          {!memberCounselIdFromUrl ? (
             <div className="mb-6">
               <select
                 value={selectedMember?.member_counsel_id || ''}
@@ -102,10 +86,13 @@ export default function SurveyResultPage() {
                   ))}
               </select>
             </div>
-          )}
+          ) : null}
 
-          {selectedMember && (
-            <ShowMemberSurveyResult selectedMemberId={selectedMember.member_counsel_id} />
+          {selectedMember && memberCounselId && (
+            <SurveyResultMulti
+              surveyIds={surveyIds}
+              memberCounselId={memberCounselId}
+            />
           )}
         </main>
       </div>

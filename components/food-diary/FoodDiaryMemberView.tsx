@@ -4,6 +4,7 @@ import { useState, useEffect } from 'react'
 import dayjs from 'dayjs'
 import { getSupabaseClient } from '@/lib/supabase'
 import { Button } from '@/components/ui/button'
+import { toast } from 'sonner'
 
 interface Props {
   memberId: string
@@ -231,7 +232,8 @@ export default function FoodDiaryMemberView({ memberId, memberName }: Props) {
     }
 
     await saveSelectedHashtags()
-    alert('저장되었습니다 💪')
+    toast.success('저장되었습니다 💪')
+    // alert('저장되었습니다 💪')
   }
 
   const handleDateChange = (direction: 'prev' | 'next') => {
@@ -240,7 +242,8 @@ export default function FoodDiaryMemberView({ memberId, memberName }: Props) {
       : selectedDate.add(1, 'day')
   
     if (newDate.isBefore(maxPast) || newDate.isAfter(maxFuture)) {
-      alert('7일 이내의 입력만 가능합니다')
+      toast.warning('7일 이내의 입력만 가능합니다')
+      // alert('7일 이내의 입력만 가능합니다')
       return
     }
   

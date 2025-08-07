@@ -12,6 +12,7 @@ import {
   DialogTitle,
 } from '@/components/ui/dialog'
 import { Input } from '@/components/ui/input'
+import { toast } from 'sonner'
 
 interface SplitWorkoutProps {
   member: Member
@@ -122,7 +123,8 @@ export default function SplitWorkout({ member, allTypes, onClose }: SplitWorkout
       .eq('member_id', member.member_id)
 
     if (error) {
-      alert('기존 분할 삭제 실패: ' + error.message)
+      // alert('기존 분할 삭제 실패: ' + error.message)
+      toast.error('기존 분할 삭제 실패: ' + error.message)
       return
     }
 
@@ -132,13 +134,16 @@ export default function SplitWorkout({ member, allTypes, onClose }: SplitWorkout
         .insert(payload)
 
       if (insertError) {
-        alert('저장 실패: ' + insertError.message)
+        // alert('저장 실패: ' + insertError.message)
+        toast.error('저장 실패: ' + insertError.message)
       } else {
-        alert('분할 저장이 완료되었습니다 😎')
+        // alert('분할 저장이 완료되었습니다 😎')
+        toast.success('분할 저장이 완료되었습니다 😎')
         onClose()
       }
     } else {
-      alert('저장할 분할이 없습니다 😥')
+      // alert('저장할 분할이 없습니다 😥')
+      toast.error('저장할 분할이 없습니다 😥')
     }
   }
 

@@ -13,6 +13,7 @@ import {
   DialogTitle,
   DialogFooter,
 } from '@/components/ui/dialog';
+import { toast } from 'sonner'
 
 interface Props {
   open: boolean;
@@ -77,11 +78,13 @@ export default function ReRegisterMemberPackage({
 
   const handleSave = async () => {
     if (!editStartDate || !editEndDate) {
-      alert('시작일과 종료일을 입력해주세요.');
+      // alert('시작일과 종료일을 입력해주세요.');
+      toast.warning('시작일과 종료일을 입력해주세요.')
       return;
     }
     if (!editTrainerId) {
-      alert('트레이너를 선택해주세요.');
+      // alert('트레이너를 선택해주세요.');
+      toast.warning('트레이너를 선택해주세요.')
       return;
     }
   
@@ -93,7 +96,8 @@ export default function ReRegisterMemberPackage({
       .eq('status', 'active');
   
     if (updateError) {
-      alert('기존 패키지 만료 처리 실패: ' + updateError.message);
+      // alert('기존 패키지 만료 처리 실패: ' + updateError.message);
+      toast.error('기존 패키지 만료 처리 실패: ' + updateError.message)
       return;
     }
   
@@ -114,9 +118,11 @@ export default function ReRegisterMemberPackage({
     ]);
   
     if (insertError) {
-      alert('패키지 등록 실패: ' + insertError.message);
+      // alert('패키지 등록 실패: ' + insertError.message);
+      toast.error('패키지 등록 실패: ' + insertError.message)
     } else {
-      alert('패키지 재등록 완료 ✅');
+      // alert('패키지 재등록 완료 ✅');
+      toast.success('패키지 재등록 완료 ✅')
       setSelectedPackage(null);
       setShowPackagePopup(false);
       fetchMemberPackages();

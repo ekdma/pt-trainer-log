@@ -14,6 +14,12 @@ import { fetchWorkoutLogs } from '@/utils/fetchLogs'
 import { getSupabaseClient } from '@/lib/supabase'
 import { FaStar, FaRegStar } from 'react-icons/fa'
 import { Button } from '@/components/ui/button'
+import { toast } from 'sonner'
+import {
+  ToggleGroup,
+  ToggleGroupItem,
+} from '@/components/ui/toggle-group'
+import { motion } from 'framer-motion'
 
 export default function MembersPage() {
   useAuthGuard()
@@ -34,6 +40,7 @@ export default function MembersPage() {
   const [showGlobalOrderModal, setShowGlobalOrderModal] = useState(false); // 전체 운동용
   const [allTypes, setAllTypes] = useState<WorkoutType[]>([]);
   const [showSplitModal, setShowSplitModal] = useState(false)
+  const [memberTab, setMemberTab] = useState<'all' | 'active'>('active')
 
   // 사용자 정보 초기화
   useEffect(() => {
@@ -60,12 +67,22 @@ export default function MembersPage() {
 
   // 트레이너: 회원 목록 조회
   const fetchAllMembers = async () => {
-    const { data, error } = await supabase
-      .from('members')
-      .select('*')
-      .eq('status', 'active')
-    if (!error && data) setMembers(data)
+    const query = supabase.from('members').select('*')
+
+    // memberTab 상태에 따라 쿼리 조건 분기
+    if (memberTab === 'active') {
+      query.eq('status', 'active')
+    } else {
+      query.neq('status', 'delete')
+    }
+
+    const { data } = await query
+    setMembers(data || [])
   }
+
+  useEffect(() => {
+    fetchAllMembers()
+  }, [memberTab])
 
   useEffect(() => {
     const fetchLogs = async () => {
@@ -98,7 +115,7 @@ export default function MembersPage() {
   const fetchFavorites = async () => {
     const { data, error } = await supabase
       .from('favorites')
-      .select('target, workout, order')
+      .select('target, workout, favorite_order')
       .eq('member_id', selectedMember?.member_id)
   
     if (!error && data) {
@@ -108,7 +125,7 @@ export default function MembersPage() {
       // ✅ 정렬 가능한 정보 저장
       const ordered = data.map(fav => ({
         key: `${fav.target}||${fav.workout}`,
-        order: fav.order ?? 0,
+        order: fav.favorite_order ?? 0,
       }))
       setFavoritesWithOrder(ordered)
     }
@@ -132,10 +149,12 @@ export default function MembersPage() {
       .update({ description })
       .eq('member_id', selectedMember.member_id)
     if (error) {
-      alert('설명 저장 중 오류가 발생했습니다.')
+      toast.error('설명 저장 중 오류가 발생했습니다.')
+      // alert('설명 저장 중 오류가 발생했습니다.')
       console.error(error)
     } else {
-      alert('설명이 저장되었습니다.')
+      toast.success('설명이 저장되었습니다.')
+      // alert('설명이 저장되었습니다.')
       // 선택 회원 상태 업데이트
       setSelectedMember({ ...selectedMember, description })
     }
@@ -179,26 +198,42 @@ export default function MembersPage() {
       <main className="max-w-6xl mx-auto px-4 py-8">
         {userRole === 'trainer' && (
           <div className="mb-6">
-            <select
-              value={selectedMember?.member_id || ''}
-              onChange={(e) => {
-                const selectedId = e.target.value
-                const m = members.find(m => String(m.member_id) === selectedId)
-                setSelectedMember(m || null)
-                setFavorites(new Set())
-              }}
-              className="block w-full max-w-md px-4 py-2 text-base border border-gray-300 rounded-md bg-white text-gray-700 focus:outline-none focus:ring-2 focus:ring-rose-500 focus:border-transparent transition duration-200 hover:border-rose-400 cursor-pointer"
-            >
-              <option value="">회원 선택</option>
-              {members
-                .slice()
-                .sort((a, b) => a.name.localeCompare(b.name, undefined, { sensitivity: 'base' }))
-                .map((m) => (
-                  <option key={m.member_id} value={m.member_id}>
-                    {m.name}
-                  </option>
-                ))}
-            </select>
+            <div className="flex items-center gap-4 mb-4">
+              <ToggleGroup
+                type="single"
+                value={memberTab}
+                onValueChange={(value) => {
+                  if (value) setMemberTab(value as 'all' | 'active')
+                }}
+              >
+                <ToggleGroupItem value="all" className="text-sm px-4 py-2">
+                  전체회원
+                </ToggleGroupItem>
+                <ToggleGroupItem value="active" className="text-sm px-4 py-2">
+                  현재회원
+                </ToggleGroupItem>
+              </ToggleGroup>
+              <select
+                value={selectedMember?.member_id || ''}
+                onChange={(e) => {
+                  const selectedId = e.target.value
+                  const m = members.find(m => String(m.member_id) === selectedId)
+                  setSelectedMember(m || null)
+                  setFavorites(new Set())
+                }}
+                className="block w-full max-w-md px-4 py-2 text-base border border-gray-300 rounded-md bg-white text-gray-700 focus:outline-none focus:ring-2 focus:ring-rose-500 focus:border-transparent transition duration-200 hover:border-rose-400 cursor-pointer"
+              >
+                <option value="">회원 선택</option>
+                {members
+                  .slice()
+                  .sort((a, b) => a.name.localeCompare(b.name, undefined, { sensitivity: 'base' }))
+                  .map((m) => (
+                    <option key={m.member_id} value={m.member_id}>
+                      {m.name}
+                    </option>
+                  ))}
+              </select>
+            </div>
           </div>
         )}
         
@@ -360,35 +395,42 @@ export default function MembersPage() {
                 }}
               />
             )}
+            <motion.div
+              key={selectedMember?.member_id}
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.3 }}
+            >
 
-            {/* 본문 */}
-            {activeTab === 'graphs' && (
-              <MemberGraphs
-                member={selectedMember}
-                record={workoutLogs}
-                logs={workoutLogs}
-                onBack={() => {}}
-                showFavoritesOnly={showFavoritesOnly}  
-                favorites={favorites}  
-                favoritesWithOrder={favoritesWithOrder}           
-                allTypes={allTypes}    
-              />
-            )}
-            {activeTab === 'records' && (
-              <WorkoutLogManager
-                member={selectedMember}
-                logs={workoutLogs}
-                onUpdateLogs={setWorkoutLogs}
-                showFavoritesOnly={showFavoritesOnly}
-                favorites={favorites}
-                favoritesWithOrder={favoritesWithOrder}
-                setFavorites={setFavorites}
-                onFavoritesChange={fetchFavorites}
-                allTypes={allTypes}
-                onRefreshAllTypes={fetchAllTypes}
-                splitWorkouts={splitWorkouts}
-              />
-            )}
+              {/* 본문 */}
+              {activeTab === 'graphs' && (
+                <MemberGraphs
+                  member={selectedMember}
+                  record={workoutLogs}
+                  logs={workoutLogs}
+                  onBack={() => {}}
+                  showFavoritesOnly={showFavoritesOnly}  
+                  favorites={favorites}  
+                  favoritesWithOrder={favoritesWithOrder}           
+                  allTypes={allTypes}    
+                />
+              )}
+              {activeTab === 'records' && (
+                <WorkoutLogManager
+                  member={selectedMember}
+                  logs={workoutLogs}
+                  onUpdateLogs={setWorkoutLogs}
+                  showFavoritesOnly={showFavoritesOnly}
+                  favorites={favorites}
+                  favoritesWithOrder={favoritesWithOrder}
+                  setFavorites={setFavorites}
+                  onFavoritesChange={fetchFavorites}
+                  allTypes={allTypes}
+                  onRefreshAllTypes={fetchAllTypes}
+                  splitWorkouts={splitWorkouts}
+                />
+              )}
+            </motion.div>
           </>
         ) : (
           <div className="text-gray-600">회원을 선택하세요.</div>

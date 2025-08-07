@@ -38,6 +38,7 @@ export default function Header() {
   }, [])
 
   const navItems = [
+    { href: '/calendar', label: '일정' },
     { href: '/survey', label: '설문' },
     { href: '/packages', label: '패키지' },
     { href: '/group-sessions', label: '그룹세션' },

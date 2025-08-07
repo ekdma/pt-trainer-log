@@ -5,14 +5,15 @@ import isBetween from 'dayjs/plugin/isBetween'
 dayjs.extend(isBetween)
 import { useState, useEffect, useMemo } from 'react'
 import { getSupabaseClient } from '@/lib/supabase'
-// import { Member, WorkoutRecord, HealthMetric } from './types'
 import { Member } from './types'
 import MemberCalendar from './MemberCalendar'
 import { SupabaseClient } from '@supabase/supabase-js'
 import 'react-calendar/dist/Calendar.css'
 import {  Dumbbell, UsersIcon, UserRoundPen, UserRoundMinus, Calendar as CalendarIcon, User } from 'lucide-react';
 import { Button } from '@/components/ui/button'
-// import { useRouter } from 'next/navigation'  
+import { toast } from 'sonner'
+import ConfirmDeleteItem from '@/components/ui/ConfirmDeleteItem' 
+import { ToggleGroup, ToggleGroupItem } from '@/components/ui/toggle-group'
 
 function toOrdinal(num: number) {
   const v = num % 100;
@@ -86,7 +87,7 @@ export default function MemberSearch({
     const { data, error } = await supabase
       .from('members')
       .select('*')
-      .eq('status', 'active');
+      .not('status', 'eq', 'delete');
 
       if (!error && data) {
       setInternalMembers(data);
@@ -126,32 +127,52 @@ export default function MemberSearch({
   //   router.push('/workout');
   // };
 
-  const handleDelete = async (memberId: number) => {
-    if (!supabase) return;
+  const handleDelete = (memberId: number) => {
+    const member = internalMembers.find((m) => m.member_id === memberId)
+    const memberName = member?.name ?? '이름 없는'
+    const toastId = crypto.randomUUID()
   
-    const password = prompt('비밀번호를 입력하세요 🤐');
-    if (password !== '2213') {
-      alert('비밀번호가 일치하지 않습니다 ❌');
-      return;
-    }
+    toast.custom(
+      (id) => (
+        <ConfirmDeleteItem
+          title={
+            <>
+              정말로 <strong className="text-red-600">{memberName}</strong> 회원을 삭제하시겠습니까?
+            </>
+          }
+          description="삭제된 회원은 복구할 수 없습니다."
+          onCancel={() => toast.dismiss(id)}
+          onConfirm={async () => {
+            toast.dismiss(id)
+            const password = prompt('비밀번호를 입력하세요 🤐')
+            if (password !== '2213') {
+              toast.error('비밀번호가 일치하지 않습니다 ❌')
+              return
+            }
   
-    const confirmDelete = confirm('정말로 이 회원을 삭제하시겠습니까?');
-    if (!confirmDelete) return;
-  
-    // const { error } = await supabase.from('members').delete().eq('member_id', memberId);
-    const { error } = await supabase
-      .from('members')
-      .update({ status: 'delete' })
-      .eq('member_id', memberId);
+            if (!supabase) {
+              toast.error('Supabase가 초기화되지 않았습니다 ❌')
+              return
+            }
 
-    if (error) {
-      alert('회원 삭제 중 문제가 발생했어요 😥');
-      return;
-    }
-  
-    alert('회원 삭제를 완료하였습니다 😊');
-    fetchMembers();
-  };
+            const { error } = await supabase
+              .from('members')
+              .update({ status: 'delete' })
+              .eq('member_id', memberId)
+
+            if (error) {
+              toast.error('회원 삭제 중 문제가 발생했어요 😥')
+              return
+            }
+
+            toast.success(`"${memberName}" 회원이 삭제되었습니다.`)
+            fetchMembers()
+          }}
+        />
+      ),
+      { id: toastId }
+    )
+  }
 
   // 재등록 횟수
   // const fetchRegistrationCounts = async (members: Member[]) => {
@@ -345,6 +366,25 @@ export default function MemberSearch({
     return a.name.localeCompare(b.name, 'ko')
   })
 
+  // ✅ 회원 상태 토글 핸들러
+  const handleToggleStatus = async (member: Member) => {
+    if (!supabase) return
+
+    const newStatus = member.status === 'active' ? 'inactive' : 'active'
+
+    const { error } = await supabase
+      .from('members')
+      .update({ status: newStatus })
+      .eq('member_id', member.member_id)
+
+    if (error) {
+      toast.error('상태 변경에 실패했어요.')
+    } else {
+      toast.success(`회원 상태를 ${newStatus === 'active' ? '활성화' : '비활성화'}했어요.`)
+      fetchMembers() // 상태 갱신
+    }
+  }
+
   return (
     <div className="flex flex-col items-center justify-center text-center bg-slate-50 py-8 px-4">
       <ul className="space-y-4 w-full max-w-3xl mx-auto">
@@ -390,16 +430,43 @@ export default function MemberSearch({
 
                 {/* 이름 + 정보 */}
                 <div className="flex flex-col items-center flex-grow">
+                  {/* <div className="flex items-center justify-center mb-1">
+                    <ToggleGroup
+                      type="single"
+                      value={member.status}
+                      onValueChange={async (value) => {
+                        if (!value) return
+                        if (!supabase) return
+
+                        const { error } = await supabase
+                          .from('members')
+                          .update({ status: value })
+                          .eq('member_id', member.member_id)
+
+                        if (error) {
+                          toast.error('상태 변경 실패')
+                        } else {
+                          toast.success(`회원 상태가 ${value === 'active' ? 'Active' : 'Inactive'}로 변경되었습니다`)
+                          fetchMembers() // 변경 후 목록 새로고침
+                        }
+                      }}
+                    >
+                      <ToggleGroupItem value="active">Active</ToggleGroupItem>
+                      <ToggleGroupItem value="inactive">Inactive</ToggleGroupItem>
+                    </ToggleGroup>
+
+                  </div> */}
+
                   <span className="text-gray-800 font-semibold text-lg leading-tight">
                     {member.name}{member.nickname ? ` | ${member.nickname}` : ''}
                   </span>
 
                   {/* 첫 번째 줄: 성별 + 가입일 */}
                   <div className="flex gap-2 text-indigo-900 text-sm mt-1 flex-wrap items-center justify-center">
-                    <span className="flex items-center gap-1 bg-gray-100 text-gray-900 px-2 py-1 rounded-full shadow-sm">
+                    <span className="text-xs flex items-center gap-1 bg-gray-100 text-gray-900 px-2 py-1 rounded-full shadow-sm">
                       {member.sex}
                     </span>
-                    <span className="flex items-center gap-1 bg-gray-100 text-gray-900 px-2 py-1 rounded-full shadow-sm">
+                    <span className="text-xs flex items-center gap-1 bg-gray-100 text-gray-900 px-2 py-1 rounded-full shadow-sm">
                       <CalendarIcon size={13} />
                       {formattedJoinDate}
                     </span>
@@ -408,7 +475,7 @@ export default function MemberSearch({
                   {/* 두 번째 줄: PT, GROUP 횟수 */}
                   <div className="flex gap-2 text-indigo-900 text-sm mt-1 flex-wrap items-center justify-center">
                     <span 
-                      className="flex items-center gap-1 bg-blue-100 text-gray-900 px-2 py-1 rounded-full shadow-sm"
+                      className="text-xs flex items-center gap-1 bg-blue-100 text-gray-900 px-2 py-1 rounded-full shadow-sm"
                       onClick={(e) => {
                         e.stopPropagation();
                         setSelectedMemberId(member.member_id);
@@ -418,7 +485,7 @@ export default function MemberSearch({
                       {sessionProgress[member.member_id]?.pt.used ?? 0}/{sessionProgress[member.member_id]?.pt.total ?? 0}회
                     </span>
                     <span 
-                      className="flex items-center gap-1 bg-gray-200 text-gray-900 px-2 py-1 rounded-full shadow-sm"
+                      className="text-xs flex items-center gap-1 bg-[#d1fae5] text-gray-900 px-2 py-1 rounded-full shadow-sm"
                       onClick={(e) => {
                         e.stopPropagation();
                         setSelectedMemberId(member.member_id);
@@ -428,7 +495,7 @@ export default function MemberSearch({
                       {sessionProgress[member.member_id]?.self.used ?? 0}/{sessionProgress[member.member_id]?.self.total ?? 0}회
                     </span>
                     <span 
-                      className="flex items-center gap-1 bg-purple-100 text-gray-900 px-2 py-1 rounded-full shadow-sm"
+                      className="text-xs flex items-center gap-1 bg-purple-100 text-gray-900 px-2 py-1 rounded-full shadow-sm"
                       onClick={(e) => {
                         e.stopPropagation();
                         setSelectedMemberId(member.member_id);
@@ -443,28 +510,51 @@ export default function MemberSearch({
               </div>
 
               {/* 오른쪽 버튼 영역 */}
-              <div className="flex gap-2 justify-end">
-                <Button
-                  onClick={() => setEditingMember(member)}
-                  variant="ghost"
-                  className="font-semibold bg-white border border-transparent text-indigo-700 hover:bg-indigo-300 px-3 py-2 rounded-full shadow-md flex items-center gap-1 text-sm"
-                  title="회원 수정"
+              <div className="flex flex-col items-end gap-2 justify-between">
+                <ToggleGroup
+                  type="single"
+                  value={member.status}
+                  onValueChange={async (value) => {
+                    if (!value || !supabase) return
+                    const { error } = await supabase
+                      .from('members')
+                      .update({ status: value })
+                      .eq('member_id', member.member_id)
+
+                    if (error) {
+                      toast.error('상태 변경 실패')
+                    } else {
+                      toast.success(`회원 상태가 ${value === 'active' ? 'Active' : 'Inactive'}로 변경되었습니다`)
+                      fetchMembers()
+                    }
+                  }}
                 >
-                  <UserRoundPen size={16} />
-                  수정
-                </Button>
-                <Button
-                  onClick={() => handleDelete(member.member_id)}
-                  variant="ghost"
-                  className="font-semibold bg-white border border-transparent text-red-600 hover:bg-red-100 px-3 py-2 rounded-full shadow-md flex items-center gap-1 text-sm"
-                  title="회원 삭제"
-                >
-                  <UserRoundMinus size={16} />
-                  삭제
-                </Button>
+                  <ToggleGroupItem value="active">Active</ToggleGroupItem>
+                  <ToggleGroupItem value="inactive">Inactive</ToggleGroupItem>
+                </ToggleGroup>
+                
+                <div className="flex gap-2">
+                  <Button
+                    onClick={() => setEditingMember(member)}
+                    variant="ghost"
+                    className="font-semibold bg-white border border-transparent text-indigo-700 hover:bg-indigo-300 px-3 py-2 rounded-full shadow-md flex items-center gap-1 text-sm"
+                    title="회원 수정"
+                  >
+                    <UserRoundPen size={16} />
+                    수정
+                  </Button>
+                  <Button
+                    onClick={() => handleDelete(member.member_id)}
+                    variant="ghost"
+                    className="font-semibold bg-white border border-transparent text-red-600 hover:bg-red-100 px-3 py-2 rounded-full shadow-md flex items-center gap-1 text-sm"
+                    title="회원 삭제"
+                  >
+                    <UserRoundMinus size={16} />
+                    삭제
+                  </Button>
+                </div>
               </div>
             </li>
-
           )
         })}
       </ul>

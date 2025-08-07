@@ -14,8 +14,9 @@ interface SurveySearchProps {
   surveys: Survey[]
   onClickSurvey: (id: string) => void
   onEditSurvey: (survey: Survey) => void
-  onDeleteSurvey: (id: string) => void
+  onDeleteSurvey: (survey: Survey) => void 
 }
+
 
 export default function SurveySearch({
   surveys,
@@ -46,7 +47,7 @@ export default function SurveySearch({
             >
               <h3 className="text-gray-800 font-bold text-lg">{survey.title}</h3>
               {survey.description && (
-                <p className="text-left text-gray-600 mt-1 whitespace-pre-line">{survey.description}</p>
+                <p className="text-sm text-left text-gray-600 mt-1 whitespace-pre-line">{survey.description}</p>
               )}
               <p className="text-sm text-gray-600 mt-1">
                 생성일: {new Date(survey.created_at).toLocaleDateString()}
@@ -64,7 +65,7 @@ export default function SurveySearch({
                 수정
               </Button>
               <Button
-                onClick={() => onDeleteSurvey(survey.id)}
+                onClick={() => onDeleteSurvey(survey)}
                 variant="ghost"
                 className="font-semibold bg-white border border-transparent text-red-600 hover:bg-red-100 px-3 py-2 rounded-full shadow-md flex items-center gap-1 text-sm"
                 title="설문 삭제"

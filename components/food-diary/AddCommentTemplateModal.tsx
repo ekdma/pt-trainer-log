@@ -13,6 +13,7 @@ import {
 } from '@/components/ui/dialog'
 import { getSupabaseClient } from '@/lib/supabase'
 import { X } from 'lucide-react'
+import { toast } from 'sonner'
 
 interface AddCommentTemplateModalProps {
   onTemplateAdded: (text: string) => void
@@ -41,8 +42,9 @@ export default function AddCommentTemplateModal({ onTemplateAdded, onTemplateDel
   const handleSave = async () => {
     const text = newTemplateText.trim()
     if (!text || templateList.includes(text)) {
-        alert('이미 존재하는 템플릿입니다')
-        return
+      toast.warning('이미 존재하는 템플릿입니다')  
+      // alert('이미 존재하는 템플릿입니다')
+      return
     }
 
     const { error } = await supabase.from('food_comment_templates').insert({

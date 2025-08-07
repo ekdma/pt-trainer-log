@@ -1,5 +1,6 @@
 'use client'
 
+import { toast } from 'sonner'
 import { useState, useEffect } from 'react'
 import { getSupabaseClient } from '@/lib/supabase'
 import dayjs, { Dayjs } from 'dayjs'
@@ -8,6 +9,11 @@ import clsx from 'clsx'
 import { Button } from '@/components/ui/button'
 import AddCommentTemplateModal from './AddCommentTemplateModal'
 import AddHashTagTemplateModal from './AddHashTagTemplateModal'
+import {
+  ToggleGroup,
+  ToggleGroupItem,
+} from '@/components/ui/toggle-group'
+import { motion } from 'framer-motion'
 dayjs.extend(isoWeek)
 
 interface Member {
@@ -45,6 +51,7 @@ export default function FoodDiaryTrainerView({ initialSelectedMember = null }: F
   const [availableHashtags, setAvailableHashtags] = useState<string[]>([])
   const [selectedTags, setSelectedTags] = useState<Record<string, string[]>>({}) // { mealType: ['#고지방', '#과자류'] }
   const [showHashtagToggle, setShowHashtagToggle] = useState<Record<string, boolean>>({})
+  const [memberTab, setMemberTab] = useState<'all' | 'active'>('active')
 
   const getWeekDates = (base: Dayjs) => {
     return Array(7).fill(0).map((_, i) =>
@@ -54,12 +61,19 @@ export default function FoodDiaryTrainerView({ initialSelectedMember = null }: F
   }
 
   const fetchMembers = async () => {
-    const { data } = await supabase
-      .from('members')
-      .select('*')
-      .eq('status', 'active')
+    const query = supabase.from('members').select('*')
+
+    // memberTab 상태에 따라 쿼리 조건 분기
+    if (memberTab === 'active') {
+      query.eq('status', 'active')
+    } else {
+      query.neq('status', 'delete')
+    }
+
+    const { data } = await query
     setMembers(data || [])
   }
+
 
   const fetchDiaries = async () => {
     if (!selectedMember) return
@@ -225,7 +239,8 @@ export default function FoodDiaryTrainerView({ initialSelectedMember = null }: F
   
     if (error) {
       console.error('코멘트 저장 실패:', error)
-      alert('저장 중 오류 발생!')
+      // alert('저장 중 오류 발생!')
+      toast.error('저장 중 오류가 발생하였습니다.')
     } 
     // else {
     //   alert('코멘트가 저장되었습니다!')
@@ -274,7 +289,8 @@ export default function FoodDiaryTrainerView({ initialSelectedMember = null }: F
   
     if (error) {
       console.error('해시태그 저장 실패:', error)
-      alert('해시태그 저장 실패!')
+      // alert('해시태그 저장 실패!')
+      toast.error('해시태그 저장 실패하였습니다.')
     } 
     // else {
     //   alert('해시태그가 저장되었습니다!')
@@ -284,13 +300,19 @@ export default function FoodDiaryTrainerView({ initialSelectedMember = null }: F
   const handleSaveAll = () => {
     handleSaveComments();
     handleSaveHashtags();
-    alert('저장되었습니다 😎')
+    // alert('저장되었습니다 😎')
+    toast.success('저장되었습니다 😎')
   };
   
   useEffect(() => {
     fetchMembers()
     fetchCommentTemplates() 
-  }, [])
+  }, [memberTab])
+
+  // useEffect(() => {
+  //   fetchMembers()
+  // }, [memberTab])
+  
 
   useEffect(() => {
     setWeekDates(getWeekDates(baseDate))
@@ -322,268 +344,293 @@ export default function FoodDiaryTrainerView({ initialSelectedMember = null }: F
   return (
     // <div className="space-y-6 p-4 md:p-6 bg-white rounded-lg shadow-md">
     <div className="space-y-6"> 
-      <select
-        value={selectedMember?.member_id || ''}
-        onChange={(e) => {
-          const selectedId = e.target.value
-          const m = members.find(m => String(m.member_id) === selectedId)
-          setSelectedMember(m || null)
-          setComments({})
-        }}
-        className="
-          block w-full max-w-md px-4 py-2 text-base
-          border border-gray-300 rounded-md bg-white text-gray-700
-          focus:outline-none focus:ring-2 focus:ring-rose-500 focus:border-transparent
-          transition duration-200 hover:border-rose-400 cursor-pointer
-        "
-      >
-        <option value="">회원 선택</option>
-        {members
-          .slice()
-          .sort((a, b) => a.name.localeCompare(b.name, undefined, { sensitivity: 'base' }))
-          .map((m) => (
-            <option key={m.member_id} value={m.member_id}>
-              {m.name}
-            </option>
-        ))}
-      </select>
+      <div className="flex items-center gap-4 mb-4">
+        <ToggleGroup
+          type="single"
+          value={memberTab}
+          onValueChange={(value) => {
+            if (value) setMemberTab(value as 'all' | 'active')
+          }}
+        >
+          <ToggleGroupItem value="all" className="text-sm px-4 py-2">
+            전체회원
+          </ToggleGroupItem>
+          <ToggleGroupItem value="active" className="text-sm px-4 py-2">
+            현재회원
+          </ToggleGroupItem>
+        </ToggleGroup>
+
+        <select
+          value={selectedMember?.member_id || ''}
+          onChange={(e) => {
+            const selectedId = e.target.value
+            const m = members.find(m => String(m.member_id) === selectedId)
+            setSelectedMember(m || null)
+            setComments({})
+          }}
+          className="
+            block w-full max-w-md px-4 py-2 text-base
+            border border-gray-300 rounded-md bg-white text-gray-700
+            focus:outline-none focus:ring-2 focus:ring-rose-500 focus:border-transparent
+            transition duration-200 hover:border-rose-400 cursor-pointer
+          "
+        >
+          <option value="">회원 선택</option>
+          {members
+            .slice()
+            .sort((a, b) => a.name.localeCompare(b.name, undefined, { sensitivity: 'base' }))
+            .map((m) => (
+              <option key={m.member_id} value={m.member_id}>
+                {m.name}
+              </option>
+          ))}
+        </select>
+      </div>
+
 
 
       {members.length === 0 && <p>회원 데이터가 없습니다.</p>}
 
       {selectedMember && (
-        <div className="overflow-auto">
-          <div className="flex justify-between items-center mb-2">
-            <button onClick={() => setBaseDate(baseDate.subtract(7, 'day'))} className="text-sm text-gray-600">{'<'}</button>
-            <div className="text-center">
-              <h3 className="text-lg font-semibold">
-                {`${selectedMember.name}'s Food Diary`}
-              </h3>
-              <p className="text-sm text-gray-500">{weekRangeText}</p>
+        <motion.div
+          key={selectedMember?.member_id}
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.3 }}
+        >
+          <div className="overflow-auto">
+            <div className="flex justify-between items-center mb-2">
+              <button onClick={() => setBaseDate(baseDate.subtract(7, 'day'))} className="text-sm text-gray-600">{'<'}</button>
+              <div className="text-center">
+                <h3 className="text-lg font-semibold">
+                  {`${selectedMember.name}'s Food Diary`}
+                </h3>
+                <p className="text-sm text-gray-500">{weekRangeText}</p>
+              </div>
+              <div className="flex items-center gap-2">
+                <button
+                  onClick={() => setBaseDate(dayjs())}
+                  className="text-xs px-2 py-1 border border-rose-500 text-rose-600 rounded hover:bg-rose-100"
+                >
+                  today
+                </button>
+                <button onClick={() => setBaseDate(baseDate.add(7, 'day'))} className="text-sm text-gray-600">{'>'}</button>
+              </div>
             </div>
-            <div className="flex items-center gap-2">
-              <button
-                onClick={() => setBaseDate(dayjs())}
-                className="text-xs px-2 py-1 border border-rose-500 text-rose-600 rounded hover:bg-rose-100"
-              >
-                today
-              </button>
-              <button onClick={() => setBaseDate(baseDate.add(7, 'day'))} className="text-sm text-gray-600">{'>'}</button>
-            </div>
-          </div>
-          {/* <p className="text-center text-sm text-gray-600 mt-2">
-            선택된 날짜: <span className="font-semibold text-rose-600">{baseDate.format('YYYY년 M월 D일 (ddd)')}</span>
-          </p> */}
-          <table className="w-full table-fixed border text-sm border-collapse rounded overflow-hidden shadow-sm">
-            <thead>
-              <tr>
-                <th className="border px-2 py-1 bg-gray-200">구분</th>
-                {weekDates.map((d) => {
-                  const isToday = dayjs().format('YYYY-MM-DD') === d
-                  const isCenter = baseDate.format('YYYY-MM-DD') === d
+            {/* <p className="text-center text-sm text-gray-600 mt-2">
+              선택된 날짜: <span className="font-semibold text-rose-600">{baseDate.format('YYYY년 M월 D일 (ddd)')}</span>
+            </p> */}
+            <table className="w-full table-fixed border text-sm border-collapse rounded overflow-hidden shadow-sm">
+              <thead>
+                <tr>
+                  <th className="border px-2 py-1 bg-gray-200">구분</th>
+                  {weekDates.map((d) => {
+                    const isToday = dayjs().format('YYYY-MM-DD') === d
+                    const isCenter = baseDate.format('YYYY-MM-DD') === d
 
-                  return (
-                    <th
-                      key={d}
-                      onClick={() => setBaseDate(dayjs(d))} // ✅ 클릭 시 날짜 선택
-                      className={`
-                       bg-gray-100 px-2 py-1 whitespace-nowrap text-sm cursor-pointer
-                        ${isToday ? 'bg-rose-100 text-rose-700' : ''}
-                        ${isCenter ? 'bg-pink-100 font-bold text-pink-700 border-2 border-pink-500' : ''}
-                        hover:bg-pink-50
-                      `}
-                    >
-                      {dayjs(d).format('DD(ddd)')}
-                    </th>
-
-                  )
-                })}
-              </tr>
-            </thead>
-            
-            <tbody>
-              {[
-                { label: '공복체중(kg)', type: 'Empty Stomach Weight', bg: 'bg-yellow-100', text: 'text-yellow-800', cell: 'bg-yellow-50' },
-                { label: '수면시간(h)', type: 'Sleep Hours', bg: 'bg-emerald-100', text: 'text-emerald-800', cell: 'bg-emerald-50' },
-                { label: '수분섭취(컵)', type: 'Water', bg: 'bg-blue-100', text: 'text-blue-800', cell: 'bg-blue-50' },
-              ].map(({ label, type, bg, text, cell }) => (
-                <tr key={type}>
-                  <td className={`${bg} border px-2 py-1 text-center font-semibold ${text}`}>
-                    {label}
-                  </td>
-                  {weekDates.map((d) => (
-                    <td key={d} className={`border px-2 py-1 text-center text-sm ${cell} text-gray-800`}>
-                      {healthMetrics[type]?.[d] !== undefined ? healthMetrics[type][d].toFixed(1) : '-'}
-                    </td>
-                  ))}
-                </tr>
-              ))}
-
-              {mealTypes.map((meal) => (
-                <tr key={meal.key}>
-                  <td className="bg-gray-200 border px-2 py-1 text-center font-semibold">{meal.label}</td>
-                  {weekDates.map((d) => (
-                    <td key={d} className="border px-2 py-1 align-top text-center relative">
-
-                      {/* 식단 내용 출력 */}
-                      <div>{diaries[d]?.[meal.key] || '-'}</div>
-
-                      {/* # 버튼 */}
-                      <button
-                        type="button"
-                        onClick={() => toggleHashtagToggle(`${d}_${meal.key}`)}
-                        className="mt-1 text-xs text-gray-600 border px-1 py-0.5 rounded hover:bg-gray-100"
+                    return (
+                      <th
+                        key={d}
+                        onClick={() => setBaseDate(dayjs(d))} // ✅ 클릭 시 날짜 선택
+                        className={`
+                        bg-gray-100 px-2 py-1 whitespace-nowrap text-sm cursor-pointer
+                          ${isToday ? 'bg-rose-100 text-rose-700' : ''}
+                          ${isCenter ? 'bg-pink-100 font-bold text-pink-700 border-2 border-pink-500' : ''}
+                          hover:bg-pink-50
+                        `}
                       >
-                        #
-                      </button>
+                        {dayjs(d).format('DD(ddd)')}
+                      </th>
 
-                      {/* 해시태그 토글 UI */}
-                      {showHashtagToggle[`${d}_${meal.key}`] && (
-                        <div className="flex flex-wrap gap-1 mt-1 max-w-xs border rounded p-1 bg-white shadow-md absolute z-10">
-                          {availableHashtags.length === 0 ? (
-                            <p className="text-xs text-gray-400">해시태그가 없습니다.</p>
-                          ) : (
-                            availableHashtags.map((tag) => {
-                              const isSelected = selectedTags[`${d}_${meal.key}`]?.includes(tag)
+                    )
+                  })}
+                </tr>
+              </thead>
+              
+              <tbody>
+                {[
+                  { label: '공복체중(kg)', type: 'Empty Stomach Weight', bg: 'bg-yellow-100', text: 'text-yellow-800', cell: 'bg-yellow-50' },
+                  { label: '수면시간(h)', type: 'Sleep Hours', bg: 'bg-emerald-100', text: 'text-emerald-800', cell: 'bg-emerald-50' },
+                  { label: '수분섭취(컵)', type: 'Water', bg: 'bg-blue-100', text: 'text-blue-800', cell: 'bg-blue-50' },
+                ].map(({ label, type, bg, text, cell }) => (
+                  <tr key={type}>
+                    <td className={`${bg} border px-2 py-1 text-center font-semibold ${text}`}>
+                      {label}
+                    </td>
+                    {weekDates.map((d) => (
+                      <td key={d} className={`border px-2 py-1 text-center text-sm ${cell} text-gray-800`}>
+                        {healthMetrics[type]?.[d] !== undefined ? healthMetrics[type][d].toFixed(1) : '-'}
+                      </td>
+                    ))}
+                  </tr>
+                ))}
+
+                {mealTypes.map((meal) => (
+                  <tr key={meal.key}>
+                    <td className="bg-gray-200 border px-2 py-1 text-center font-semibold">{meal.label}</td>
+                    {weekDates.map((d) => (
+                      <td key={d} className="border px-2 py-1 align-top text-center relative">
+
+                        {/* 식단 내용 출력 */}
+                        <div>{diaries[d]?.[meal.key] || '-'}</div>
+
+                        {/* # 버튼 */}
+                        <button
+                          type="button"
+                          onClick={() => toggleHashtagToggle(`${d}_${meal.key}`)}
+                          className="mt-1 text-xs text-gray-600 border px-1 py-0.5 rounded hover:bg-gray-100"
+                        >
+                          #
+                        </button>
+
+                        {/* 해시태그 토글 UI */}
+                        {showHashtagToggle[`${d}_${meal.key}`] && (
+                          <div className="flex flex-wrap gap-1 mt-1 max-w-xs border rounded p-1 bg-white shadow-md absolute z-10">
+                            {availableHashtags.length === 0 ? (
+                              <p className="text-xs text-gray-400">해시태그가 없습니다.</p>
+                            ) : (
+                              availableHashtags.map((tag) => {
+                                const isSelected = selectedTags[`${d}_${meal.key}`]?.includes(tag)
+                                return (
+                                  <button
+                                    key={tag}
+                                    type="button"
+                                    onClick={() => toggleTagSelect(`${d}_${meal.key}`, tag)}
+                                    className={clsx(
+                                      'text-xs px-2 py-0.5 rounded-full border transition-colors whitespace-nowrap',
+                                      isSelected
+                                        ? 'bg-rose-200 border-rose-400 text-rose-800 font-semibold'
+                                        : 'bg-gray-100 border-gray-300 text-gray-600 hover:bg-rose-50'
+                                    )}
+                                  >
+                                    {tag}
+                                  </button>
+                                )
+                              })
+                            )}
+                          </div>
+                        )}
+
+                        {/* 선택된 태그 표시 (버튼 토글 외, 읽기용) */}
+                        <div className="flex flex-wrap gap-1 mt-1">
+                          {(selectedTags[`${d}_${meal.key}`] || []).map(tag => (
+                            <span
+                              key={tag}
+                              className="text-xs bg-rose-100 text-rose-700 px-2 py-0.5 rounded-full select-none"
+                            >
+                              {tag}
+                            </span>
+                          ))}
+                        </div>
+
+                      </td>
+                    ))}
+                  </tr>
+                ))}
+
+                {mealTypes.map((meal) => (
+                  <tr
+                    key={`${meal.key}-comment`}
+                    className={clsx(
+                      selectedMealForTemplates === meal.key && 'bg-rose-50'
+                    )}
+                  >
+                    <td className="border px-2 py-1 text-center text-rose-700">💬 {meal.label}</td>
+                    <td colSpan={7} className="border px-2 py-1">
+                      <textarea
+                        rows={2}
+                        className="
+                          w-full max-w-full border border-gray-300 rounded
+                          p-2 mt-1 resize-none text-sm
+                          focus:ring-2 focus:ring-rose-500 focus:outline-none
+                        "
+                        placeholder="코멘트를 입력하세요"
+                        value={comments[meal.key] || ''}
+                        onChange={(e) => {
+                          const value = e.target.value
+                          setComments({ ...comments, [meal.key]: value })
+                        }}
+                        onFocus={() => setSelectedMealForTemplates(meal.key)}
+                      />
+
+                      {selectedMealForTemplates === meal.key && (
+                        <div className="flex flex-wrap gap-2 mt-2">
+                          {[...commentTemplates]
+                            .sort((a, b) => a.localeCompare(b, undefined, { sensitivity: 'base' }))
+                            .map((template, idx) => {
+                              const isSelected = (comments[meal.key] || '').includes(template)
                               return (
                                 <button
-                                  key={tag}
-                                  type="button"
-                                  onClick={() => toggleTagSelect(`${d}_${meal.key}`, tag)}
+                                  key={idx}
+                                  onClick={() => {
+                                    const current = comments[meal.key] || ''
+                                    const lines = current.split('\n').map(s => s.trim()).filter(Boolean)
+
+                                    let updated: string
+                                    if (lines.includes(template)) {
+                                      // 이미 있는 경우 → 제거
+                                      updated = lines.filter(t => t !== template).join('\n')
+                                    } else {
+                                      // 없는 경우 → 추가 (줄바꿈으로 추가)
+                                      updated = [...lines, template].join('\n')
+                                    }
+
+                                    setComments({ ...comments, [meal.key]: updated })
+                                  }}
                                   className={clsx(
-                                    'text-xs px-2 py-0.5 rounded-full border transition-colors whitespace-nowrap',
+                                    'px-3 py-1 text-sm rounded-full border transition-all',
                                     isSelected
-                                      ? 'bg-rose-200 border-rose-400 text-rose-800 font-semibold'
-                                      : 'bg-gray-100 border-gray-300 text-gray-600 hover:bg-rose-50'
+                                      ? 'bg-rose-100 border-rose-400 text-rose-700 font-semibold'
+                                      : 'bg-gray-100 hover:bg-rose-50 border-gray-300'
                                   )}
                                 >
-                                  {tag}
+                                  {template}
                                 </button>
                               )
-                            })
-                          )}
+                          })}
                         </div>
                       )}
-
-                      {/* 선택된 태그 표시 (버튼 토글 외, 읽기용) */}
-                      <div className="flex flex-wrap gap-1 mt-1">
-                        {(selectedTags[`${d}_${meal.key}`] || []).map(tag => (
-                          <span
-                            key={tag}
-                            className="text-xs bg-rose-100 text-rose-700 px-2 py-0.5 rounded-full select-none"
-                          >
-                            {tag}
-                          </span>
-                        ))}
-                      </div>
-
                     </td>
-                  ))}
-                </tr>
-              ))}
+                  </tr>
+                ))}
 
-              {mealTypes.map((meal) => (
-                <tr
-                  key={`${meal.key}-comment`}
-                  className={clsx(
-                    selectedMealForTemplates === meal.key && 'bg-rose-50'
-                  )}
+              </tbody>
+            </table>
+            <div className="mt-6 flex justify-end items-center gap-4">
+              <div className="flex items-center gap-2">
+                <AddCommentTemplateModal
+                  onTemplateAdded={(text) => {
+                    setCommentTemplates((prev) => [...prev, text])
+                  }}
+                  onTemplateDeleted={(text) => {
+                    setCommentTemplates((prev) => prev.filter(t => t !== text))
+                  }}
+                />
+                <AddHashTagTemplateModal
+                  trainerId="1"
+                  onTemplateAdded={(text) => {
+                    // 필요 시 상태 업데이트 로직 추가
+                    console.log('해시태그 템플릿 추가됨:', text)
+                  }}
+                  onTemplateDeleted={(text) => {
+                    // 필요 시 상태 업데이트 로직 추가
+                    console.log('해시태그 템플릿 삭제됨:', text)
+                  }}
+                />
+                <Button
+                  onClick={handleSaveAll}
+                  variant="darkGray" 
+                  className="text-sm"
+                  // type="submit"
+                  // className="bg-rose-600 hover:bg-rose-700 text-white text-sm"
                 >
-                  <td className="border px-2 py-1 text-center text-rose-700">💬 {meal.label}</td>
-                  <td colSpan={7} className="border px-2 py-1">
-                    <textarea
-                      rows={2}
-                      className="
-                        w-full max-w-full border border-gray-300 rounded
-                        p-2 mt-1 resize-none text-sm
-                        focus:ring-2 focus:ring-rose-500 focus:outline-none
-                      "
-                      placeholder="코멘트를 입력하세요"
-                      value={comments[meal.key] || ''}
-                      onChange={(e) => {
-                        const value = e.target.value
-                        setComments({ ...comments, [meal.key]: value })
-                      }}
-                      onFocus={() => setSelectedMealForTemplates(meal.key)}
-                    />
-
-                    {selectedMealForTemplates === meal.key && (
-                      <div className="flex flex-wrap gap-2 mt-2">
-                        {[...commentTemplates]
-                          .sort((a, b) => a.localeCompare(b, undefined, { sensitivity: 'base' }))
-                          .map((template, idx) => {
-                            const isSelected = (comments[meal.key] || '').includes(template)
-                            return (
-                              <button
-                                key={idx}
-                                onClick={() => {
-                                  const current = comments[meal.key] || ''
-                                  const lines = current.split('\n').map(s => s.trim()).filter(Boolean)
-
-                                  let updated: string
-                                  if (lines.includes(template)) {
-                                    // 이미 있는 경우 → 제거
-                                    updated = lines.filter(t => t !== template).join('\n')
-                                  } else {
-                                    // 없는 경우 → 추가 (줄바꿈으로 추가)
-                                    updated = [...lines, template].join('\n')
-                                  }
-
-                                  setComments({ ...comments, [meal.key]: updated })
-                                }}
-                                className={clsx(
-                                  'px-3 py-1 text-sm rounded-full border transition-all',
-                                  isSelected
-                                    ? 'bg-rose-100 border-rose-400 text-rose-700 font-semibold'
-                                    : 'bg-gray-100 hover:bg-rose-50 border-gray-300'
-                                )}
-                              >
-                                {template}
-                              </button>
-                            )
-                        })}
-                      </div>
-                    )}
-                  </td>
-                </tr>
-              ))}
-
-            </tbody>
-          </table>
-          <div className="mt-6 flex justify-end items-center gap-4">
-            <div className="flex items-center gap-2">
-              <AddCommentTemplateModal
-                onTemplateAdded={(text) => {
-                  setCommentTemplates((prev) => [...prev, text])
-                }}
-                onTemplateDeleted={(text) => {
-                  setCommentTemplates((prev) => prev.filter(t => t !== text))
-                }}
-              />
-              <AddHashTagTemplateModal
-                trainerId="1"
-                onTemplateAdded={(text) => {
-                  // 필요 시 상태 업데이트 로직 추가
-                  console.log('해시태그 템플릿 추가됨:', text)
-                }}
-                onTemplateDeleted={(text) => {
-                  // 필요 시 상태 업데이트 로직 추가
-                  console.log('해시태그 템플릿 삭제됨:', text)
-                }}
-              />
-              <Button
-                onClick={handleSaveAll}
-                variant="darkGray" 
-                className="text-sm"
-                // type="submit"
-                // className="bg-rose-600 hover:bg-rose-700 text-white text-sm"
-              >
-                저장
-              </Button>
+                  저장
+                </Button>
+              </div>
             </div>
-          </div>
 
-        </div>
+          </div>
+        </motion.div>
       )}
     </div>
   )

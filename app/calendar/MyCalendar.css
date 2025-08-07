@@ -1,0 +1,80 @@
+/* MyCalendar.css */
+.react-calendar {
+    border: none;
+    width: 100%;
+    font-family: inherit;
+  }
+  
+  .react-calendar__tile {
+    padding: 0.75rem 0;
+    border-radius: 8px;
+    transition: 0.2s ease;
+    text-align: center;
+  }
+  
+  .react-calendar__tile--now {
+    background-color: #f3f3f3 !important;
+    font-weight: bold;
+    color: #39393a !important;
+  }
+  
+  .react-calendar__tile--active {
+    background-color: #2563eb !important;
+    color: white !important;
+  }
+  
+  .react-calendar__tile:hover {
+    transform: scale(1.05);
+    cursor: pointer;
+  }
+  
+  /* 적용 우선순위를 높이기 위해 .react-calendar__tile 에 덧씌움 */
+  .react-calendar__tile.bg-status-pending {
+    background-color: #fef9c3 !important;
+    border: 1px solid #facc15 !important;
+    color: #854d0e !important;
+    font-weight: bold;
+    border-radius: 8px;
+  }
+
+  .react-calendar__tile.bg-status-confirmed {
+    background-color: #d1fae5 !important;
+    border: 1px solid #10b981 !important;
+    color: #065f46 !important;
+    font-weight: bold;
+    border-radius: 8px;
+  }
+
+  .react-calendar__tile.bg-status-confirmed_pt {
+    background-color: #dbeafe;  
+    border: 1px solid #3b82f6;
+    color: #065f46;
+    font-weight: bold;
+    border-radius: 8px;
+  }
+
+  .react-calendar__tile.bg-status-confirmed_self {
+    background-color: #d1fae5; /* 연초록 */
+    border: 1px solid #10b981;
+    color: #065f46;
+    font-weight: bold;
+    border-radius: 8px;
+  }
+  
+  .bg-status-cancelled {
+    background-color: #f3f4f6; /* 연회색 */
+    border: 1px solid #9ca3af; /* 중회색 */
+    color: #6b7280;
+    text-decoration: line-through;
+    font-weight: 400;
+  }
+  
+  .react-calendar__tile--selected-custom {
+    background-color: #595959 !important;
+    color: white !important;
+    font-weight: bold !important;
+    z-index: 1;
+    position: relative;
+    border: none !important;
+  }
+  

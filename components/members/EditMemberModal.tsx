@@ -9,6 +9,7 @@ import dayjs from 'dayjs'
 import EditMemberPackage from "@/components/members/EditMemberPackage";
 import ReRegisterMemberPackage from "@/components/members/ReRegisterMemberPackage";
 import BeforeMemberPackage from "@/components/members/BeforeMemberPackage";
+import { toast } from 'sonner'
 
 export default function EditMemberModal({
   member,
@@ -253,7 +254,8 @@ export default function EditMemberModal({
       ]);
   
       if (pkgErr) {
-        alert('회원은 수정되었지만 패키지 등록에 실패했습니다');
+        // alert('회원은 수정되었지만 패키지 등록에 실패했습니다');
+        toast.error('회원은 수정되었지만 패키지 등록에 실패했습니다')
       }
     }
   
@@ -262,7 +264,8 @@ export default function EditMemberModal({
     if (error) {
       setErrorMsg('회원 정보 수정 중 문제가 발생했어요 😥');
     } else {
-      alert('회원 정보를 성공적으로 수정했어요 ✅');
+      // alert('회원 정보를 성공적으로 수정했어요 ✅');
+      toast.success('회원 정보를 성공적으로 수정했어요 ✅')
       onUpdate();
       onClose();
     }

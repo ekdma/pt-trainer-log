@@ -13,6 +13,7 @@ import {
 } from '@/components/ui/dialog'
 import { Button } from '@/components/ui/button'
 import { PackagePlus } from 'lucide-react'
+import { toast } from 'sonner'
 
 type Props = {
   open: boolean
@@ -74,9 +75,11 @@ export default function AddPackageOpen({ open, onClose, onPackageAdded }: Props)
 
     if (error) {
       setErrorMsg(error.message)
-      alert('패키지 추가 중 문제가 발생했어요 😥')
+      // alert('패키지 추가 중 문제가 발생했어요 😥')
+      toast.error('패키지 추가 중 문제가 발생했어요 😥')
     } else {
-      alert('패키지 추가를 완료하였습니다 😊')
+      // alert('패키지 추가를 완료하였습니다 😊')
+      toast.success('패키지 추가를 완료하였습니다 😊')
       onPackageAdded()
       onClose()
     }

@@ -12,6 +12,7 @@ export type Member = {
   phone: string
   description: string
   nickname: string
+  status: string
 }
 
 export type MemberCounsel = {

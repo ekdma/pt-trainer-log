@@ -10,6 +10,7 @@ import { FaStar, FaRegStar } from 'react-icons/fa';
 import AddWorkout from '@/components/workout/AddWorkout'
 import { Button } from '@/components/ui/button'
 import { Member, WorkoutRecord, WorkoutType } from '@/components/members/types'
+import { toast } from 'sonner'
 
 interface WorkoutLogManagerProps {
   member: Member
@@ -223,7 +224,8 @@ export default function WorkoutLogManager({
       .eq('session_date', date);
   
     if (error) {
-      alert('PT 세션 삭제 실패: ' + error.message);
+      // alert('PT 세션 삭제 실패: ' + error.message);
+      toast.error('PT 세션 삭제 실패: ' + error.message);
     }
   };
 
@@ -287,14 +289,26 @@ export default function WorkoutLogManager({
   //       favorites.has(`${target}||${workout}`)
   //     )
   //   : rows;  
+  // const displayedRows = showFavoritesOnly
+  //   ? favoritesWithOrder
+  //       .map(({ key }) => {
+  //         const [target, workout] = key.split('||');
+  //         return rows.find((row) => row.target === target && row.workout === workout);
+  //       })
+  //       .filter((row): row is typeof rows[number] => !!row)
+  //   : rows;
+
+  const rowMap = new Map(
+    rows.map((row) => [`${row.target}||${row.workout}`, row])
+  )
+  
   const displayedRows = showFavoritesOnly
-    ? favoritesWithOrder
-        .map(({ key }) => {
-          const [target, workout] = key.split('||');
-          return rows.find((row) => row.target === target && row.workout === workout);
-        })
-        .filter((row): row is typeof rows[number] => !!row)
-    : rows;
+  ? [...favoritesWithOrder]
+      .sort((a, b) => a.order - b.order) // ✅ 순서 정렬 추가
+      .map(({ key }) => rowMap.get(key))
+      .filter((row): row is typeof rows[number] => !!row)
+  : rows;
+  console.log('favoritesWithOrder', favoritesWithOrder)
 
   const toggleFavorite = async (rowKey: string) => {
     const [target, workout] = rowKey.split('||');
@@ -361,7 +375,8 @@ export default function WorkoutLogManager({
       .eq('member_id', member.member_id)
   
     if (logError) {
-      alert('불러오기 오류: ' + logError.message)
+      // alert('불러오기 오류: ' + logError.message)
+      toast.error('불러오기 오류: ' + logError.message)
       return
     }
   
@@ -516,7 +531,8 @@ export default function WorkoutLogManager({
   
     // ✅ 날짜 중복 검사
     if (addingDate && dates.includes(addingDate)) {
-      alert(`이미 존재하는 날짜입니다: ${dayjs(addingDate).format('YYYY-MM-DD')} ☹`)
+      // alert(`이미 존재하는 날짜입니다: ${dayjs(addingDate).format('YYYY-MM-DD')} ☹`)
+      toast.warning(`이미 존재하는 날짜입니다: ${dayjs(addingDate).format('YYYY-MM-DD')} ☹`)
       return
     }
 
@@ -543,7 +559,8 @@ export default function WorkoutLogManager({
     // 2. 신규 날짜 추가된 셀 입력 (addingDate + newLogInputs)
     if (addingDate) {
       if (!isTrainer && !isDateWithinLast7Days(addingDate)) {
-        alert('7일 이내의 날짜만 추가할 수 있습니다 😥');
+        // alert('7일 이내의 날짜만 추가할 수 있습니다 😥');
+        toast.warning('7일 이내의 날짜만 추가할 수 있습니다 😥');
         return;
       }
 
@@ -594,9 +611,11 @@ export default function WorkoutLogManager({
     }
   
     if (updateErrors.length > 0) {
-      alert('일부 저장 실패: ' + updateErrors.join(', '))
+      // alert('일부 저장 실패: ' + updateErrors.join(', '))
+      toast.error('일부 저장 실패: ' + updateErrors.join(', '))
     } else {
-      alert('기록 수정을 완료하였습니다 😊')
+      // alert('기록 수정을 완료하였습니다 😊')
+      toast.success('기록 수정을 완료하였습니다 😊')
       setModifiedCells([])
       setAddingDate(null)
       setAddingRow(false)
@@ -606,7 +625,8 @@ export default function WorkoutLogManager({
 
   const handleAddType = async () => {
     if (!newTarget || !newWorkout || !newLevel) {
-      alert('모든 필드를 입력해주세요 😎')
+      // alert('모든 필드를 입력해주세요 😎')
+      toast.warning('모든 필드를 입력해주세요 😎')
       return
     }
   
@@ -647,9 +667,11 @@ export default function WorkoutLogManager({
     ])
   
     if (error) {
-      alert('추가 중 오류 발생: ' + error.message)
+      // alert('추가 중 오류 발생: ' + error.message)
+      toast.error('추가 중 오류 발생: ' + error.message)
     } else {
-      alert('운동 추가를 완료하였습니다 😊')
+      // alert('운동 추가를 완료하였습니다 😊')
+      toast.success('운동 추가를 완료하였습니다 😊')
       setNewTarget('')
       setNewWorkout('')
       setNewLevel('')
@@ -679,9 +701,11 @@ export default function WorkoutLogManager({
       .delete()
       .eq('workout_type_id', id)
 
-    if (error) alert('삭제 실패: ' + error.message)
+    // if (error) alert('삭제 실패: ' + error.message)
+    if (error) toast.error('삭제 실패: ' + error.message)
     else {
-      alert('운동 삭제를 완료하였습니다 😊')
+      // alert('운동 삭제를 완료하였습니다 😊')
+      toast.success('운동 삭제를 완료하였습니다 😊')
       const { data: updatedTypes, error: fetchError } = await supabase
         .from('workout_types')
         .select('*')
@@ -852,12 +876,14 @@ export default function WorkoutLogManager({
                               const normalized = normalizeDateInput(fullDate);
                               if (normalized) {
                                 if (!isTrainer && !isDateWithinLast7Days(normalized)) {
-                                  alert('7일 이내의 날짜만 추가할 수 있습니다 😥');
+                                  // alert('7일 이내의 날짜만 추가할 수 있습니다 😥');
+                                  toast.warning('7일 이내의 날짜만 추가할 수 있습니다 😥');
                                   return;
                                 }
                               
                                 if (dates.includes(normalized)) {
-                                  alert(`이미 존재하는 날짜입니다: ${normalized} ☹`);
+                                  // alert(`이미 존재하는 날짜입니다: ${normalized} ☹`);
+                                  toast.warning(`이미 존재하는 날짜입니다: ${normalized} ☹`);
                                   return;
                                 }
                               

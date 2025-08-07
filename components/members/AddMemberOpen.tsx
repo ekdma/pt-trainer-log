@@ -8,6 +8,7 @@ import { Button } from '@/components/ui/button'
 import dayjs from 'dayjs'
 import { endOfMonth, addMonths, format, parseISO } from 'date-fns';
 import AddMemberPackage from '@/components/members/AddMemberPackage'
+import { toast } from 'sonner'
 
 interface Package {
   package_id: number
@@ -180,12 +181,14 @@ export default function AddMemberOpen({ onClose, onMemberAdded }: Props) {
       ])
 
       if (pkgErr) {
-        alert('회원은 등록되었지만 패키지 등록에 실패했습니다')
+        // alert('회원은 등록되었지만 패키지 등록에 실패했습니다')
+        toast.error('회원은 등록되었지만 패키지 등록에 실패했습니다')
       }
     }
 
     setLoading(false)
-    alert('회원 등록이 완료되었습니다 😎')
+    // alert('회원 등록이 완료되었습니다 😎')
+    toast.success('회원 등록이 완료되었습니다 😎')
     onMemberAdded()
     onClose()
   }

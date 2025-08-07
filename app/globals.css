@@ -75,9 +75,9 @@ body {
   border-radius: 9999px; /* rounded-full */
 }
 
-/* GROUP 세션 날짜 배경색과 텍스트색 덮어쓰기 */
+/* SELF 세션 날짜 배경색과 텍스트색 덮어쓰기 */
 .react-calendar__tile.self-session {
-  background-color: #c7c7c7 !important; 
+  background-color: #10b981 !important; 
   color: white !important;
   font-weight: 700;
   border-radius: 9999px; /* rounded-full */
@@ -138,4 +138,19 @@ body {
   align-items: center;
   justify-content: center;
   padding: 0.25rem;
+}
+
+
+.react-calendar .bg-yellow-100 {
+  background-color: #fefcbf;
+}
+.react-calendar .bg-green-200 {
+  background-color: #c6f6d5;
+}
+.react-calendar .bg-gray-200 {
+  background-color: #e2e8f0;
+}
+
+[data-sonner-toast] {
+  font-family: 'Nanum Gothic', sans-serif !important;
 }

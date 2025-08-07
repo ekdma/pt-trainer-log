@@ -3,6 +3,8 @@
 import { getSupabaseClient } from '@/lib/supabase'
 import { PackageOpen, PackageMinus } from 'lucide-react'
 import { Button } from '@/components/ui/button'
+import { toast } from 'sonner'
+import ConfirmDeleteItem from '@/components/ui/ConfirmDeleteItem'
 
 interface Package {
   package_id: number
@@ -29,44 +31,60 @@ export default function PackageSearch({
 }: Props) {
   const supabase = getSupabaseClient()
 
-  const handleDeletePackage = async (packageId: number) => {
-    const password = prompt('비밀번호를 입력하세요 🤐')
-    if (password !== '2213') {
-      alert('비밀번호가 일치하지 않습니다 ❌')
-      return
-    }
+  const handleDeletePackage = (pkg: Package) => {
+    const toastId = crypto.randomUUID()
   
-    const confirmDelete = confirm('정말로 이 패키지를 삭제하시겠습니까?')
-    if (!confirmDelete) return
+    toast.custom(
+      (id) => (
+        <ConfirmDeleteItem
+          title={
+            <>
+              정말로 <strong className="text-red-600">{pkg.package_name}</strong> 패키지를 삭제하시겠습니까?
+            </>
+          }
+          description="삭제된 패키지는 복구할 수 없습니다."
+          onCancel={() => toast.dismiss(id)}
+          onConfirm={async () => {
+            toast.dismiss(id)
   
-    // 🔥 먼저 참조 테이블(member_packages)에서 삭제
-    const { error: refError } = await supabase
-      .from('member_packages')
-      .delete()
-      .eq('package_id', packageId)
+            const password = prompt('비밀번호를 입력하세요 🤐')
+            if (password !== '2213') {
+              toast.error('비밀번호가 일치하지 않습니다 ❌')
+              return
+            }
   
-    if (refError) {
-      console.error('참조 테이블 삭제 오류:', refError.message)
-      alert('참조 테이블 삭제 중 오류 발생 😥\n\n' + refError.message)
-      return
-    }
+            // // 🔥 참조 테이블 먼저 삭제
+            // const { error: refError } = await supabase
+            //   .from('member_packages')
+            //   .delete()
+            //   .eq('package_id', pkg.package_id)
   
-    // ✅ 실제 packages 테이블에서 삭제
-    const { error } = await supabase
-      .from('packages')
-      .delete()
-      .eq('package_id', packageId)
+            // if (refError) {
+            //   console.error('참조 테이블 삭제 오류:', refError.message)
+            //   toast.error('참조 테이블 삭제 중 오류 발생 😥\n\n' + refError.message)
+            //   return
+            // }
   
-    if (error) {
-      console.error('패키지 삭제 오류:', error.message)
-      alert('패키지 삭제 중 오류 발생 😥\n\n' + error.message)
-      return
-    }
+            // ✅ packages 테이블에서 삭제
+            const { error } = await supabase
+              .from('packages')
+              .delete()
+              .eq('package_id', pkg.package_id)
   
-    alert('패키지 삭제를 완료하였습니다 🎉')
-    fetchPackages()
+            if (error) {
+              console.error('패키지 삭제 오류:', error.message)
+              toast.error('패키지 삭제 중 오류 발생 😥\n\n' + error.message)
+              return
+            }
+  
+            toast.success(`"${pkg.package_name}"패키지가 삭제되었습니다.`)
+            fetchPackages()
+          }}
+        />
+      ),
+      { id: toastId }
+    )
   }
-  
 
   const sortedPackages = [...packages].sort((a, b) =>
     a.package_name.localeCompare(b.package_name, 'ko')
@@ -108,7 +126,7 @@ export default function PackageSearch({
             </Button>
 
             <Button
-              onClick={() => handleDeletePackage(pkg.package_id)}
+              onClick={() => handleDeletePackage(pkg)}
               variant="ghost"
               className="font-semibold bg-white border border-transparent text-red-600 hover:bg-red-100 px-3 py-2 rounded-full shadow-md flex items-center gap-1 text-sm"
               title="패키지 삭제"
@@ -116,6 +134,7 @@ export default function PackageSearch({
               <PackageMinus size={16} />
               삭제
             </Button>
+
           </div>
         </li>
       ))}

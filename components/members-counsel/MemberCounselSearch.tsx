@@ -13,7 +13,8 @@ import {  Calendar as CalendarIcon } from 'lucide-react';
 // import { Button } from '@/components/ui/button'
 // import { useRouter } from 'next/navigation'  
 
-function formatPhoneDisplay(phone: string) {
+function formatPhoneDisplay(phone: string | null | undefined) {
+  if (!phone) return '-'
   const digits = phone.replace(/\D/g, '')
   if (digits.length < 4) return digits
   if (digits.length < 8) return `${digits.slice(0, 3)}-${digits.slice(3)}`

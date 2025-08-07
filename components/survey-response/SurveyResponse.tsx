@@ -7,9 +7,11 @@ import { useRouter } from 'next/navigation'
 import SignatureCanvas from 'react-signature-canvas'
 import { useRef } from 'react'
 import html2canvas from 'html2canvas'
+import jsPDF from 'jspdf'
+import { toast } from 'sonner'
 
 interface SurveyDetailProps {
-  surveyId: string
+  surveyIds: string[]
   currentMemberId: number
   onBack: () => void
 }
@@ -35,7 +37,7 @@ interface Option {
 }
 
 export default function SurveyDetail({
-  surveyId,
+  surveyIds,
   currentMemberId,
   onBack,
 }: SurveyDetailProps) {
@@ -52,9 +54,34 @@ export default function SurveyDetail({
   const sigCanvasRef = useRef<SignatureCanvas | null>(null)
   const [signatureData, setSignatureData] = useState<string | null>(null)
   const today = new Date().toLocaleDateString()
+  const [currentIndex, setCurrentIndex] = useState(0)
+  const currentSurveyId = surveyIds[currentIndex]
+  const isLastSurvey = currentIndex === surveyIds.length - 1
 
   const captureRef = useRef<HTMLDivElement | null>(null)
+  const [memberName, setMemberName] = useState<string | null>(null);
 
+  useEffect(() => {
+    const fetchMemberName = async () => {
+      if (!currentMemberId) return;
+  
+      const { data, error } = await supabase
+        .from('members_counsel')
+        .select('name')
+        .eq('member_counsel_id', currentMemberId)
+        .single();
+  
+      if (error || !data?.name) {
+        console.error('회원 정보 불러오기 실패:', error);
+        setMemberName(null);
+        return;
+      }
+  
+      setMemberName(data.name);
+    };
+    fetchMemberName();
+  }, [currentMemberId]);
+  
   // 설문 및 질문 불러오기
   useEffect(() => {
     const fetchSurveyData = async () => {
@@ -63,12 +90,13 @@ export default function SurveyDetail({
         const { data: surveyData, error: surveyError } = await supabase
           .from('surveys')
           .select('id, title, description')
-          .eq('id', surveyId)
+          .eq('id', currentSurveyId)
           .single()
   
         if (surveyError) {
           setLoading(false)
-          alert('설문 정보를 불러오는데 실패했습니다.')
+          // alert('설문 정보를 불러오는데 실패했습니다.')
+          toast.error('설문 정보를 불러오는데 실패했습니다.')
           onBack()
           return
         }
@@ -77,12 +105,13 @@ export default function SurveyDetail({
         const { data: questionsData, error: questionsError } = await supabase
           .from('survey_questions')
           .select('id, question_text, question_type, order')
-          .eq('survey_id', surveyId)
+          .eq('survey_id', currentSurveyId)
           .order('order', { ascending: true })
   
         if (questionsError) {
           setLoading(false)
-          alert('질문을 불러오는데 실패했습니다.')
+          // alert('질문을 불러오는데 실패했습니다.')
+          toast.error('질문을 불러오는데 실패했습니다.')
           onBack()
           return
         }
@@ -106,7 +135,8 @@ export default function SurveyDetail({
       } catch (error) {
         console.error(error)
         setLoading(false)
-        alert('데이터를 불러오는 중 오류가 발생했습니다.')
+        // alert('데이터를 불러오는 중 오류가 발생했습니다.')
+        toast.error('데이터를 불러오는 중 오류가 발생했습니다.')
         onBack()
       } finally {
         setLoading(false)
@@ -114,7 +144,7 @@ export default function SurveyDetail({
     }
   
     fetchSurveyData()
-  }, [surveyId]) // supabase, onBack 제거
+  }, [currentSurveyId]) // supabase, onBack 제거
 
   // 답변 변경 핸들러
   const handleChangeAnswer = (
@@ -124,37 +154,44 @@ export default function SurveyDetail({
     setAnswers((prev) => ({ ...prev, [questionId]: value }))
   }
 
-  const handleSubmit = async () => {
+  const handleAnswerAndMoveNext = async () => {
+    if (!memberName) {
+      return;
+    }
     for (const q of questions) {
       if (
         answers[q.id] === undefined ||
         answers[q.id] === '' ||
         (Array.isArray(answers[q.id]) && answers[q.id].length === 0)
       ) {
-        alert('모든 질문에 답변해 주세요.')
+        // alert('모든 질문에 답변해 주세요.')
+        toast.warning('모든 질문에 답변해 주세요.')
         return
       }
     }
-
+  
     setLoading(true)
-
+  
     try {
+      // 캡처 저장
+      await handleCaptureAndDownload(memberName)
+  
       // survey_responses 삽입
       const { data: responseData, error: responseError } = await supabase
         .from('survey_responses')
         .insert({
-          survey_id: surveyId,
+          survey_id: currentSurveyId,
           member_counsel_id: currentMemberId,
           signature: signatureData,
         })
         .select('id')
         .single()
-
+  
       if (responseError) throw responseError
-
+  
       const responseId = responseData.id
-
-      // survey_answers 일괄 삽입 준비
+  
+      // survey_answers 삽입
       const answersToInsert = questions.map((q) => {
         if (q.question_type === 'text') {
           return {
@@ -168,7 +205,7 @@ export default function SurveyDetail({
             q.question_type === 'single'
               ? [answers[q.id] as string]
               : (answers[q.id] as string[])
-      
+  
           return {
             response_id: responseId,
             question_id: q.id,
@@ -177,35 +214,80 @@ export default function SurveyDetail({
           }
         }
       })
-
+  
       const { error: answerError } = await supabase
         .from('survey_answers')
         .insert(answersToInsert)
-
+  
       if (answerError) throw answerError
-
-      alert('설문이 성공적으로 제출되었습니다.')
-      router.push(`/survey-result?surveyID=${surveyId}&responseID=${responseId}&member_counsel_id=${currentMemberId}`)
-      // onBack()
+  
+      if (isLastSurvey) {
+        // alert('모든 설문이 제출되었습니다.')
+        toast.success('모든 설문이 제출되었습니다.')
+  
+        if (surveyIds.length === 1) {
+          router.push(`/survey-result?surveyID=${currentSurveyId}&responseID=${responseId}&member_counsel_id=${currentMemberId}`)
+        } else {
+          const query = new URLSearchParams()
+          surveyIds.forEach(id => query.append('surveyID', id))
+          query.append('member_counsel_id', currentMemberId.toString())
+  
+          router.push(`/survey-result-multi?${query.toString()}`)
+        }
+      } else {
+        // 다음 설문으로 이동
+        setAnswers({}) // 👉 다음 설문을 위해 답변 초기화
+        setSignatureData(null)
+        setCurrentIndex((prev) => prev + 1)
+      }
     } catch (e) {
       console.error(e)
-      alert('설문 제출 중 오류가 발생했습니다.')
+      // alert('설문 제출 중 오류가 발생했습니다.')
+      toast.error('설문 제출 중 오류가 발생했습니다.')
     } finally {
       setLoading(false)
     }
   }
-
-  const handleCaptureAndDownload = async () => {
-    if (!captureRef.current) return
   
-    const canvas = await html2canvas(captureRef.current)
-    const dataUrl = canvas.toDataURL('image/png')
+  const handleCaptureAndDownload = async (memberName: string) => {
+    if (!captureRef.current || !survey) return;
+    try {
+      const element = captureRef.current;
+      const canvas = await html2canvas(element, { scale: 2, useCORS: true });
+      const imgData = canvas.toDataURL('image/png');
   
-    const link = document.createElement('a')
-    link.href = dataUrl
-    link.download = `survey-${surveyId}.png`
-    link.click()
-  }
+      const pdf = new jsPDF('p', 'mm', 'a4');
+      const pageWidth = pdf.internal.pageSize.getWidth();
+      const pageHeight = pdf.internal.pageSize.getHeight();
+  
+      const imgProps = pdf.getImageProperties(imgData);
+      const imgRatio = imgProps.width / imgProps.height;
+  
+      let pdfWidth = pageWidth;
+      let pdfHeight = pdfWidth / imgRatio;
+  
+      if (pdfHeight > pageHeight) {
+        pdfHeight = pageHeight;
+        pdfWidth = pdfHeight * imgRatio;
+      }
+  
+      const marginX = (pageWidth - pdfWidth) / 2;
+      const marginY = 10;
+  
+      pdf.addImage(imgData, 'PNG', marginX, marginY, pdfWidth, pdfHeight);
+  
+      const formattedDate = new Date().toISOString().split('T')[0].replace(/-/g, '');
+      const safeTitle = survey.title.replace(/[/\\?%*:|"<>]/g, '-');
+      const fileName = `${safeTitle}_${memberName}_${formattedDate}.pdf`;
+  
+      pdf.save(fileName);
+    } catch (err) {
+      console.error('PDF 저장 오류 상세:', err);
+      // alert('PDF 저장 중 오류가 발생했습니다.');
+      toast.error('PDF 저장 중 오류가 발생했습니다.');
+    }
+  };
+  
 
   if (loading) return <p>불러오는 중...</p>
   if (!survey) return <p>설문을 불러올 수 없습니다.</p>
@@ -220,12 +302,7 @@ export default function SurveyDetail({
           )}
         </div>
 
-        <form
-          onSubmit={(e) => {
-            e.preventDefault()
-            handleSubmit()
-          }}
-          className="space-y-6"
+        <form className="space-y-6"
         >
           {questions.map((q) => (
             <div
@@ -305,6 +382,12 @@ export default function SurveyDetail({
               <strong>{today}</strong>
             </div>
 
+            {memberName && (
+              <div className="text-gray-800 text-xl font-semibold whitespace-nowrap">
+                {memberName}
+              </div>
+            )}
+    
             {/* 서명 영역 */}
             <div className="flex flex-col items-center">
               <p className="text-gray-700 font-semibold mb-2">서명</p>
@@ -360,16 +443,18 @@ export default function SurveyDetail({
             )} */}
           </div>
 
-
-
-
           <div className="text-center">
             <Button 
               variant='darkGray' 
               disabled={loading}
-              onClick={handleCaptureAndDownload}
+              type="button"
+              onClick={handleAnswerAndMoveNext}
             >
-              {loading ? '제출 중...' : '제출'}
+              {loading
+                ? '처리 중...'
+                : isLastSurvey
+                  ? '제출'
+                  : '다음 설문'}
             </Button>
           </div>
         </form>

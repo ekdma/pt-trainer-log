@@ -9,6 +9,7 @@ import { useHorizontalDragScroll } from '@/utils/useHorizontalDragScroll';
 import AddHealthMetric from '@/components/health-metric/AddHealthMetric'
 import { Button } from '@/components/ui/button'
 import type { Member, HealthMetric, HealthMetricType } from '@/components/members/types'
+import { toast } from 'sonner'
 
 interface HealthMetricManagerProps {
   member: Member
@@ -128,7 +129,8 @@ export default function HealthMetricManager({
       .eq('member_id', member.member_id);
   
     if (logError) {
-      alert('불러오기 오류: ' + logError.message);
+      // alert('불러오기 오류: ' + logError.message);
+      toast.error('불러오기 오류: ' + logError.message);
       return;
     }
   
@@ -248,7 +250,8 @@ export default function HealthMetricManager({
       
     // ✅ 날짜 중복 검사
     if (addingDate && dates.includes(addingDate)) {
-      alert(`이미 존재하는 날짜입니다: ${dayjs(addingDate).format('YYYY-MM-DD')} ☹`)
+      // alert(`이미 존재하는 날짜입니다: ${dayjs(addingDate).format('YYYY-MM-DD')} ☹`)
+      toast.warning(`이미 존재하는 날짜입니다: ${dayjs(addingDate).format('YYYY-MM-DD')} ☹`)
       return
     }
   
@@ -274,7 +277,8 @@ export default function HealthMetricManager({
     // 2. 신규 날짜 추가된 셀 입력 (addingDate + newLogInputs)
     if (addingDate) {
       if (!isTrainer && !isDateWithinLast7Days(addingDate)) {
-        alert('7일 이내의 날짜만 추가할 수 있습니다 😥');
+        // alert('7일 이내의 날짜만 추가할 수 있습니다 😥');
+        toast.warning('7일 이내의 날짜만 추가할 수 있습니다 😥');
         return;
       }
 
@@ -318,9 +322,11 @@ export default function HealthMetricManager({
     }
   
     if (updateErrors.length > 0) {
-      alert('일부 저장 실패: ' + updateErrors.join(', '))
+      // alert('일부 저장 실패: ' + updateErrors.join(', '))
+      toast.error('일부 저장 실패: ' + updateErrors.join(', '))
     } else {
-      alert('기록 수정을 완료하였습니다 😊')
+      // alert('기록 수정을 완료하였습니다 😊')
+      toast.success('기록 수정을 완료하였습니다 😊')
       setModifiedCells([])
       setAddingDate(null)
       setAddingRow(false)
@@ -330,7 +336,8 @@ export default function HealthMetricManager({
 
   const handleAddType = async () => {
     if (!newTarget || !newWorkout) {
-      alert('모든 필드를 입력해주세요 😎')
+      // alert('모든 필드를 입력해주세요 😎')
+      toast.warning('모든 필드를 입력해주세요 😎')
       return
     }
   
@@ -374,9 +381,11 @@ export default function HealthMetricManager({
     ])
   
     if (error) {
-      alert('추가 중 오류 발생: ' + error.message)
+      // alert('추가 중 오류 발생: ' + error.message)
+      toast.error('추가 중 오류 발생: ' + error.message)
     } else {
-      alert('건강지표 추가를 완료하였습니다 😊')
+      // alert('건강지표 추가를 완료하였습니다 😊')
+      toast.success('건강지표 추가를 완료하였습니다 😊')
       setNewTarget('')
       setNewWorkout('')
       // setNewLevel('')
@@ -399,9 +408,11 @@ export default function HealthMetricManager({
       .delete()
       .eq('health_metric_type_id', id)
 
-    if (error) alert('삭제 실패: ' + error.message)
+    // if (error) alert('삭제 실패: ' + error.message)
+    if (error) toast.error('삭제 실패: ' + error.message)
     else {
-      alert('건강지표 삭제를 완료하였습니다 😊')
+      // alert('건강지표 삭제를 완료하였습니다 😊')
+      toast.success('건강지표 삭제를 완료하였습니다 😊')
       await fetchAllTypes()
       fetchLogs()
       if (onRefreshAllTypes) {
@@ -552,7 +563,8 @@ export default function HealthMetricManager({
                               const normalized = normalizeDateInput(fullDate);
                               if (normalized) {
                                 if (!isTrainer && !isDateWithinLast7Days(normalized)) {
-                                  alert('7일 이내의 날짜만 추가할 수 있습니다 😥');
+                                  // alert('7일 이내의 날짜만 추가할 수 있습니다 😥');
+                                  toast.warning('7일 이내의 날짜만 추가할 수 있습니다 😥');
                                   return;
                                 }
                                 // if (dates.includes(normalized)) {
@@ -560,7 +572,8 @@ export default function HealthMetricManager({
                                 //   return;
                                 // }
                                 if (dates.some(date => dayjs(date).format('YYYY-MM-DD') === normalized)) {
-                                  alert(`이미 존재하는 날짜입니다: ${normalized} ☹`);
+                                  // alert(`이미 존재하는 날짜입니다: ${normalized} ☹`);
+                                  toast.warning(`이미 존재하는 날짜입니다: ${normalized} ☹`);
                                   return;
                                 }
                                 setAddingDate(normalized);

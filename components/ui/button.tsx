@@ -13,6 +13,7 @@ type ButtonVariant =
   | 'save'
   | 'darkGray'
   | 'lightGray'
+  | 'Blue'
   | 'menu_click'
   | 'menu_unclick';
 
@@ -44,6 +45,7 @@ export function Button({
     ghost: 'bg-transparent text-gray-700 hover:bg-gray-100',
     darkGray: 'bg-[#595959] text-white hover:bg-[#3f3f3f]',
     lightGray: 'bg-[#a1a1a1] text-white hover:bg-[#3f3f3f]',
+    Blue: 'bg-[#a1a1a1] text-white hover:bg-[#a1a1a1]',
   };
 
   const sizeStyles = {
@@ -57,7 +59,7 @@ export function Button({
       {...props}
       className={twMerge(
         clsx(
-          'rounded-md focus:outline-none transition duration-200',
+          'rounded-md focus:outline-none transition duration-200 font-nanum',
           variantStyles[variant],
           sizeStyles[size],
           className

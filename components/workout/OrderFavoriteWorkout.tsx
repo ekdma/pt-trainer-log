@@ -12,12 +12,13 @@ import {
 import { useSortable } from '@dnd-kit/sortable'
 import { CSS } from '@dnd-kit/utilities'
 import { MdDragHandle } from 'react-icons/md'
+import { toast } from 'sonner'
 
 interface FavoriteWorkout {
   id: number
   target: string
   workout: string
-  order: number
+  favorite_order: number
 }
 
 export default function OrderFavoriteWorkout({
@@ -37,7 +38,7 @@ export default function OrderFavoriteWorkout({
         .from('favorites')
         .select('*')
         .eq('member_id', memberId)
-        .order('order', { ascending: true })
+        .order('favorite_order', { ascending: true })
 
       if (!error && data) setItems(data)
     }
@@ -58,11 +59,12 @@ export default function OrderFavoriteWorkout({
     for (let i = 0; i < items.length; i++) {
       await supabase
         .from('favorites')
-        .update({ order: i })
+        .update({ favorite_order: i })
         .eq('id', items[i].id)
     }
     setSaving(false)
-    alert('순서를 저장했어요 😊')
+    // alert('순서를 저장했어요 😊')
+    toast.success('순서를 저장했어요 😊')
     onClose()
   }
 

@@ -4,12 +4,15 @@ import { useState, useEffect } from 'react'
 import TrainerHeader from '@/components/layout/TrainerHeader'
 import { useAuthGuard } from '@/hooks/useAuthGuard'
 import { getSupabaseClient } from '@/lib/supabase'
-import { Search, FilePlus2 } from 'lucide-react'
+import { Search, FilePlus2, CirclePlay } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import AddSurvey from '@/components/survey/AddSurvey'
 import EditSurvey from '@/components/survey/EditSurvey'
 import SurveyDetail from '@/components/survey/SurveyDetail'
 import SurveySearch from '@/components/survey/SurveySearch'
+import SurveyResponseMulti from '@/components/survey/SurveyResponseMuilti'
+import { toast } from 'sonner'
+import ConfirmDeleteItem from '@/components/ui/ConfirmDeleteItem'
 
 interface Survey {
   id: string
@@ -26,6 +29,7 @@ export default function SurveysPage() {
   const [isAddSurveyOpen, setIsAddSurveyOpen] = useState(false)
   const [myMemberId, setMyMemberId] = useState<number | null>(null)
   const [selectedSurveyId, setSelectedSurveyId] = useState<string | null>(null)
+  const [isStartSurveyOpen, setIsStartSurveyOpen] = useState(false)
 
   const handleSurveyClick = (id: string) => setSelectedSurveyId(id)
   const handleBackToList = () => setSelectedSurveyId(null)
@@ -42,24 +46,44 @@ export default function SurveysPage() {
   }
 
   // 삭제 클릭
-  const handleDeleteSurvey = async (surveyId: string) => {
-    if (!confirm('정말 이 설문을 삭제하시겠습니까?')) return
-
-    setIsLoading(true)
-    const { error } = await supabase
-      .from('surveys')
-      .delete()
-      .eq('id', surveyId)
-
-    if (error) {
-      alert('설문 삭제 중 오류가 발생했습니다.')
-      console.error(error)
-    } else {
-      alert('설문이 삭제되었습니다.')
-      fetchSurveys()
-    }
-    setIsLoading(false)
+  const handleDeleteSurvey = (survey: Survey) => {
+    const toastId = crypto.randomUUID()
+  
+    toast.custom(
+      (id) => (
+        <ConfirmDeleteItem
+          title={
+            <>
+              정말로 <strong className="text-red-600">{survey.title}</strong> 설문을 정말 삭제하시겠습니까?
+            </>
+          }
+          description="삭제된 설문은 복구할 수 없습니다."
+          onCancel={() => toast.dismiss(id)}
+          onConfirm={async () => {
+            toast.dismiss(id)
+            setIsLoading(true)
+  
+            const { error } = await supabase
+              .from('surveys')
+              .delete()
+              .eq('id', survey.id)
+  
+            if (error) {
+              toast.error('설문 삭제 중 오류가 발생했어요.')
+              console.error(error)
+            } else {
+              toast.success(`"${survey.title}" 설문이 삭제되었습니다.`)
+              fetchSurveys()
+            }
+  
+            setIsLoading(false)
+          }}
+        />
+      ),
+      { id: toastId }
+    )
   }
+  
 
   
   useAuthGuard()
@@ -151,6 +175,13 @@ export default function SurveysPage() {
                   <FilePlus2 size={20} /> 설문 추가
                 </Button>
 
+                <Button
+                  onClick={() => setIsStartSurveyOpen(true)}
+                  variant="click"
+                  className="text-sm"
+                >
+                  <CirclePlay size={20} /> 설문 시작
+                </Button>
               </div>
             </div>
 
@@ -161,7 +192,7 @@ export default function SurveysPage() {
                 surveys={filteredSurveys}
                 onClickSurvey={handleSurveyClick}
                 onEditSurvey={handleEditSurvey}
-                onDeleteSurvey={handleDeleteSurvey}
+                onDeleteSurvey={handleDeleteSurvey} 
               />
             )}
 
@@ -189,6 +220,16 @@ export default function SurveysPage() {
                 }}
               />
             )}
+
+            <SurveyResponseMulti
+              open={isStartSurveyOpen}
+              onClose={() => setIsStartSurveyOpen(false)}
+              onStart={(selectedSurveyIds, mode) => {
+                console.log('선택된 설문:', selectedSurveyIds)
+                console.log('대상:', mode)
+                // 원하는 로직 실행
+              }}
+            />
 
           </>
         ) : (

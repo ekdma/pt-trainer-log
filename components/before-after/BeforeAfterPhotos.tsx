@@ -5,6 +5,7 @@ import Image from 'next/image'
 import { getSupabaseClient } from '@/lib/supabase'
 import { Button } from '@/components/ui/button'
 import { Eye, EyeOff } from 'lucide-react';
+import { toast } from 'sonner'
 
 interface BeforeAfterPhotosProps {
   memberId: string
@@ -184,13 +185,15 @@ export default function BeforeAfterPhotos({ memberId }: BeforeAfterPhotosProps) 
       .upload(filePath, file, { cacheControl: '3600', upsert: true })
   
     if (uploadError) {
-      alert('업로드 실패: ' + uploadError.message)
+      toast.error('업로드 실패: ' + uploadError.message)
+      // alert('업로드 실패: ' + uploadError.message)
       return
     }
   
     const { data: { publicUrl } = {} } = supabase.storage.from('photos').getPublicUrl(filePath)
     if (!publicUrl) {
-      alert('사진 URL을 가져오지 못했습니다.')
+      toast.error('사진 URL을 가져오지 못했습니다.')
+      // alert('사진 URL을 가져오지 못했습니다.')
       return
     }
   
@@ -204,7 +207,8 @@ export default function BeforeAfterPhotos({ memberId }: BeforeAfterPhotosProps) 
         .eq('id', recordId)
   
       if (updateError) {
-        alert('DB 업데이트 실패: ' + updateError.message)
+        toast.error('DB 업데이트 실패: ' + updateError.message)
+        // alert('DB 업데이트 실패: ' + updateError.message)
         return
       }
     } else {
@@ -215,7 +219,8 @@ export default function BeforeAfterPhotos({ memberId }: BeforeAfterPhotosProps) 
         .single()
   
       if (insertError) {
-        alert('DB 저장 실패: ' + insertError.message)
+        toast.error('DB 저장 실패: ' + insertError.message)
+        // alert('DB 저장 실패: ' + insertError.message)
         return
       }
       setRecordId(insertData.id)

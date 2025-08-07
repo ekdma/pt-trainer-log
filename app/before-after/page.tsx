@@ -7,6 +7,11 @@ import Header from '@/components/layout/Header'
 import BeforeAfterPhotos from '@/components/before-after/BeforeAfterPhotos'
 import type { Member } from '@/components/members/types'
 import { getSupabaseClient } from '@/lib/supabase'
+import {
+  ToggleGroup,
+  ToggleGroupItem,
+} from '@/components/ui/toggle-group'
+import { motion } from 'framer-motion'
 
 export default function HomePage() {
   useAuthGuard()
@@ -15,6 +20,8 @@ export default function HomePage() {
   const [members, setMembers] = useState<Member[]>([])
   const [userRole, setUserRole] = useState<'member' | 'trainer' | null>(null)
   const [selectedMember, setSelectedMember] = useState<Member | null>(null)
+  const [memberTab, setMemberTab] = useState<'all' | 'active'>('active')
+
   useEffect(() => {
     const raw = localStorage.getItem('litpt_member')
     const user = raw ? JSON.parse(raw) : null
@@ -29,12 +36,22 @@ export default function HomePage() {
   }, [])
 
   const fetchAllMembers = async () => {
-    const { data, error } = await supabase
-      .from('members')
-      .select('*')
-      .eq('status', 'active')
-    if (!error && data) setMembers(data)
+    const query = supabase.from('members').select('*')
+
+    // memberTab 상태에 따라 쿼리 조건 분기
+    if (memberTab === 'active') {
+      query.eq('status', 'active')
+    } else {
+      query.neq('status', 'delete')
+    }
+
+    const { data } = await query
+    setMembers(data || [])
   }
+
+  useEffect(() => {
+    fetchAllMembers()
+  }, [memberTab])
 
   return (
     <div className="min-h-screen bg-gray-50">
@@ -43,32 +60,57 @@ export default function HomePage() {
       <main className="max-w-6xl mx-auto px-4 py-8">
         {userRole === 'trainer' && (
           <div className="mb-6">
-            <select
-              value={selectedMember?.member_id || ''}
-              onChange={(e) => {
-                const selectedId = e.target.value
-                const m = members.find(m => String(m.member_id) === selectedId)
-                setSelectedMember(m || null)
-              }}
-              className="block w-full max-w-md px-4 py-2 text-base border border-gray-300 rounded-md bg-white text-gray-700 focus:outline-none focus:ring-2 focus:ring-rose-500 focus:border-transparent transition duration-200 hover:border-rose-400 cursor-pointer"
-            >
-              <option value="">회원 선택</option>
-              {members
-                .slice()
-                .sort((a, b) => a.name.localeCompare(b.name, undefined, { sensitivity: 'base' }))
-                .map((m) => (
-                  <option key={m.member_id} value={m.member_id}>
-                    {m.name}
-                  </option>
-                ))}
-            </select>
+            <div className="flex items-center gap-4 mb-4">
+              <ToggleGroup
+                type="single"
+                value={memberTab}
+                onValueChange={(value) => {
+                  if (value) setMemberTab(value as 'all' | 'active')
+                }}
+              >
+                <ToggleGroupItem value="all" className="text-sm px-4 py-2">
+                  전체회원
+                </ToggleGroupItem>
+                <ToggleGroupItem value="active" className="text-sm px-4 py-2">
+                  현재회원
+                </ToggleGroupItem>
+              </ToggleGroup>
+              <select
+                value={selectedMember?.member_id || ''}
+                onChange={(e) => {
+                  const selectedId = e.target.value
+                  const m = members.find(m => String(m.member_id) === selectedId)
+                  setSelectedMember(m || null)
+                }}
+                className="block w-full max-w-md px-4 py-2 text-base border border-gray-300 rounded-md bg-white text-gray-700 focus:outline-none focus:ring-2 focus:ring-rose-500 focus:border-transparent transition duration-200 hover:border-rose-400 cursor-pointer"
+              >
+                <option value="">회원 선택</option>
+                {members
+                  .slice()
+                  .sort((a, b) => a.name.localeCompare(b.name, undefined, { sensitivity: 'base' }))
+                  .map((m) => (
+                    <option key={m.member_id} value={m.member_id}>
+                      {m.name}
+                    </option>
+                  ))}
+              </select>
+            </div>
           </div>
         )}
         
-        {selectedMember && (
+        {/* {selectedMember && (
           <BeforeAfterPhotos memberId={String(selectedMember.member_id)} />
+        )} */}
+        {selectedMember && (
+          <motion.div
+            key={selectedMember?.member_id}
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.3 }}
+          >
+            <BeforeAfterPhotos memberId={String(selectedMember.member_id)} />
+          </motion.div>
         )}
-
 
       </main>
     </div>
