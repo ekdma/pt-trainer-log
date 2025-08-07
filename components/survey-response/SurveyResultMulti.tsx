@@ -174,7 +174,7 @@ export default function SurveyResultMulti({
   
       <h2 className="text-2xl font-semibold mb-6 text-gray-900">제출된 설문 목록</h2>
       <div className="space-y-6">
-        {results.map(({ survey, questions, answers, responseId, submittedAt }) => {
+        {results.map(({ survey, responseId, submittedAt }) => {
           // const isVisible = visibleSurveyIds.includes(survey.id)
   
           return (
