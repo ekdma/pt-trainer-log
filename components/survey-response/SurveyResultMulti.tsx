@@ -57,11 +57,11 @@ export default function SurveyResultMulti({
     }[]
     >([])
 
-  const toggleVisibility = (id: string) => {
-    setVisibleSurveyIds((prev) =>
-      prev.includes(id) ? prev.filter((sid) => sid !== id) : [...prev, id]
-    )
-  }
+  // const toggleVisibility = (id: string) => {
+  //   setVisibleSurveyIds((prev) =>
+  //     prev.includes(id) ? prev.filter((sid) => sid !== id) : [...prev, id]
+  //   )
+  // }
   
   useEffect(() => {
     const fetchData = async () => {
@@ -115,7 +115,7 @@ export default function SurveyResultMulti({
           )
 
           // 응답 ID
-          const { data: responseList, error: responseError } = await supabase
+          const { data: responseList } = await supabase
             .from('survey_responses')
             .select('id, submitted_at')
             .eq('survey_id', surveyId)

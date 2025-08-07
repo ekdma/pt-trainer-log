@@ -16,6 +16,7 @@ interface CalendarSession {
   session_type: string;
   member_id: string;
   status: string;
+  updated_at?: string;
   members: {
     name: string;
   };
@@ -31,19 +32,19 @@ export default function ReserveMemberSession({ selectedDate, trainerId, onSessio
   const supabase = getSupabaseClient()
 
   const [availableTimes, setAvailableTimes] = useState<string[]>([])
-  const [blockedSessions, setBlockedSessions] = useState<any[]>([])
+  const [blockedSessions, setBlockedSessions] = useState<CalendarSession[]>([])
   const [selectedHour, setSelectedHour] = useState<string | null>(null)
   const [selectedSessionType, setSelectedSessionType] = useState<string>('PT')
   const [selectedMemberId, setSelectedMemberId] = useState<number | null>(null)
   const [memberList, setMemberList] = useState<{ id: number; name: string }[]>([])
-  const [selectedPendingSession, setSelectedPendingSession] = useState<any | null>(null)
-  const [editingSession, setEditingSession] = useState<any | null>(null)
+  const [selectedPendingSession, setSelectedPendingSession] = useState<CalendarSession | null>(null)
+  const [editingSession, setEditingSession] = useState<CalendarSession | null>(null)
   const [selectedConfirmedSession, setSelectedConfirmedSession] = useState<CalendarSession | null>(null)
   const [confirmingCancelSession, setConfirmingCancelSession] = useState<CalendarSession | null>(null)
   const [multiSessionsModalTime, setMultiSessionsModalTime] = useState<string | null>(null)
   const [remainingSessions, setRemainingSessions] = useState<Record<string, { total: number; used: number }>>({})
   const [memberPackageMap, setMemberPackageMap] = useState<Record<string, { start_date: string, end_date: string }>>({})
-  const [allConfirmedSessions, setAllConfirmedSessions] = useState<any[]>([])
+  const [allConfirmedSessions, setAllConfirmedSessions] = useState<CalendarSession[]>([])
 
   useEffect(() => {
     setAvailableTimes(Array.from({ length: 12 }, (_, i) => `${9 + i}:00`))
@@ -62,13 +63,18 @@ export default function ReserveMemberSession({ selectedDate, trainerId, onSessio
       const dateStr = format(selectedDate, 'yyyy-MM-dd')
       const { data, error } = await supabase
         .from('calendar_sessions')
-        .select('calendar_sessions_id, workout_date, workout_time, session_type, member_id, status, updated_at, members(name)') // id 포함 필수
+        .select('calendar_sessions_id, workout_date, workout_time, session_type, member_id, status, members(name)')
         .eq('trainer_id', trainerId)
         .eq('workout_date', dateStr)
   
       if (!error && data) {
-        setBlockedSessions(data)
+        const normalized = data.map((item) => ({
+          ...item,
+          members: Array.isArray(item.members) ? item.members[0] : item.members
+        }))
+        setBlockedSessions(normalized as CalendarSession[])
       }
+        
       console.log('fetchBlocked data:', data)
     }
     fetchBlocked()
@@ -105,7 +111,6 @@ export default function ReserveMemberSession({ selectedDate, trainerId, onSessio
 
   useEffect(() => {
     const fetchRemainingSessions = async () => {
-      const dateStr = format(selectedDate, 'yyyy-MM-dd')
   
       // 전체 member_packages 조회 (패키지 범위 포함)
       const { data: packages, error: pkgError } = await supabase
@@ -189,7 +194,7 @@ export default function ReserveMemberSession({ selectedDate, trainerId, onSessio
       // 3) 패키지 기간 내 모든 확정 세션 조회 (trainerId, status=확정, workout_date between minStartDate & maxEndDate)
       const { data: sessions, error: sessionError } = await supabase
         .from('calendar_sessions')
-        .select('member_id, session_type, workout_date, workout_time, status')
+        .select('calendar_sessions_id, workout_date, workout_time, session_type, member_id, status, members(name)')
         .eq('trainer_id', trainerId)
         .eq('status', '확정')
         .gte('workout_date', minStartDate.toISOString().slice(0,10))
@@ -204,7 +209,12 @@ export default function ReserveMemberSession({ selectedDate, trainerId, onSessio
       // (생략, 동일하게 처리)
   
       // 5) 상태 업데이트
-      setAllConfirmedSessions(sessions)
+      const normalized = sessions.map((item) => ({
+        ...item,
+        members: Array.isArray(item.members) ? item.members[0] : item.members
+      }))
+  
+      setAllConfirmedSessions(normalized as CalendarSession[])
       // setRemainingSessions(usage)
       // setMemberPackageMap(packageMap)
     }
@@ -385,7 +395,7 @@ export default function ReserveMemberSession({ selectedDate, trainerId, onSessio
                       setSelectedConfirmedSession(null)
                     } else if (status === '신청') {
                       const matched = matchedSessions.find(s => s.status === '신청')
-                      setSelectedPendingSession(matched)
+                      setSelectedPendingSession(matched ?? null)
                       setSelectedHour(time)
                       setSelectedConfirmedSession(null)
                     } else if (status === '확정') {
@@ -672,7 +682,11 @@ export default function ReserveMemberSession({ selectedDate, trainerId, onSessio
                       format(new Date(`1970-01-01T${s.workout_time}`), 'H:mm') === multiSessionsModalTime &&
                       s.status !== '취소'
                   )
-                  .sort((a, b) => new Date(a.updated_at).getTime() - new Date(b.updated_at).getTime())
+                  .sort((a, b) => {
+                    const aTime = a.updated_at ? new Date(a.updated_at).getTime() : 0;
+                    const bTime = b.updated_at ? new Date(b.updated_at).getTime() : 0;
+                    return aTime - bTime;
+                  })
                   .map((s) => (
                     <li
                       key={s.calendar_sessions_id}
@@ -689,7 +703,7 @@ export default function ReserveMemberSession({ selectedDate, trainerId, onSessio
                             {s.session_type}
                           </span>
                           <span className="text-[11px] text-gray-500 mt-0.5">
-                            신청시각: {format(new Date(s.updated_at), 'yyyy-MM-dd HH:mm')}
+                            신청시각: {s.updated_at ? format(new Date(s.updated_at), 'yyyy-MM-dd HH:mm') : '정보없음'}
                           </span>
                         </div>
                       </div>

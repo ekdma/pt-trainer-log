@@ -367,23 +367,23 @@ export default function MemberSearch({
   })
 
   // ✅ 회원 상태 토글 핸들러
-  const handleToggleStatus = async (member: Member) => {
-    if (!supabase) return
+  // const handleToggleStatus = async (member: Member) => {
+  //   if (!supabase) return
 
-    const newStatus = member.status === 'active' ? 'inactive' : 'active'
+  //   const newStatus = member.status === 'active' ? 'inactive' : 'active'
 
-    const { error } = await supabase
-      .from('members')
-      .update({ status: newStatus })
-      .eq('member_id', member.member_id)
+  //   const { error } = await supabase
+  //     .from('members')
+  //     .update({ status: newStatus })
+  //     .eq('member_id', member.member_id)
 
-    if (error) {
-      toast.error('상태 변경에 실패했어요.')
-    } else {
-      toast.success(`회원 상태를 ${newStatus === 'active' ? '활성화' : '비활성화'}했어요.`)
-      fetchMembers() // 상태 갱신
-    }
-  }
+  //   if (error) {
+  //     toast.error('상태 변경에 실패했어요.')
+  //   } else {
+  //     toast.success(`회원 상태를 ${newStatus === 'active' ? '활성화' : '비활성화'}했어요.`)
+  //     fetchMembers() // 상태 갱신
+  //   }
+  // }
 
   return (
     <div className="flex flex-col items-center justify-center text-center bg-slate-50 py-8 px-4">

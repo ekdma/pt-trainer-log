@@ -24,7 +24,7 @@ export default function SurveyResponsePage() {
 
   const surveyIDs = searchParams.getAll('surveyID')
   const memberIdFromUrl = searchParams.get('member_counsel_id')
-  const surveyId = surveyIDs.length === 1 ? surveyIDs[0] : null
+  // const surveyId = surveyIDs.length === 1 ? surveyIDs[0] : null
 
   const [name, setName] = useState('')
   const [birthDate, setBirthDate] = useState('')

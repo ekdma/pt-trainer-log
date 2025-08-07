@@ -35,7 +35,7 @@ export default function SurveyResultPage() {
   
       const surveyId = searchParams.get('surveyID')
   
-      const { data, error } = await supabase
+      const { data } = await supabase
         .from('survey_responses')
         .select('member_counsel_id, members_counsel(name)')
         .eq('survey_id', surveyId)

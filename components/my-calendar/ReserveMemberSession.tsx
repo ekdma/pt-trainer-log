@@ -2,7 +2,6 @@
 
 import { useEffect, useState } from 'react'
 import { Button } from '@/components/ui/button'
-import { Label } from '@/components/ui/label'
 import RadioGroup from '@/components/ui/radio-group'
 import { getSupabaseClient } from '@/lib/supabase'
 import { toast } from 'sonner'
@@ -316,7 +315,7 @@ export default function ReserveMemberSession({
     const dateStr = format(selectedDate, 'yyyy-MM-dd')
     const statusToMatch = myPendingTimes.includes(time) ? '신청' : '확정'
 
-    const updateData: any = { status: '취소' }
+    const updateData: { status: string; notes?: string } = { status: '취소' }
     if (requireReason) updateData.notes = cancelReason.trim()
 
     const { error } = await supabase

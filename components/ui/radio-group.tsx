@@ -17,8 +17,6 @@ const radioGroupVariants = cva('grid gap-2', {
   },
 })
 
-type BaseProps = Omit<React.InputHTMLAttributes<HTMLInputElement>, 'onChange'>
-
 export interface RadioGroupProps
   extends React.InputHTMLAttributes<HTMLInputElement>,
     VariantProps<typeof radioGroupVariants> {

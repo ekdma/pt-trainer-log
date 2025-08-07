@@ -20,7 +20,6 @@ export default function TrainerCalendarPage() {
   const [memberId, setMemberId] = useState<string | null>(null)
   const [showConfirmModal, setShowConfirmModal] = useState(false)
   const [sessionMap, setSessionMap] = useState<SessionInfo>({})
-  const [allConfirmedSessions, setAllConfirmedSessions] = useState<SessionInfo[]>([]);
 
   useEffect(() => {
     // 예: localStorage에서 memberId 가져오기
@@ -55,9 +54,6 @@ export default function TrainerCalendarPage() {
       })
 
       setSessionMap(map)
-
-      const confirmed = data.filter(s => s.status === '확정')
-      setAllConfirmedSessions(confirmed)
     }
   }
 

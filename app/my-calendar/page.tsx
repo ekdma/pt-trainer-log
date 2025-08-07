@@ -24,7 +24,6 @@ export default function MyCalendarPage() {
 
   const [memberId, setMemberId] = useState<string | null>(null)
   const today = new Date()
-  const maxSelectableDate = addMonths(today, 1)
   const [showSessionInfo, setShowSessionInfo] = useState(false)
   const [sessionMap, setSessionMap] = useState<SessionInfo>({})
 

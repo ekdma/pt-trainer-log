@@ -12,6 +12,7 @@ interface Session {
   session_type: string
   status: string
   updated_at: string
+  member_id: string
   member: {
     name: string
   } | null
@@ -180,8 +181,8 @@ export default function ConfirmSession({ trainerId, onClose, onSessionChange }: 
           <p className="text-gray-500 text-sm text-center">신청된 수업이 없습니다.</p>
         ) : (
           <ul className="divide-y divide-gray-200">
-            {sessions.map((session) => {
-              const id = (session as any).member_id || (session as any).member?.member_id || null
+            {sessions.map((session: Session) => {
+              const id = session.member_id ?? session.member_id ?? null
               // memberId가 없으면 그냥 출력
               if (!id) return (
                 <li key={session.calendar_sessions_id} className="px-2 py-3 text-sm text-gray-800 space-y-1">
@@ -213,21 +214,20 @@ export default function ConfirmSession({ trainerId, onClose, onSessionChange }: 
                 </li>
               )
 
-              // 사용 횟수 가져오기
-              const usedKey = `${id}_${session.session_type}`
-              const usedCount = usedSessionsCount[usedKey] ?? 0
+              // // 사용 횟수 가져오기
+              // const usedKey = `${id}_${session.session_type}`
 
-              // total 횟수 가져오기
-              const pkg = memberPackages.find(
-                (p) => p.member_id === id
-              )
-              let totalCount = 0
-              if (pkg) {
-                totalCount = 
-                  session.session_type === 'PT' ? (pkg.pt_session_cnt ?? 0) :
-                  session.session_type === 'GROUP' ? (pkg.group_session_cnt ?? 0) :
-                  session.session_type === 'SELF' ? (pkg.self_session_cnt ?? 0) : 0
-              }
+              // // total 횟수 가져오기
+              // const pkg = memberPackages.find(
+              //   (p) => p.member_id === id
+              // )
+              // let totalCount = 0
+              // if (pkg) {
+              //   totalCount = 
+              //     session.session_type === 'PT' ? (pkg.pt_session_cnt ?? 0) :
+              //     session.session_type === 'GROUP' ? (pkg.group_session_cnt ?? 0) :
+              //     session.session_type === 'SELF' ? (pkg.self_session_cnt ?? 0) : 0
+              // }
 
               return (
                 <li key={session.calendar_sessions_id} className="px-2 py-3 text-sm text-gray-800 space-y-1">
@@ -267,7 +267,7 @@ export default function ConfirmSession({ trainerId, onClose, onSessionChange }: 
                     </div>
                   </div>
                   <div>
-                    {renderSessionUsage(id)}   
+                    {renderSessionUsage(Number(id))}
                   </div>
                 </li>
               )
