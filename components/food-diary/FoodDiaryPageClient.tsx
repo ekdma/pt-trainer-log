@@ -5,6 +5,7 @@ import { useRouter, useSearchParams } from 'next/navigation'
 import { useAuthGuard } from '@/hooks/useAuthGuard'
 import FoodDiaryMemberView from './FoodDiaryMemberView'
 import FoodDiaryTrainerView from './FoodDiaryTrainerView'
+import type { Member } from '@/components/members/types'
 
 type Role = 'member' | 'trainer'
 
@@ -67,9 +68,27 @@ export default function FoodDiaryPageClient() {
     )
   }
 
-  const initialSelectedMember = memberIdFromQuery
-    ? { member_id: memberIdFromQuery, name: memberNameFromQuery }
-    : null
+  const initialSelectedMember: Member | null = memberIdFromQuery
+  ? {
+      member_id: Number(memberIdFromQuery),  // string → number 변환
+      name: memberNameFromQuery,
+      join_date: '',
+      level: '',
+      creation_dt: '',
+      birth_date: null,
+      sex: '',
+      before_level: '',
+      modified_dt: '',
+      role: '',
+      phone: '',
+      description: '',
+      nickname: '',
+      status: '',
+    }
+  : null
+  // const initialSelectedMember = memberIdFromQuery
+  //   ? { member_id: memberIdFromQuery, name: memberNameFromQuery }
+  //   : null
 
   return (
     <main className="flex flex-col min-h-screen bg-gray-50">
