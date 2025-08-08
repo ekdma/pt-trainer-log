@@ -115,13 +115,15 @@ export default function MembersPage() {
                 value="all"
                 className="text-sm px-4 py-2"
               >
-                전체회원
+                <span className="hidden sm:inline">전체회원</span>
+                <span className="inline sm:hidden">전체</span>
               </ToggleGroupItem>
               <ToggleGroupItem
                 value="active"
                 className="text-sm px-4 py-2"
               >
-                현재회원
+                <span className="hidden sm:inline">현재회원</span>
+                <span className="inline sm:hidden">현재</span>
               </ToggleGroupItem>
             </ToggleGroup>
 

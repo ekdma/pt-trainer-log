@@ -37,6 +37,11 @@ type ConfirmedSession = {
   sessionType: string // 'PT' | 'SELF' | ...
 }
 
+interface PendingSession {
+  time: string
+  sessionType: string
+}
+
 export default function ReserveMemberSession({
   selectedDate,
   memberId,
@@ -60,7 +65,7 @@ export default function ReserveMemberSession({
     GROUP?: { remain: number; total: number }
     SELF?: { remain: number; total: number }
   }>({})
-  
+  const [myPendingSessions, setMyPendingSessions] = useState<PendingSession[]>([])
   
   const supabase = getSupabaseClient()
 
@@ -87,7 +92,7 @@ export default function ReserveMemberSession({
       return
     }
 
-    const pending: string[] = []
+    const pending: PendingSession[] = []
     const confirmedMine: ConfirmedSession[] = []
     const confirmedOthers: string[] = []
 
@@ -97,7 +102,7 @@ export default function ReserveMemberSession({
     
       if (row.member_id === memberId) {
         if (row.status === '신청') {
-          pending.push(timeStr)
+          pending.push({ time: timeStr, sessionType: row.session_type })
         } else if (row.status === '확정') {
           confirmedMine.push({ time: timeStr, sessionType: row.session_type })
         }
@@ -106,7 +111,7 @@ export default function ReserveMemberSession({
       }
     })
 
-    setMyPendingTimes(pending)
+    setMyPendingSessions(pending)
     setMyConfirmedTimes(confirmedMine)
     setOtherConfirmedTimes(confirmedOthers)
   }
@@ -140,12 +145,12 @@ export default function ReserveMemberSession({
   }, [selectedDate, trainerId, memberId])
 
   useEffect(() => {
-  if (myConfirmedTimes.length === 1) {
-    const session = myConfirmedTimes[0]
-    setSelectedHour(session.time)
-    setSelectedSessionType(session.sessionType)
-  }
-}, [myConfirmedTimes])
+    if (myConfirmedTimes.length === 1) {
+      const session = myConfirmedTimes[0]
+      setSelectedHour(session.time)
+      setSelectedSessionType(session.sessionType)
+    }
+  }, [myConfirmedTimes])
 
   // 패키지 기반 세션 옵션 로드
   useEffect(() => {
@@ -172,7 +177,7 @@ export default function ReserveMemberSession({
       })
   
       if (!activePackage) {
-        toast.error('현재 선택한 날짜에 사용할 수 있는 패키지가 없어요.')
+        toast.error('현재 선택한 날짜에 사용할 수 있는 패키지가 없어요.', { id: 'no-package-error' })
         setSessionOptions([])
         setRemainingSessions({})
         return
@@ -286,6 +291,11 @@ export default function ReserveMemberSession({
       toast.success(`${dateStr} ${selectedHour} 수업이 신청되었어요!`)
       setMyPendingTimes((prev) => [...prev, selectedHour])
 
+      setMyPendingSessions((prev) => [
+        ...prev,
+        { time: selectedHour, sessionType: selectedSessionType }
+      ])
+
       // ✅ 잔여 세션 수 즉시 반영
       setRemainingSessions((prev) => {
         const sessionKey = selectedSessionType as keyof typeof prev
@@ -313,7 +323,7 @@ export default function ReserveMemberSession({
     }
 
     const dateStr = format(selectedDate, 'yyyy-MM-dd')
-    const statusToMatch = myPendingTimes.includes(time) ? '신청' : '확정'
+    // const statusToMatch = myPendingTimes.includes(time) ? '신청' : '확정'
 
     const updateData: { status: string; notes?: string } = { status: '취소' }
     if (requireReason) updateData.notes = cancelReason.trim()
@@ -325,19 +335,30 @@ export default function ReserveMemberSession({
       .eq('member_id', memberId)
       .eq('workout_date', dateStr)
       .eq('workout_time', time)
-      .eq('status', statusToMatch)
+      // .eq('status', statusToMatch)
+      .in('status', ['신청', '확정'])
 
     if (error) {
       toast.error('세션 취소 중 오류가 발생했습니다.')
       console.error(error)
-    } else {
-      toast.success('세션이 취소되었습니다.')
-      setCancelTargetTime(null)
-      setCancelReason('')
-      await loadSessionTimes()
-      await loadBlockedTimes()
-      onSessionChange?.()
+      return
     }
+  
+    toast.success('세션이 취소되었습니다.')
+  
+    // ✅ UI 즉시 반영
+    setMyPendingSessions((prev) => prev.filter(p => p.time !== time))
+    setMyConfirmedTimes((prev) => prev.filter(c => c.time !== time))
+    setOtherConfirmedTimes((prev) => prev.filter(t => t !== time))
+    setMyPendingTimes((prev) => prev.filter(t => t !== time)) // pendingTimes도 갱신
+  
+    setCancelTargetTime(null)
+    setCancelReason('')
+  
+    // 이후 서버 상태 동기화
+    await loadSessionTimes()
+    await loadBlockedTimes()
+    onSessionChange?.()
   }
 
 
@@ -351,37 +372,37 @@ export default function ReserveMemberSession({
       <div>
         <p className="text-gray-800 font-bold text-sm mb-2">남은 세션 횟수</p>
         <div className="grid grid-cols-1 gap-2 text-sm">
-          {remainingSessions.PT && (
-            <div className="rounded-md border border-blue-200 bg-blue-50 p-3 text-blue-800">
-              <span className="font-semibold">PT 세션:</span>{' '}
-              {remainingSessions.PT.total - remainingSessions.PT.remain}/{remainingSessions.PT.total}회 사용
-              <span className="ml-2 text-xs text-blue-700">(남은 {remainingSessions.PT.remain}회)</span>
-            </div>
-          )}
-          {remainingSessions.GROUP && (
-            <div className="rounded-md border border-purple-200 bg-purple-50 p-3 text-purple-800">
-              <span className="font-semibold">GROUP 세션:</span>{' '}
-              {remainingSessions.GROUP.total - remainingSessions.GROUP.remain}/{remainingSessions.GROUP.total}회 사용
-              <span className="ml-2 text-xs text-purple-700">(남은 {remainingSessions.GROUP.remain}회)</span>
-            </div>
-          )}
-          {remainingSessions.SELF && (
-            <div className="rounded-md border border-green-200 bg-green-50 p-3 text-green-800">
-              <span className="font-semibold">SELF 세션:</span>{' '}
-              {remainingSessions.SELF.total - remainingSessions.SELF.remain}/{remainingSessions.SELF.total}회 사용
-              <span className="ml-2 text-xs text-green-700">(남은 {remainingSessions.SELF.remain}회)</span>
-            </div>
-          )}
+          {Object.entries(remainingSessions).map(([type, data]) => {
+            if (data && data.total > 0) {
+              const colors = {
+                PT: { border: 'border-blue-200', bg: 'bg-blue-50', text: 'text-blue-800', sub: 'text-blue-700' },
+                GROUP: { border: 'border-purple-200', bg: 'bg-purple-50', text: 'text-purple-800', sub: 'text-purple-700' },
+                SELF: { border: 'border-green-200', bg: 'bg-green-50', text: 'text-green-800', sub: 'text-green-700' }
+              }
+              const c = colors[type as keyof typeof colors]
+              return (
+                <div key={type} className={`rounded-md border ${c.border} ${c.bg} p-3 ${c.text}`}>
+                  <span className="font-semibold">{type} 세션:</span>{' '}
+                  {data.total - data.remain}/{data.total}회 사용
+                  <span className={`ml-2 text-xs ${c.sub}`}>(남은 {data.remain}회)</span>
+                </div>
+              )
+            }
+            return null
+          })}
+
         </div>
       </div>
       <hr className="border-t border-gray-300" />
 
-      <p className="block mb-2 text-gray-800 font-bold text-sm">시간 선택</p>
+      <p className="block mb-2 text-gray-800 font-semibold text-sm">시간 선택</p>
       <div className="grid grid-cols-3 sm:grid-cols-4 gap-3">
         {availableTimes.map((time) => {
           const isSelected = selectedHour === time
           const isBlocked = otherConfirmedTimes.includes(time)
-          const isMyPending = myPendingTimes.includes(time)
+          
+          const matchedPending = myPendingSessions.find(p => p.time === time)
+          const isMyPending = Boolean(matchedPending)
 
           const matchedConfirmed = myConfirmedTimes.find(c => c.time === time)
           const isMyConfirmed = Boolean(matchedConfirmed)
@@ -413,12 +434,12 @@ export default function ReserveMemberSession({
           if (isSelected) {
             if (isMyConfirmed) {
               confirmedStyle = isPT
-                ? 'bg-blue-300 border-4 border-blue-700 text-blue-900 font-bold'
+                ? '!bg-blue-300 border-4 border-blue-700 text-blue-900 font-bold'
                 : isSELF
-                ? 'bg-green-300 border-4 border-green-700 text-green-900 font-bold'
+                ? '!bg-green-300 border-4 border-green-700 text-green-900 font-bold'
                 : ''
             } else if (isMyPending) {
-              pendingStyle = 'bg-yellow-300 border-4 border-yellow-600 text-yellow-900 font-bold'
+              pendingStyle = '!bg-yellow-300 border-4 border-yellow-600 text-yellow-900 font-bold'
             }
           }
           
@@ -443,7 +464,7 @@ export default function ReserveMemberSession({
                   type="button"
                   className="absolute top-0 left-0 text-red-500 font-bold z-10 p-1"
                   onClick={() => {
-                    const isPending = myPendingTimes.includes(time)
+                    const isPending = isMyPending
                     if (isPending) {
                       setConfirmOnlyTime(time) // confirmOnlyTime 모달 띄우기
                     } else {
@@ -466,6 +487,15 @@ export default function ReserveMemberSession({
                 disabled={isBlocked}
               >
                 {time}
+                {(isMyConfirmed || isMyPending) && (
+                  <div className="text-center mt-1 text-[10px] font-semibold text-gray-700 select-none">
+                    {isMyConfirmed
+                      ? matchedConfirmed?.sessionType
+                      : isMyPending
+                      ? matchedPending?.sessionType   
+                      : ''}
+                  </div>
+                )}
                 {/* {isBlocked && (
                   <span className="absolute text-[10px] text-gray-500 bottom-0 right-0 select-none">예약됨</span>
                 )} */}
@@ -484,7 +514,7 @@ export default function ReserveMemberSession({
       <hr className="border-t border-gray-300" />
       {sessionOptions.length > 0 && (
         <>
-          <p className="mb-2 block text-gray-800 font-bold text-sm">수업 종류</p>
+          <p className="mb-2 block text-gray-800 font-semibold text-sm">수업 종류</p>
           <RadioGroup
             value={selectedSessionType}
             onValueChange={setSelectedSessionType}

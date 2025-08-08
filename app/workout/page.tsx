@@ -20,6 +20,7 @@ import {
   ToggleGroupItem,
 } from '@/components/ui/toggle-group'
 import { motion } from 'framer-motion'
+import MemberSelectListbox from '@/components/ui/MemberSelectListbox'  
 
 export default function MembersPage() {
   useAuthGuard()
@@ -207,13 +208,22 @@ export default function MembersPage() {
                 }}
               >
                 <ToggleGroupItem value="all" className="text-sm px-4 py-2">
-                  전체회원
+                  <span className="hidden sm:inline">전체회원</span>
+                  <span className="inline sm:hidden">전체</span>
                 </ToggleGroupItem>
                 <ToggleGroupItem value="active" className="text-sm px-4 py-2">
-                  현재회원
+                  <span className="hidden sm:inline">현재회원</span>
+                  <span className="inline sm:hidden">현재</span>
                 </ToggleGroupItem>
               </ToggleGroup>
-              <select
+              <MemberSelectListbox
+                members={members}
+                value={selectedMember}
+                onChange={setSelectedMember}
+                getKey={(m) => m.member_id}
+                getName={(m) => m.name}
+              />
+              {/* <select
                 value={selectedMember?.member_id || ''}
                 onChange={(e) => {
                   const selectedId = e.target.value
@@ -232,7 +242,7 @@ export default function MembersPage() {
                       {m.name}
                     </option>
                   ))}
-              </select>
+              </select> */}
             </div>
           </div>
         )}
@@ -268,7 +278,7 @@ export default function MembersPage() {
 
                 <button
                   onClick={toggleViewMode}
-                  className={`flex items-center gap-2 px-3 py-1.5 rounded-full text-sm font-medium transition
+                  className={`flex items-center gap-2 px-3 py-1.5 rounded-full text-xs sm:text-sm font-medium transition
                     ${showFavoritesOnly ? 'bg-yellow-500 text-white hover:bg-yellow-600' : 'bg-gray-200 text-gray-800 hover:bg-gray-300'}`}
                 >
                   {showFavoritesOnly ? (
@@ -293,7 +303,7 @@ export default function MembersPage() {
                         setShowGlobalOrderModal(true); // 👉 OrderManagementModal 모달
                       }
                     }}
-                    className={`flex items-center gap-2 px-3 py-1.5 rounded-full text-sm font-medium transition 
+                    className={`flex items-center gap-2 px-3 py-1.5 rounded-full text-xs sm:text-sm font-medium transition 
                       ${showFavoritesOnly ? 'bg-yellow-200 text-white hover:bg-yellow-400' : 'bg-gray-200 text-gray-800 hover:bg-gray-300'}`}
                   >
                     순서
@@ -361,6 +371,7 @@ export default function MembersPage() {
                 variant={activeTab === 'records' ? 'menu_click' : 'menu_unclick'}
                 size="sm"
                 onClick={() => setActiveTab('records')}
+                className='text-xs sm:text-sm'
               >
                 기록지
               </Button>
@@ -369,6 +380,7 @@ export default function MembersPage() {
                 variant={activeTab === 'graphs' ? 'menu_click' : 'menu_unclick'}
                 size="sm"
                 onClick={() => setActiveTab('graphs')}
+                className='text-xs sm:text-sm'
               >
                 그래프
               </Button>

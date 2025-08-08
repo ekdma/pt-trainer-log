@@ -7,6 +7,7 @@ import { getSupabaseClient } from '@/lib/supabase'
 import dayjs from 'dayjs'
 import { ChevronLeftIcon, ChevronRightIcon, ChevronDoubleLeftIcon, ChevronDoubleRightIcon } from '@heroicons/react/24/solid'
 import { Eye, EyeClosedIcon } from 'lucide-react';
+import { format } from 'date-fns-tz'
 
 type SessionDates = {
   pt: string[]
@@ -114,6 +115,11 @@ export default function MemberCalendar() {
           if (sessionDates.self.includes(d)) return 'self-session'
           return ''
         }}
+        formatShortWeekday={(_locale, date) => date.toLocaleDateString('en-US', { weekday: 'short' })}
+        formatMonthYear={(_locale, date) =>
+          format(date, 'yyyy.MM')  
+        }
+        formatDay={(_locale, date) => date.getDate().toString()}
       />
 
       {showSessionList && (

@@ -6,9 +6,9 @@ import {
   LineChart, Line, XAxis, YAxis, CartesianGrid, ResponsiveContainer
 } from 'recharts';
 import { HealthMetric, Member, HealthMetricType } from '@/types/healthMetricTypes';
-// import HealthMetricManager from './HealthMetricManager' 
-// import OrderHealthMetricModal from './OrderHealthMetricModal'
-// import { getHealthMetricTypes } from '../../lib/supabase' 
+import TargetSelectListbox from '@/components/ui/TargetSelectListbox'
+import ViewModeSelectListbox from '@/components/ui/ViewModeSelectListbox'
+import { motion } from 'framer-motion'
 
 interface Props {
   healthLogs: HealthMetric[];
@@ -67,18 +67,28 @@ const MemberHealthGraphsClient: React.FC<Props> = ({ healthLogs, member, allType
   // const [isOrderModalOpen, setIsOrderModalOpen] = useState(false)
   // const [allTypes, setAllTypes] = useState<HealthMetricType[]>([]);
   const [viewMode, setViewMode] = useState<'daily' | 'monthly'>('daily');
+  const [isMobile, setIsMobile] = useState(false)
 
-  const useIsMobile = () => {
-    const [isMobile, setIsMobile] = useState(false)
-    useEffect(() => {
-      const check = () => setIsMobile(window.innerWidth < 640)
-      check()
-      window.addEventListener('resize', check)
-      return () => window.removeEventListener('resize', check)
-    }, [])
-    return isMobile
-  }
-  const isMobile = useIsMobile()
+  useEffect(() => {
+    const checkMobile = () => {
+      setIsMobile(window.innerWidth < 640) // Tailwind 기준 sm 아래를 모바일로 간주
+    }
+    checkMobile()
+    window.addEventListener('resize', checkMobile)
+    return () => window.removeEventListener('resize', checkMobile)
+  }, [])
+
+  const xAxisFontSize = isMobile ? 10 : 12
+  
+  // const useIsMobile = () => {
+  //   useEffect(() => {
+  //     const check = () => setIsMobile(window.innerWidth < 640)
+  //     check()
+  //     window.addEventListener('resize', check)
+  //     return () => window.removeEventListener('resize', check)
+  //   }, [])
+  //   return isMobile
+  // }
 
   useEffect(() => {
     setLogs(healthLogs);
@@ -169,159 +179,156 @@ const MemberHealthGraphsClient: React.FC<Props> = ({ healthLogs, member, allType
         </div> */}
 
         {targets.length > 0 && (
-          <div className="flex items-end gap-4 overflow-x-auto max-w-full">
-            <div className="w-[160px]">
-              <label className="block text-sm text-gray-600 mb-1">Health Metric</label>
-              <select
-                value={selectedTarget || ''}
-                onChange={(e) => setSelectedTarget(e.target.value || null)}
-                className="w-full border border-gray-300 rounded-md px-3 py-2 text-sm"
-              >
-                <option value="">Total</option>
-                {targets.map((target) => (
-                  <option key={target} value={target}>
-                    {target}
-                  </option>
-                ))}
-              </select>
+          <div className="flex gap-6">
+            <div className="flex flex-col">
+              <label className="block text-xs sm:text-sm text-gray-600 mb-1">Health Metric</label>
+              <TargetSelectListbox
+                targets={targets}
+                value={selectedTarget}
+                onChange={setSelectedTarget}
+              />
             </div>
-
-            <div className="w-[120px] shrink-0">
-              <label className="block text-sm text-gray-600 mb-1">View</label>
-              <select
+          
+            <div className="flex flex-col">
+              <label className="block text-xs sm:text-sm text-gray-600 mb-1">View</label>
+              <ViewModeSelectListbox
                 value={viewMode}
-                onChange={(e) => setViewMode(e.target.value as 'daily' | 'monthly')}
-                className="w-full border border-gray-300 rounded-md px-3 py-2 text-sm"
-              >
-                <option value="daily">Daily</option>
-                <option value="monthly">Monthly</option>
-              </select>
+                onChange={setViewMode}
+              />
             </div>
           </div>
+        
         )}
 
-        {/* 그래프 영역 */}
-        {currentTargets.length === 0 || currentTargets.every(target => !targetGroups[target] || targetGroups[target].length === 0) ? (
-          <p className="text-center text-gray-500 mt-8">등록된 건강 지표가 없습니다.</p>
-        ) : (
-          currentTargets.map(target => {
-            const groupLogs = targetGroups[target];
-            if (!groupLogs || groupLogs.length === 0) return null;
+        <motion.div
+          key={`${member.member_id}-${selectedTarget ?? 'all'}-${viewMode}`}
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.3 }}
+        >
+          {/* 그래프 영역 */}
+          {currentTargets.length === 0 || currentTargets.every(target => !targetGroups[target] || targetGroups[target].length === 0) ? (
+            <p className="text-center text-gray-500 mt-8">등록된 건강 지표가 없습니다.</p>
+          ) : (
+            currentTargets.map(target => {
+              const groupLogs = targetGroups[target];
+              if (!groupLogs || groupLogs.length === 0) return null;
 
-            // 날짜별 운동별 값 변환
-            const metricTypesMap: Record<string, Record<string, number>> = {};
-            groupLogs.forEach((log) => {
-              if (!metricTypesMap[log.measure_date]) metricTypesMap[log.measure_date] = {};
-              metricTypesMap[log.measure_date][log.metric_type] = log.metric_value;
-            });
-            // const valueData = Object.entries(metricTypesMap).map(([date, metric_types]) => ({ date, ...metric_types }));
+              // 날짜별 운동별 값 변환
+              const metricTypesMap: Record<string, Record<string, number>> = {};
+              groupLogs.forEach((log) => {
+                if (!metricTypesMap[log.measure_date]) metricTypesMap[log.measure_date] = {};
+                metricTypesMap[log.measure_date][log.metric_type] = log.metric_value;
+              });
+              // const valueData = Object.entries(metricTypesMap).map(([date, metric_types]) => ({ date, ...metric_types }));
 
-            // 운동 종류 추출 및 정렬
-            const typesInGroup = Array.from(new Set(groupLogs.map((log) => log.metric_type)));
-            const sortedWorkouts = typesInGroup.sort((a, b) => {
-              const aOrder = allTypes.find(w => w.metric_type === a && w.metric_target === target)?.order_type ?? 999;
-              const bOrder = allTypes.find(w => w.metric_type === b && w.metric_target === target)?.order_type ?? 999;
-              return aOrder - bOrder;
-            });
+              // 운동 종류 추출 및 정렬
+              const typesInGroup = Array.from(new Set(groupLogs.map((log) => log.metric_type)));
+              const sortedWorkouts = typesInGroup.sort((a, b) => {
+                const aOrder = allTypes.find(w => w.metric_type === a && w.metric_target === target)?.order_type ?? 999;
+                const bOrder = allTypes.find(w => w.metric_type === b && w.metric_target === target)?.order_type ?? 999;
+                return aOrder - bOrder;
+              });
 
-            return (
-              <section key={target}>
-                <h3 className="text-l font-semibold text-indigo-500 mb-4">{target} Graph</h3>
+              return (
+                <section key={target}>
+                  <h3 className="text-l font-semibold text-indigo-500 mb-4">{target} Graph</h3>
 
-                <div className="flex flex-col gap-y-1">
-                  {sortedWorkouts.map((metric, index) => {
-                    let data = createChartDataForMetric(groupLogs, metric);
-                    if (viewMode === 'monthly') {
-                      data = getMonthlyFirstData(data);
-                    }
-                    const maxVal = Math.max(...data.map(d => d.value ?? 0));
-                    const isLast = index === sortedWorkouts.length - 1;
+                  <div className="flex flex-col gap-y-1">
+                    {sortedWorkouts.map((metric, index) => {
+                      let data = createChartDataForMetric(groupLogs, metric);
+                      if (viewMode === 'monthly') {
+                        data = getMonthlyFirstData(data);
+                      }
+                      const maxVal = Math.max(...data.map(d => d.value ?? 0));
+                      const isLast = index === sortedWorkouts.length - 1;
 
-                    return (
-                      <div
-                        key={metric}
-                        className="w-full space-y-2 sm:space-y-0 sm:flex sm:items-center sm:space-x-4 mb-6"
-                      >
-                        {/* 그래프 제목 */}
+                      return (
                         <div
-                          className="w-full sm:w-[15%] sm:text-right pr-2 font-semibold text-gray-700 text-sm"
-                          style={{ whiteSpace: 'normal', wordBreak: 'break-word' }}
+                          key={metric}
+                          className="w-full space-y-2 sm:space-y-0 sm:flex sm:items-center sm:space-x-4 mb-6"
                         >
-                          {metric}
-                        </div>
+                          {/* 그래프 제목 */}
+                          <div
+                            className="w-full sm:w-[15%] sm:text-right pr-2 font-semibold text-gray-700 text-sm"
+                            style={{ whiteSpace: 'normal', wordBreak: 'break-word' }}
+                          >
+                            {metric}
+                          </div>
 
-                        {/* 그래프 */}
-                        <div className="w-full overflow-x-auto">
-                          <div className="min-w-[600px]">
-                            <ResponsiveContainer width="100%" height={100}>
-                              <LineChart data={data} margin={{ top: 20, right: 20, left: 0, bottom: 0 }}>
-                                <CartesianGrid strokeDasharray="3 3" vertical={false} />
-                                <XAxis
-                                  dataKey="date"
-                                  tick={(isMobile || isLast) ? { fontSize: 12, fontWeight: 'bold' } : false}
-                                  axisLine={true}
-                                  tickLine={true}
-                                  tickFormatter={(date: string) => dayjs(date).format('YY.MM.DD')}
-                                />
-                                <YAxis
-                                  tick={false}
-                                  domain={['auto', maxVal + 1]}
-                                  width={40}
-                                />
-                                <Line
-                                  type="monotone"
-                                  dataKey="value"
-                                  stroke={colorMap[metric] || '#8884d8'}
-                                  strokeWidth={2}
-                                  dot={{ r: 3 }}
-                                  name={metric}
-                                  isAnimationActive={false}
-                                  label={({ x, y, value }) => (
-                                    <text
-                                      x={x}
-                                      y={y - 6}
-                                      fill="#555"
-                                      fontSize={12}
-                                      fontWeight="bold"
-                                      textAnchor="middle"
-                                    >
-                                      {Number(value).toFixed(1)}
-                                    </text>
-                                  )}
-                                />
-                              </LineChart>
-                            </ResponsiveContainer>
+                          {/* 그래프 */}
+                          <div className="w-full overflow-x-auto">
+                            <div className="min-w-[600px]">
+                              <ResponsiveContainer width="100%" height={100}>
+                                <LineChart data={data} margin={{ top: 20, right: 20, left: 0, bottom: 0 }}>
+                                  <CartesianGrid strokeDasharray="3 3" vertical={false} />
+                                  <XAxis
+                                    dataKey="date"
+                                    tick={(isMobile || isLast) ? { fontSize: xAxisFontSize, fontWeight: 'bold' } : false}
+                                    axisLine={true}
+                                    tickLine={true}
+                                    tickFormatter={(date: string) => dayjs(date).format('YY.MM.DD')}
+                                  />
+                                  <YAxis
+                                    tick={false}
+                                    domain={['auto', maxVal + 1]}
+                                    width={40}
+                                  />
+                                  <Line
+                                    type="monotone"
+                                    dataKey="value"
+                                    stroke={colorMap[metric] || '#8884d8'}
+                                    strokeWidth={2}
+                                    dot={{ r: 3 }}
+                                    name={metric}
+                                    isAnimationActive={false}
+                                    label={({ x, y, value }) => (
+                                      <text
+                                        x={x}
+                                        y={y - 6}
+                                        fill="#555"
+                                        fontSize={12}
+                                        fontWeight="bold"
+                                        textAnchor="middle"
+                                      >
+                                        {Number(value).toFixed(1)}
+                                      </text>
+                                    )}
+                                  />
+                                </LineChart>
+                              </ResponsiveContainer>
+                            </div>
                           </div>
                         </div>
-                      </div>
 
 
-                    );
-                  })}
-                </div>
-              </section>
-            );
-          })
-        )}
+                      );
+                    })}
+                  </div>
+                </section>
+              );
+            })
+          )}
 
 
-        {/* {isOrderModalOpen && (
-          <OrderHealthMetricModal
-            isOpen={isOrderModalOpen}
-            onClose={() => setIsOrderModalOpen(false)}
-            allTypes={allTypes}
-            onRefreshAllTypes={fetchHealthMetricTypes}  // ✅ 여기 추가
-          />
-        )} */}
+          {/* {isOrderModalOpen && (
+            <OrderHealthMetricModal
+              isOpen={isOrderModalOpen}
+              onClose={() => setIsOrderModalOpen(false)}
+              allTypes={allTypes}
+              onRefreshAllTypes={fetchHealthMetricTypes}  // ✅ 여기 추가
+            />
+          )} */}
 
-        {/* {isHealthMetricManagerOpen && (
-          <HealthMetricManager
-            member={member}
-            logs={logs}
-            onClose={() => setIsHealthMetricManagerOpen(false)}
-            onUpdateLogs={(updatedLogs) => setLogs(updatedLogs)}
-          />
-        )} */}
+          {/* {isHealthMetricManagerOpen && (
+            <HealthMetricManager
+              member={member}
+              logs={logs}
+              onClose={() => setIsHealthMetricManagerOpen(false)}
+              onUpdateLogs={(updatedLogs) => setLogs(updatedLogs)}
+            />
+          )} */}
+        </motion.div>
       </div>
     </div>
   );

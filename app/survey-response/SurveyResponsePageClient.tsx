@@ -180,7 +180,7 @@ export default function SurveyResponsePage() {
                 />
 
                 <select
-                  className="w-full border border-gray-300 rounded-lg px-4 py-3 bg-white text-gray-700 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition"
+                  className="w-full border border-gray-300 rounded-lg px-4 py-3 bg-white text-gray-700 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition text-sm"
                   value={gender}
                   onChange={(e) => setGender(e.target.value)}
                   disabled={loading}
@@ -215,7 +215,7 @@ export default function SurveyResponsePage() {
 
             <fieldset className="border border-gray-300 rounded-lg p-4">
               <legend className="font-semibold mb-2">운동 희망 요일</legend>
-              <label className="inline-flex items-center mr-4 cursor-pointer">
+              <label className="inline-flex items-center mr-4 cursor-pointer text-sm">
                 <input
                   type="checkbox"
                   checked={preferredDays.includes('weekdays')}
@@ -225,7 +225,7 @@ export default function SurveyResponsePage() {
                 />
                 평일
               </label>
-              <label className="inline-flex items-center mr-4 cursor-pointer">
+              <label className="inline-flex items-center mr-4 cursor-pointer text-sm">
                 <input
                   type="checkbox"
                   checked={preferredDays.includes('weekends')}

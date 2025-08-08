@@ -10,7 +10,7 @@ import TrainerHeader from '@/components/layout/TrainerHeader'
 import { getSupabaseClient } from '@/lib/supabase'
 import ConfirmSession from '@/components/calendar/ConfirmSession'
 import ReserveSession from '@/components/calendar/ReserveSession'
-import { formatInTimeZone } from 'date-fns-tz'
+import { formatInTimeZone, format } from 'date-fns-tz'
 
 type SessionInfo = Record<string, { status: string; type: string }[]>
 
@@ -61,7 +61,7 @@ export default function TrainerCalendarPage() {
     <div className="min-h-screen bg-gray-50">
       <TrainerHeader />
       <main className="max-w-4xl mx-auto px-4 py-6">
-        <h2 className="text-xl font-bold text-gray-800 mb-4">트레이너 캘린더</h2>
+        <h2 className="text-xl font-bold text-gray-800 mb-4">Trainer Calendar</h2>
 
         <div className="flex flex-col md:flex-row gap-6">
           <div className="bg-white p-4 rounded shadow">
@@ -116,6 +116,11 @@ export default function TrainerCalendarPage() {
               
                 return ''
               }}
+              formatShortWeekday={(_locale, date) => date.toLocaleDateString('en-US', { weekday: 'short' })}
+              formatMonthYear={(_locale, date) =>
+                format(date, 'yyyy.MM') // date-fns 사용 예시
+              }
+              formatDay={(_locale, date) => date.getDate().toString()}
               prev2Label={<ChevronDoubleLeftIcon className="w-4 h-4 text-gray-500" />}
               prevLabel={<ChevronLeftIcon className="w-4 h-4 text-gray-600" />}
               nextLabel={<ChevronRightIcon className="w-4 h-4 text-gray-600" />}

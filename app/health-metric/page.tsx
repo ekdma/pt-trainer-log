@@ -16,6 +16,7 @@ import {
   ToggleGroupItem,
 } from '@/components/ui/toggle-group'
 import { motion } from 'framer-motion'
+import MemberSelectListbox from '@/components/ui/MemberSelectListbox'  
 
 export default function MembersHealthPage() {
   useAuthGuard()
@@ -104,13 +105,22 @@ export default function MembersHealthPage() {
                 }}
               >
                 <ToggleGroupItem value="all" className="text-sm px-4 py-2">
-                  전체회원
+                  <span className="hidden sm:inline">전체회원</span>
+                  <span className="inline sm:hidden">전체</span>
                 </ToggleGroupItem>
                 <ToggleGroupItem value="active" className="text-sm px-4 py-2">
-                  현재회원
+                  <span className="hidden sm:inline">현재회원</span>
+                  <span className="inline sm:hidden">현재</span>
                 </ToggleGroupItem>
               </ToggleGroup>
-              <select
+              <MemberSelectListbox
+                members={members}
+                value={selectedMember}
+                onChange={setSelectedMember}
+                getKey={(m) => m.member_id}
+                getName={(m) => m.name}
+              />
+              {/* <select
                 value={selectedMember?.member_id || ''}
                 onChange={(e) => {
                   const selectedId = e.target.value
@@ -128,7 +138,7 @@ export default function MembersHealthPage() {
                       {m.name}
                     </option>
                   ))}
-              </select>
+              </select> */}
             </div>
           </div>
         )}
@@ -159,6 +169,7 @@ export default function MembersHealthPage() {
                 variant={activeTab === 'records' ? 'menu_click' : 'menu_unclick'}
                 size="sm"
                 onClick={() => setActiveTab('records')}
+                className='text-xs sm:text-sm'
               >
                 기록지
               </Button>
@@ -167,6 +178,7 @@ export default function MembersHealthPage() {
                 variant={activeTab === 'graphs' ? 'menu_click' : 'menu_unclick'}
                 size="sm"
                 onClick={() => setActiveTab('graphs')}
+                className='text-xs sm:text-sm'
               >
                 그래프
               </Button>

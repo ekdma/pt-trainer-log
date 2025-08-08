@@ -6,7 +6,9 @@ import { WorkoutRecord, Member, WorkoutType } from '@/components/members/types'
 import {
   LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer,
 } from 'recharts'
-// import OrderManagementModal from '@/components/members/OrderManagementModal'
+import TargetSelectListbox from '@/components/ui/TargetSelectListbox'
+import ViewModeSelectListbox from '@/components/ui/ViewModeSelectListbox'
+import { motion } from 'framer-motion'
 
 type Props = {
   member: Member
@@ -116,7 +118,7 @@ function getColorForWorkout(target: string, workout: string) {
   return newColor
 }
 
-export default function MemberGraphs({ logs: initialLogs, showFavoritesOnly, favorites, favoritesWithOrder, allTypes }: Props) {
+export default function MemberGraphs({ member, logs: initialLogs, showFavoritesOnly, favorites, favoritesWithOrder, allTypes }: Props) {
   // const [isTrainer, setIsTrainer] = useState(false)
   const [logs, setLogs] = useState<WorkoutRecord[]>([])
   // const [allTypes, setAllTypes] = useState<WorkoutType[]>([]);
@@ -125,7 +127,18 @@ export default function MemberGraphs({ logs: initialLogs, showFavoritesOnly, fav
   // const [isListOpen, setIsListOpen] = useState(false)
   const [selectedTarget, setSelectedTarget] = useState<string | null>(null)
   const [viewMode, setViewMode] = useState<'daily' | 'monthly'>('daily');
+  const [isMobile, setIsMobile] = useState(false)
 
+  useEffect(() => {
+    const checkMobile = () => {
+      setIsMobile(window.innerWidth < 640) // Tailwind 기준 sm 아래를 모바일로 간주
+    }
+    checkMobile()
+    window.addEventListener('resize', checkMobile)
+    return () => window.removeEventListener('resize', checkMobile)
+  }, [])
+
+  const xAxisFontSize = isMobile ? 10 : 12
   // useEffect(() => {
   //   try {
   //     // const raw = localStorage.getItem('litpt_member')
@@ -228,230 +241,141 @@ export default function MemberGraphs({ logs: initialLogs, showFavoritesOnly, fav
   
   return (
     <div className="max-w-screen-lg mx-auto">
+      
       <div className="space-y-6">
         {targets.length > 0 && (
-          <div className="flex items-end gap-4 overflow-x-auto max-w-full">
-            <div className="w-[160px]">
-              <label className="block text-sm text-gray-600 mb-1">Target</label>
-              <select
-                value={selectedTarget || ''}
-                onChange={(e) => setSelectedTarget(e.target.value || null)}
-                className="w-full border border-gray-300 rounded-md px-3 py-2 text-sm"
-              >
-                <option value="">Total</option>
-                {targets.map((target) => (
-                  <option key={target} value={target}>
-                    {target}
-                  </option>
-                ))}
-              </select>
+          <div className="flex gap-6">
+            <div className="flex flex-col">
+              <label className="block text-xs sm:text-sm text-gray-600 mb-1">Target</label>
+              <TargetSelectListbox
+                targets={targets}
+                value={selectedTarget}
+                onChange={setSelectedTarget}
+              />
             </div>
           
-            <div className="w-[120px] shrink-0">
-              <label className="block text-sm text-gray-600 mb-1">View</label>
-              <select
+            <div className="flex flex-col">
+              <label className="block text-xs sm:text-sm text-gray-600 mb-1">View</label>
+              <ViewModeSelectListbox
                 value={viewMode}
-                onChange={(e) => setViewMode(e.target.value as 'daily' | 'monthly')}
-                className="w-full border border-gray-300 rounded-md px-3 py-2 text-sm"
-              >
-                <option value="daily">Daily</option>
-                <option value="monthly">Monthly</option>
-              </select>
+                onChange={setViewMode}
+              />
             </div>
           </div>
         )}
 
-        {/* 렌더링 */}
-        {selectedTarget === null ? (
-          // 통합 모드
-          targets.length === 0 ? (
-            <p className="text-center text-gray-500 mt-8">등록된 운동 기록이 없습니다.</p>
-          ) : (
-            targets.map((target) => {
-              const groupLogs = targetGroups[target]
-              if (!groupLogs || groupLogs.length === 0) return null
-              
-              const weightDateGrouped: Record<string, Record<string, number>> = {}
-              groupLogs.forEach((log) => {
-                if (!weightDateGrouped[log.workout_date]) weightDateGrouped[log.workout_date] = {}
-                weightDateGrouped[log.workout_date][log.workout] = log.weight
-              })
-
-              const workoutsInGroup = Array.from(new Set(groupLogs.map((log) => log.workout)))
-              const allDates = Array.from(new Set(groupLogs.map((log) => log.workout_date))).sort();
-
-              // ⬇️ order_workout 순서로 정렬
-              // const sortedWorkouts = workoutsInGroup.sort((a, b) => {
-              //   const aOrder = allTypes.find(w => w.workout === a && w.target === target)?.order_workout ?? 999
-              //   const bOrder = allTypes.find(w => w.workout === b && w.target === target)?.order_workout ?? 999
-              //   return aOrder - bOrder
-              // })
-              const sortedWorkouts = workoutsInGroup.sort((a, b) => {
-                if (showFavoritesOnly && favoritesWithOrder) {
-                  const aKey = `${selectedTarget}||${a}`
-                  const bKey = `${selectedTarget}||${b}`
-                  const aOrder = favoritesWithOrder.find(f => f.key === aKey)?.order ?? 999
-                  const bOrder = favoritesWithOrder.find(f => f.key === bKey)?.order ?? 999
-                  return aOrder - bOrder
-                } else {
-                  const aOrder = allTypes.find(w => w.workout === a && w.target === selectedTarget)?.order_workout ?? 999
-                  const bOrder = allTypes.find(w => w.workout === b && w.target === selectedTarget)?.order_workout ?? 999
-                  return aOrder - bOrder
-                }
-              })
-              
-              // 날짜별로 모든 운동 키를 포함한 weightData 생성 (null로 채우기)
-              let weightData = allDates.map((date) => {
-                const dataForDate = weightDateGrouped[date] || {};
-                const filled: Record<string, number | null> = {};
-                sortedWorkouts.forEach((workout) => {
-                  filled[workout] = dataForDate[workout] ?? null;
-                });
-                return { date, ...filled };
-              });
-
-              // 월별 요약 모드일 경우
-              if (viewMode === 'monthly') {
-                weightData = getMonthlyFirstData(
-                  weightData.map(({ date, ...rest }) => ({ workout_date: date, ...rest }))
-                ).map(({ workout_date, ...rest }) => ({ date: workout_date, ...rest }));
-              }
-
-              return (
-                <div key={target} className="mb-10">
-                  <h3 className="text-l font-semibold text-indigo-500 mb-4">{target} Graph</h3>
-                  <div className="flex flex-col lg:flex-row gap-6 w-full">
-                    <div className="w-full overflow-x-auto">
-                      <div className="min-w-[600px]">
-                        <h4 className="text-sm text-black font-medium mb-2">Weight (kg)</h4>
-                        <ResponsiveContainer width="100%" height={400}>
-                          <LineChart data={weightData} margin={{ top: 30, right: 20, bottom: 5, left: 0 }}>
-                            <CartesianGrid strokeDasharray="3 3" />
-                            <XAxis 
-                              dataKey="date" 
-                              tick={{ fontSize: 12, fontWeight: 600 }}
-                              tickFormatter={(date: string) => {
-                                const d = dayjs(date)
-                                return viewMode === 'monthly' ? d.format('YY.MM') : d.format('MM.DD')
-                              }}
-                            />
-                            <YAxis tick={{ fontSize: 12, fontWeight: 600 }} />
-                            <Tooltip wrapperStyle={{ fontSize: 12 }} labelStyle={{ color: 'black' }} />
-                            <Legend wrapperStyle={{ fontSize: 12, fontWeight: 600 }} />
-                            {sortedWorkouts.map((workout) => (
-                              <Line
-                                key={workout}
-                                type="monotone"
-                                dataKey={workout}
-                                name={workout}
-                                stroke={getColorForWorkout(target, workout)}
-                                strokeWidth={2}
-                                dot={{ r: 3 }}
-                                connectNulls={true}
-                                label={
-                                  viewMode === 'monthly'
-                                    ? (props) => (
-                                        <text
-                                          x={props.x}
-                                          y={props.y - 10} // dot보다 위쪽에 표시
-                                          fill="#555"
-                                          fontSize={12}  
-                                          fontWeight="bold" 
-                                          textAnchor="middle"
-                                        >
-                                          {props.value}
-                                        </text>
-                                      )
-                                    : false
-                                }
-                              />
-                            ))}
-                          </LineChart>
-                        </ResponsiveContainer>
-                      </div>
-                    </div>
-                  </div>
-                </div>
-              )
-            })
-          )
-        ) : (
-          // 특정 Target 선택 모드
-          <>
-            {targetGroups[selectedTarget]?.length === 0 || !targetGroups[selectedTarget] ? (
+        <motion.div
+          key={`${member.member_id}-${selectedTarget ?? 'all'}-${viewMode}`}
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.3 }}
+          // className="space-y-6"
+        >
+          {/* 렌더링 */}
+          {selectedTarget === null ? (
+            // 통합 모드
+            targets.length === 0 ? (
               <p className="text-center text-gray-500 mt-8">등록된 운동 기록이 없습니다.</p>
             ) : (
-              Array.from(new Set(targetGroups[selectedTarget].map((log) => log.workout)))
-              // .sort((a, b) => {
-              //   const aOrder = allTypes.find(w => w.workout === a && w.target === selectedTarget)?.order_workout ?? 999
-              //   const bOrder = allTypes.find(w => w.workout === b && w.target === selectedTarget)?.order_workout ?? 999
-              //   return aOrder - bOrder
-              // })
-              .sort((a, b) => {
-                if (showFavoritesOnly && favoritesWithOrder) {
-                  const aKey = `${selectedTarget}||${a}`
-                  const bKey = `${selectedTarget}||${b}`
-                  const aOrder = favoritesWithOrder.find(f => f.key === aKey)?.order ?? 999
-                  const bOrder = favoritesWithOrder.find(f => f.key === bKey)?.order ?? 999
-                  return aOrder - bOrder
-                } else {
-                  const aOrder = allTypes.find(w => w.workout === a && w.target === selectedTarget)?.order_workout ?? 999
-                  const bOrder = allTypes.find(w => w.workout === b && w.target === selectedTarget)?.order_workout ?? 999
-                  return aOrder - bOrder
-                }
-              })
-              .map((workout) => {
-                let filtered = chartData.filter((d) => d.workout === workout && d.target === selectedTarget);
-                if (viewMode === 'monthly') {
-                  filtered = getMonthlyFirstData(filtered);
-                }
-                if (filtered.length === 0) return null
+              targets.map((target) => {
+                const groupLogs = targetGroups[target]
+                if (!groupLogs || groupLogs.length === 0) return null
+                
+                const weightDateGrouped: Record<string, Record<string, number>> = {}
+                groupLogs.forEach((log) => {
+                  if (!weightDateGrouped[log.workout_date]) weightDateGrouped[log.workout_date] = {}
+                  weightDateGrouped[log.workout_date][log.workout] = log.weight
+                })
 
-                const color = getColorForWorkout(selectedTarget, workout)
+                const workoutsInGroup = Array.from(new Set(groupLogs.map((log) => log.workout)))
+                const allDates = Array.from(new Set(groupLogs.map((log) => log.workout_date))).sort();
+
+                // ⬇️ order_workout 순서로 정렬
+                // const sortedWorkouts = workoutsInGroup.sort((a, b) => {
+                //   const aOrder = allTypes.find(w => w.workout === a && w.target === target)?.order_workout ?? 999
+                //   const bOrder = allTypes.find(w => w.workout === b && w.target === target)?.order_workout ?? 999
+                //   return aOrder - bOrder
+                // })
+                const sortedWorkouts = workoutsInGroup.sort((a, b) => {
+                  if (showFavoritesOnly && favoritesWithOrder) {
+                    const aKey = `${selectedTarget}||${a}`
+                    const bKey = `${selectedTarget}||${b}`
+                    const aOrder = favoritesWithOrder.find(f => f.key === aKey)?.order ?? 999
+                    const bOrder = favoritesWithOrder.find(f => f.key === bKey)?.order ?? 999
+                    return aOrder - bOrder
+                  } else {
+                    const aOrder = allTypes.find(w => w.workout === a && w.target === selectedTarget)?.order_workout ?? 999
+                    const bOrder = allTypes.find(w => w.workout === b && w.target === selectedTarget)?.order_workout ?? 999
+                    return aOrder - bOrder
+                  }
+                })
+                
+                // 날짜별로 모든 운동 키를 포함한 weightData 생성 (null로 채우기)
+                let weightData = allDates.map((date) => {
+                  const dataForDate = weightDateGrouped[date] || {};
+                  const filled: Record<string, number | null> = {};
+                  sortedWorkouts.forEach((workout) => {
+                    filled[workout] = dataForDate[workout] ?? null;
+                  });
+                  return { date, ...filled };
+                });
+
+                // 월별 요약 모드일 경우
+                if (viewMode === 'monthly') {
+                  weightData = getMonthlyFirstData(
+                    weightData.map(({ date, ...rest }) => ({ workout_date: date, ...rest }))
+                  ).map(({ workout_date, ...rest }) => ({ date: workout_date, ...rest }));
+                }
 
                 return (
-                  <div key={workout} className="mb-8">
-                    <p className="text-l font-semibold text-indigo-500 mb-4">{workout}</p>
+                  <div key={target} className="mb-10">
+                    <h3 className="text-l font-semibold text-indigo-500 mb-4">{target} Graph</h3>
                     <div className="flex flex-col lg:flex-row gap-6 w-full">
                       <div className="w-full overflow-x-auto">
                         <div className="min-w-[600px]">
-                          <h4 className="text-sm text-black font-medium mb-2">Weight (kg)</h4>
+                          <h4 className="text-xs sm:text-sm text-black font-medium mb-2">Weight (kg)</h4>
                           <ResponsiveContainer width="100%" height={400}>
-                            <LineChart data={filtered} margin={{ top: 30, right: 20, bottom: 5, left: 0 }}>
+                            <LineChart data={weightData} margin={{ top: 30, right: 20, bottom: 5, left: 0 }}>
                               <CartesianGrid strokeDasharray="3 3" />
                               <XAxis 
-                                dataKey="workout_date" 
-                                tick={{ fontSize: 12, fontWeight: 600 }} 
-                                tickFormatter={(date: string) => dayjs(date).format('YY.MM.DD')}
+                                dataKey="date" 
+                                tick={{ fontSize: xAxisFontSize, fontWeight: 600 }}
+                                tickFormatter={(date: string) => {
+                                  const d = dayjs(date)
+                                  return viewMode === 'monthly' ? d.format('YY.MM') : d.format('MM.DD')
+                                }}
                               />
                               <YAxis tick={{ fontSize: 12, fontWeight: 600 }} />
                               <Tooltip wrapperStyle={{ fontSize: 12 }} labelStyle={{ color: 'black' }} />
                               <Legend wrapperStyle={{ fontSize: 12, fontWeight: 600 }} />
-                              <Line 
-                                type="monotone" 
-                                dataKey="weight" 
-                                name="Weight" 
-                                stroke={color} 
-                                strokeWidth={2}
-                                dot={{ r: 3 }}
-                                connectNulls={true}
-                                label={
-                                  viewMode === 'monthly'
+                              {sortedWorkouts.map((workout) => (
+                                <Line
+                                  key={workout}
+                                  type="monotone"
+                                  dataKey={workout}
+                                  name={workout}
+                                  stroke={getColorForWorkout(target, workout)}
+                                  strokeWidth={2}
+                                  dot={{ r: 3 }}
+                                  connectNulls={true}
+                                  label={
+                                    viewMode === 'monthly'
                                       ? (props) => (
                                           <text
-                                          x={props.x}
-                                          y={props.y - 10} // dot보다 위쪽에 표시
-                                          fill="#555"
-                                          fontSize={12}  
-                                          fontWeight="bold" 
-                                          textAnchor="middle"
+                                            x={props.x}
+                                            y={props.y - 10} // dot보다 위쪽에 표시
+                                            fill="#555"
+                                            fontSize={12}  
+                                            fontWeight="bold" 
+                                            textAnchor="middle"
                                           >
-                                          {props.value}
+                                            {props.value}
                                           </text>
-                                      )
+                                        )
                                       : false
                                   }
-                              />
+                                />
+                              ))}
                             </LineChart>
                           </ResponsiveContainer>
                         </div>
@@ -460,9 +384,96 @@ export default function MemberGraphs({ logs: initialLogs, showFavoritesOnly, fav
                   </div>
                 )
               })
-            )}
-          </>
-        )}
+            )
+          ) : (
+            // 특정 Target 선택 모드
+            <>
+              {targetGroups[selectedTarget]?.length === 0 || !targetGroups[selectedTarget] ? (
+                <p className="text-center text-gray-500 mt-8">등록된 운동 기록이 없습니다.</p>
+              ) : (
+                Array.from(new Set(targetGroups[selectedTarget].map((log) => log.workout)))
+                // .sort((a, b) => {
+                //   const aOrder = allTypes.find(w => w.workout === a && w.target === selectedTarget)?.order_workout ?? 999
+                //   const bOrder = allTypes.find(w => w.workout === b && w.target === selectedTarget)?.order_workout ?? 999
+                //   return aOrder - bOrder
+                // })
+                .sort((a, b) => {
+                  if (showFavoritesOnly && favoritesWithOrder) {
+                    const aKey = `${selectedTarget}||${a}`
+                    const bKey = `${selectedTarget}||${b}`
+                    const aOrder = favoritesWithOrder.find(f => f.key === aKey)?.order ?? 999
+                    const bOrder = favoritesWithOrder.find(f => f.key === bKey)?.order ?? 999
+                    return aOrder - bOrder
+                  } else {
+                    const aOrder = allTypes.find(w => w.workout === a && w.target === selectedTarget)?.order_workout ?? 999
+                    const bOrder = allTypes.find(w => w.workout === b && w.target === selectedTarget)?.order_workout ?? 999
+                    return aOrder - bOrder
+                  }
+                })
+                .map((workout) => {
+                  let filtered = chartData.filter((d) => d.workout === workout && d.target === selectedTarget);
+                  if (viewMode === 'monthly') {
+                    filtered = getMonthlyFirstData(filtered);
+                  }
+                  if (filtered.length === 0) return null
+
+                  const color = getColorForWorkout(selectedTarget, workout)
+
+                  return (
+                    <div key={workout} className="mb-8">
+                      <p className="text-l font-semibold text-indigo-500 mb-4">{workout}</p>
+                      <div className="flex flex-col lg:flex-row gap-6 w-full">
+                        <div className="w-full overflow-x-auto">
+                          <div className="min-w-[600px]">
+                            <h4 className="text-xs sm:text-sm text-black font-medium mb-2">Weight (kg)</h4>
+                            <ResponsiveContainer width="100%" height={400}>
+                              <LineChart data={filtered} margin={{ top: 30, right: 20, bottom: 5, left: 0 }}>
+                                <CartesianGrid strokeDasharray="3 3" />
+                                <XAxis 
+                                  dataKey="workout_date" 
+                                  tick={{ fontSize: xAxisFontSize, fontWeight: 600 }} 
+                                  tickFormatter={(date: string) => dayjs(date).format('YY.MM.DD')}
+                                />
+                                <YAxis tick={{ fontSize: 12, fontWeight: 600 }} />
+                                <Tooltip wrapperStyle={{ fontSize: 12 }} labelStyle={{ color: 'black' }} />
+                                <Legend wrapperStyle={{ fontSize: 12, fontWeight: 600 }} />
+                                <Line 
+                                  type="monotone" 
+                                  dataKey="weight" 
+                                  name="Weight" 
+                                  stroke={color} 
+                                  strokeWidth={2}
+                                  dot={{ r: 3 }}
+                                  connectNulls={true}
+                                  label={
+                                    viewMode === 'monthly'
+                                        ? (props) => (
+                                            <text
+                                            x={props.x}
+                                            y={props.y - 10} // dot보다 위쪽에 표시
+                                            fill="#555"
+                                            fontSize={12}  
+                                            fontWeight="bold" 
+                                            textAnchor="middle"
+                                            >
+                                            {props.value}
+                                            </text>
+                                        )
+                                        : false
+                                    }
+                                />
+                              </LineChart>
+                            </ResponsiveContainer>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  )
+                })
+              )}
+            </>
+          )}
+        </motion.div>
       </div>
     </div>
   )

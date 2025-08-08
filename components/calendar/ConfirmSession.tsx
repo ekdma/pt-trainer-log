@@ -190,7 +190,19 @@ export default function ConfirmSession({ trainerId, onClose, onSessionChange }: 
                     <div className="flex gap-4 flex-wrap">
                       <span className="font-medium w-[30px]">{dayjs(session.workout_date).format('MM/DD')}</span>
                       <span className="w-[30px]">{session.workout_time.slice(0, 5)}</span>
-                      <span className="px-2 py-0.5 rounded text-xs font-semibold bg-indigo-100 text-indigo-700">{session.session_type}</span>
+                      <span
+                        className={`px-2 py-0.5 rounded text-xs font-semibold ${
+                          session.session_type === 'PT'
+                            ? 'bg-indigo-100 text-indigo-700'
+                            : session.session_type === 'SELF'
+                            ? 'bg-green-100 text-green-700'
+                            : session.session_type === 'GROUP'
+                            ? 'bg-purple-100 text-purple-700'
+                            : 'bg-gray-100 text-gray-700' // 기본값
+                        }`}
+                      >
+                        {session.session_type.toUpperCase()}
+                      </span>
                       <span className="text-[11px] text-gray-500 mt-0.5">신청시각: {dayjs(session.updated_at).format('YYYY-MM-DD HH:mm')}</span>
                     </div>
                   </div>
@@ -235,7 +247,19 @@ export default function ConfirmSession({ trainerId, onClose, onSessionChange }: 
                     <div className="flex gap-4 flex-wrap">
                       <span className="font-medium w-[30px]">{dayjs(session.workout_date).format('MM/DD')}</span>
                       <span className="w-[30px]">{session.workout_time.slice(0, 5)}</span>
-                      <span className="px-2 py-0.5 rounded text-xs font-semibold bg-indigo-100 text-indigo-700">{session.session_type}</span>
+                      <span
+                        className={`px-2 py-0.5 rounded text-xs font-semibold ${
+                          session.session_type === 'PT'
+                            ? 'bg-indigo-100 text-indigo-700'
+                            : session.session_type === 'SELF'
+                            ? 'bg-green-100 text-green-700'
+                            : session.session_type === 'GROUP'
+                            ? 'bg-purple-100 text-purple-700'
+                            : 'bg-gray-100 text-gray-700' // 기본값
+                        }`}
+                      >
+                        {session.session_type.toUpperCase()}
+                      </span>
                       <span className="text-[11px] text-gray-500 mt-0.5">신청시각: {dayjs(session.updated_at).format('YYYY-MM-DD HH:mm')}</span>
                     </div>
                   </div>

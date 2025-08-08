@@ -8,6 +8,14 @@ import { format } from 'date-fns'
 import { toast } from 'sonner'
 import { getSupabaseClient } from '@/lib/supabase'
 import EditConfirmedSession from '@/components/calendar/EditConfirmedSession'
+import {
+  Root as Popover,
+  Trigger as PopoverTrigger,
+  Content as PopoverContent,
+} from '@radix-ui/react-popover'
+import { TriangleAlert } from "lucide-react"
+import dayjs from 'dayjs'
+import MemberPackageSelectListbox from '@/components/ui/MemberPackageSelectListbox'
 
 interface CalendarSession {
   calendar_sessions_id: string;
@@ -17,6 +25,7 @@ interface CalendarSession {
   member_id: string;
   status: string;
   updated_at?: string;
+  notes: string;
   members: {
     name: string;
   };
@@ -63,7 +72,7 @@ export default function ReserveMemberSession({ selectedDate, trainerId, onSessio
       const dateStr = format(selectedDate, 'yyyy-MM-dd')
       const { data, error } = await supabase
         .from('calendar_sessions')
-        .select('calendar_sessions_id, workout_date, workout_time, session_type, member_id, status, members(name)')
+        .select('calendar_sessions_id, workout_date, workout_time, session_type, member_id, status, notes, members(name)')
         .eq('trainer_id', trainerId)
         .eq('workout_date', dateStr)
   
@@ -320,7 +329,7 @@ export default function ReserveMemberSession({ selectedDate, trainerId, onSessio
     <div className="space-y-6 bg-white p-6 rounded-2xl shadow-md border border-gray-200">
       {/* 시간 선택 */}
       <div>
-        <Label className="mb-2 block text-gray-800 font-medium text-sm">시간 선택</Label>
+        <Label className="mb-2 block text-gray-800 font-semibold text-sm">시간 선택</Label>
         <div className="grid grid-cols-3 sm:grid-cols-4 gap-3">
           {availableTimes.map((time) => {
             const matchedSessions = blockedSessions.filter(
@@ -409,12 +418,34 @@ export default function ReserveMemberSession({ selectedDate, trainerId, onSessio
                     }
                   }}
                 >
+                {status === '취소' && prioritySession?.notes && (
+                  <Popover>             
+                    <PopoverTrigger>   
+                      <button>
+                        <TriangleAlert className="w-4 h-4 text-red-500 ml-1" />
+                      </button>
+                    </PopoverTrigger>
+                  
+                    <PopoverContent
+                      className="w-56 p-3 bg-red-300 text-gray-800 rounded-md shadow-md text-xs sm:text-sm"
+                      sideOffset={5} 
+                    >
+                      <p><strong>취소한 사람:</strong> {prioritySession?.members?.name}</p>
+                      <p><strong>세션 타입:</strong> {prioritySession?.session_type}</p>
+                      <p><strong>사유:</strong> {prioritySession?.notes}</p>
+                    </PopoverContent>
+                  </Popover>
+                )}
                   <span className='text-xs'>{time}</span> <br />
                   {memberName && (
                     (status === '확정' ||
                       (status === '신청' && matchedSessions.filter(s => s.status === '신청').length <= 1)) && (
                         <span className="ml-2 text-xs text-gray-500 truncate">
                           {memberName}
+                          <br />
+                          <span className="ml-1 text-[10px] text-gray-400">
+                            {sessionType ? ` [${sessionType.toUpperCase()}]` : ''}
+                          </span>
                           {(() => {
                             const memberId = prioritySession?.member_id
                             const type = prioritySession?.session_type
@@ -454,22 +485,16 @@ export default function ReserveMemberSession({ selectedDate, trainerId, onSessio
 
                             if (currentIndex >= 0) {
                               return (
-                                <span className="ml-1 text-[11px] text-gray-400">
+                                <span className="ml-1 text-[10px] text-gray-400">
                                   ({currentIndex + 1}/{total})
                                 </span>
                               )
                             }
                             return null
                           })()}
-
                         </span>
-
-
-
                       )
                   )}
-
-
                 </Button>
                 {matchedSessions.filter(s => s.status === '신청').length > 1 && (
                   <div
@@ -535,22 +560,17 @@ export default function ReserveMemberSession({ selectedDate, trainerId, onSessio
 
       {/* 회원 선택 */}
       <div>
-        <Label className="mb-2 block text-gray-800 font-medium text-sm">회원 선택</Label>
-        <select
-          className="w-full border rounded px-3 py-2 text-sm focus:ring-2 focus:ring-primary-500"
-          value={selectedMemberId ?? ''}
-          onChange={(e) => setSelectedMemberId(Number(e.target.value))}
-        >
-          <option value="" disabled>회원을 선택하세요</option>
-          {memberList.map((member) => (
-            <option key={member.id} value={member.id}>{member.name}</option>
-          ))}
-        </select>
+        <Label className="mb-2 block text-gray-800 font-semibold text-sm">회원 선택</Label>
+        <MemberPackageSelectListbox
+          members={memberList}
+          value={selectedMemberId}
+          onChange={setSelectedMemberId}
+        />
       </div>
 
       {/* 수업 종류 */}
       <div>
-        <Label className="mb-2 block text-gray-800 font-medium text-sm">수업 종류</Label>
+        <Label className="mb-2 block text-gray-800 font-semibold text-sm">수업 종류</Label>
         <RadioGroup
           value={selectedSessionType}
           onValueChange={setSelectedSessionType}
@@ -699,11 +719,21 @@ export default function ReserveMemberSession({ selectedDate, trainerId, onSessio
                             {format(new Date(s.workout_date), 'MM/dd')}
                           </span>
                           <span className="w-[40px]">{s.workout_time.slice(0, 5)}</span>
-                          <span className="px-2 py-0.5 rounded text-xs font-semibold bg-indigo-100 text-indigo-700">
+                          <span
+                            className={`px-2 py-0.5 rounded text-xs font-semibold ${
+                              s.session_type === 'PT'
+                                ? 'bg-indigo-100 text-indigo-700'
+                                : s.session_type === 'SELF'
+                                ? 'bg-green-100 text-green-700'
+                                : s.session_type === 'GROUP'
+                                ? 'bg-purple-100 text-purple-700'
+                                : 'bg-gray-100 text-gray-700' // 기본값
+                            }`}
+                          >
                             {s.session_type}
                           </span>
                           <span className="text-[11px] text-gray-500 mt-0.5">
-                            신청시각: {s.updated_at ? format(new Date(s.updated_at), 'yyyy-MM-dd HH:mm') : '정보없음'}
+                            신청시각: {dayjs(s.updated_at).format('YYYY-MM-DD HH:mm')}
                           </span>
                         </div>
                       </div>

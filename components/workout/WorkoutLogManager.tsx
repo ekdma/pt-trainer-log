@@ -781,14 +781,14 @@ export default function WorkoutLogManager({
           <table className="table-fixed min-w-max text-sm border-separate border-spacing-0 border border-gray-300 bg-gray-50">
             <thead className="bg-gray-100 text-gray-700 select-none z-10">
               <tr>
-                <th className="sticky top-0 left-0 bg-gray-200 z-30 border px-2 py-2 text-center font-semibold w-[35px] md:w-[100px]">
+                <th className="sticky top-0 left-0 bg-gray-200 z-30 border px-2 py-2 text-center text-xs sm:text-sm font-semibold w-[35px] md:w-[100px]">
                   <span className="block md:hidden">{''}</span>
                   <span className="hidden md:block">LEVEL</span>
                 </th>
-                <th className="hidden md:table-cell sticky top-0 md:left-[100px] bg-gray-200 z-[25] border px-2 py-2 text-center font-semibold w-[90px]">
+                <th className="hidden md:table-cell sticky top-0 md:left-[100px] bg-gray-200 z-[25] border px-2 py-2 text-center text-xs sm:text-sm font-semibold w-[90px]">
                   TARGET
                 </th>
-                <th className="border px-2 py-2 text-center font-semibold w-[120px] sticky top-0 left-[35px] md:left-[190px] bg-gray-200 z-20">
+                <th className="border px-2 py-2 text-center text-xs sm:text-sm font-semibold w-[120px] sticky top-0 left-[35px] md:left-[190px] bg-gray-200 z-20">
                   WORKOUT
                 </th>
 
@@ -949,7 +949,7 @@ export default function WorkoutLogManager({
 
                 return (
                   <tr key={rowKey} className="hover:bg-blue-50 text-sm">
-                    <td className="sticky left-0 z-15 bg-gray-100 border px-2 py-1 font-semibold text-sm pl-6 bg-opacity-100 style={{ willChange: 'transform' }}">
+                    <td className="sticky left-0 z-15 bg-gray-100 border px-2 py-1 font-semibold text-xs sm:text-sm pl-6 bg-opacity-100 style={{ willChange: 'transform' }}">
                       {/* 즐겨찾기 버튼 (⭐) */}
                       <button
                         onClick={() => toggleFavorite(rowKey)}
@@ -969,10 +969,10 @@ export default function WorkoutLogManager({
                       {/* 난이도 텍스트 */}
                       <span className="hidden md:inline-block pl-5">{level}</span>
                     </td>
-                    <td className="hidden md:table-cell sticky left-[100px] z-10 bg-gray-100 border px-2 py-1 font-semibold bg-opacity-100 style={{ willChange: 'transform' }}">
+                    <td className="hidden md:table-cell sticky left-[100px] z-10 bg-gray-100 border px-2 py-1 text-xs sm:text-sm font-semibold bg-opacity-100 style={{ willChange: 'transform' }}">
                       {target}
                     </td>
-                    <td className="sticky left-[35px] md:left-[190px] z-5 bg-gray-100 border px-2 py-1 font-semibold bg-opacity-100 style={{ willChange: 'transform' }}">
+                    <td className="sticky left-[35px] md:left-[190px] z-5 bg-gray-100 border px-2 py-1 text-xs sm:text-sm font-semibold bg-opacity-100 style={{ willChange: 'transform' }}">
                       {workout}
                     </td>
                     

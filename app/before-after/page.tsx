@@ -12,6 +12,7 @@ import {
   ToggleGroupItem,
 } from '@/components/ui/toggle-group'
 import { motion } from 'framer-motion'
+import MemberSelectListbox from '@/components/ui/MemberSelectListbox'  
 
 export default function HomePage() {
   useAuthGuard()
@@ -69,31 +70,21 @@ export default function HomePage() {
                 }}
               >
                 <ToggleGroupItem value="all" className="text-sm px-4 py-2">
-                  전체회원
+                  <span className="hidden sm:inline">전체회원</span>
+                  <span className="inline sm:hidden">전체</span>
                 </ToggleGroupItem>
                 <ToggleGroupItem value="active" className="text-sm px-4 py-2">
-                  현재회원
+                  <span className="hidden sm:inline">현재회원</span>
+                  <span className="inline sm:hidden">현재</span>
                 </ToggleGroupItem>
               </ToggleGroup>
-              <select
-                value={selectedMember?.member_id || ''}
-                onChange={(e) => {
-                  const selectedId = e.target.value
-                  const m = members.find(m => String(m.member_id) === selectedId)
-                  setSelectedMember(m || null)
-                }}
-                className="block w-full max-w-md px-4 py-2 text-base border border-gray-300 rounded-md bg-white text-gray-700 focus:outline-none focus:ring-2 focus:ring-rose-500 focus:border-transparent transition duration-200 hover:border-rose-400 cursor-pointer"
-              >
-                <option value="">회원 선택</option>
-                {members
-                  .slice()
-                  .sort((a, b) => a.name.localeCompare(b.name, undefined, { sensitivity: 'base' }))
-                  .map((m) => (
-                    <option key={m.member_id} value={m.member_id}>
-                      {m.name}
-                    </option>
-                  ))}
-              </select>
+              <MemberSelectListbox
+                members={members}
+                value={selectedMember}
+                onChange={setSelectedMember}
+                getKey={(m) => m.member_id}
+                getName={(m) => m.name}
+              />
             </div>
           </div>
         )}
@@ -101,7 +92,7 @@ export default function HomePage() {
         {/* {selectedMember && (
           <BeforeAfterPhotos memberId={String(selectedMember.member_id)} />
         )} */}
-        {selectedMember && (
+        {selectedMember ? (
           <motion.div
             key={selectedMember?.member_id}
             initial={{ opacity: 0, y: 20 }}
@@ -110,6 +101,8 @@ export default function HomePage() {
           >
             <BeforeAfterPhotos memberId={String(selectedMember.member_id)} />
           </motion.div>
+        ) : (
+          <div className="text-gray-600">회원을 선택하세요.</div>
         )}
 
       </main>

@@ -6,6 +6,7 @@ import ShowMemberSurveyResult from '@/components/survey-response/ShowMemberSurve
 import { getSupabaseClient } from '@/lib/supabase'
 import { useSearchParams } from 'next/navigation'
 import { useAuthGuard } from '@/hooks/useAuthGuard'
+import MemberSelectListbox from '@/components/ui/MemberSelectListbox'  
 
 interface MemberCounsel {
   member_counsel_id: number
@@ -73,7 +74,16 @@ export default function SurveyResultPage() {
           {!memberCounselIdFromUrl && (
             // <div className="space-y-6 p-4 md:p-6 bg-white rounded-lg shadow-md mb-8">
             <div className="mb-6">
-              <select
+              <MemberSelectListbox<MemberCounsel>
+                members={members}
+                value={selectedMember}
+                onChange={setSelectedMember}
+                getKey={(m) => m.member_counsel_id}
+                getName={(m) => m.name}
+              />
+
+              
+              {/* <select
                 value={selectedMember?.member_counsel_id || ''}
                 onChange={(e) => {
                   const selectedId = e.target.value
@@ -100,7 +110,7 @@ export default function SurveyResultPage() {
                       {m.name}
                     </option>
                   ))}
-              </select>
+              </select> */}
             </div>
           )}
 
@@ -112,3 +122,5 @@ export default function SurveyResultPage() {
     </>
   )
 }
+
+

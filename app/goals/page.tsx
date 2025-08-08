@@ -13,6 +13,7 @@ import {
   ToggleGroupItem,
 } from '@/components/ui/toggle-group'
 import { motion } from 'framer-motion'
+import MemberSelectListbox from '@/components/ui/MemberSelectListbox'  
 
 interface Sessions {
   pt_session_cnt: number
@@ -290,7 +291,7 @@ export default function GoalsPage() {
   return (
     <div className="min-h-screen bg-gray-50">
       {userRole === 'trainer' ? <TrainerHeader /> : <Header />}
-      <main className="max-w-5xl mx-auto px-6 py-10 space-y-8">
+      <main className="max-w-6xl mx-auto px-4 py-8">
         {/* 회원 선택 (트레이너용) */}
         {userRole === 'trainer' && (
           <div className="mb-8">
@@ -303,13 +304,22 @@ export default function GoalsPage() {
                 }}
               >
                 <ToggleGroupItem value="all" className="text-sm px-4 py-2">
-                  전체회원
+                  <span className="hidden sm:inline">전체회원</span>
+                  <span className="inline sm:hidden">전체</span>
                 </ToggleGroupItem>
                 <ToggleGroupItem value="active" className="text-sm px-4 py-2">
-                  현재회원
+                  <span className="hidden sm:inline">현재회원</span>
+                  <span className="inline sm:hidden">현재</span>
                 </ToggleGroupItem>
               </ToggleGroup>
-              <select
+              <MemberSelectListbox
+                members={members}
+                value={selectedMember}
+                onChange={setSelectedMember}
+                getKey={(m) => m.member_id}
+                getName={(m) => m.name}
+              />
+              {/* <select
                 value={selectedMember?.member_id || ''}
                 onChange={(e) => {
                   const selectedId = e.target.value
@@ -327,7 +337,7 @@ export default function GoalsPage() {
                       {m.name}
                     </option>
                   ))}
-              </select>
+              </select> */}
             </div>
           </div>
         )}

@@ -93,7 +93,7 @@ export default function Header() {
           </div>
 
           {/* 메뉴 리스트 */}
-          <div className="flex flex-col gap-3 text-lg font-medium text-gray-800">
+          <div className="flex flex-col gap-3 text-sm font-medium text-gray-800">
             {navItems.map((item) => {
               const isActive = pathname === item.href
               return (

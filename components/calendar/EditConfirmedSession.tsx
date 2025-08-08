@@ -14,6 +14,7 @@ export interface CalendarSession {
   session_type: string;
   member_id: string;
   status: string;
+  notes: string;
   members: {
     name: string;
   };
@@ -89,7 +90,7 @@ export default function EditConfirmedSession({ session, onClose, onUpdated, onSe
         workout_time: workoutTime,
       })
       .eq('calendar_sessions_id', session.calendar_sessions_id)
-      .select('calendar_sessions_id, workout_date, workout_time, session_type, member_id, status, members(name)')
+      .select('calendar_sessions_id, workout_date, workout_time, session_type, member_id, status, notes, members(name)')
       .single()
 
     if (error || !data) {
@@ -113,12 +114,12 @@ export default function EditConfirmedSession({ session, onClose, onUpdated, onSe
       <div className="w-full max-w-md bg-white p-6 rounded-lg shadow-lg relative">
         <button onClick={onClose} className="absolute top-3 right-3 text-gray-500 hover:text-black text-sm">X</button>
 
-        <div className="text-base font-medium mb-4">{session.members.name} 수업 수정</div>
+        <div className="text-center text-base font-medium mb-4"><strong className='text-indigo-700'>{session.members.name}</strong> 수업 수정</div>
 
-        <div className="space-y-4">
+        <div className="space-y-6">
           {/* 날짜 */}
           <div>
-            <Label className="mb-1 block">날짜</Label>
+            <Label className="mb-2 block">날짜</Label>
             <input
               type="date"
               value={workoutDate}
@@ -138,9 +139,10 @@ export default function EditConfirmedSession({ session, onClose, onUpdated, onSe
                     disabled={disabledTimes.has(time)}
                     onClick={() => handleTimeClick(time)}
                     className={`
-                      text-sm text-center justify-start w-full
-                      ${workoutTime === time ? 'bg-blue-600 text-white font-semibold' : 'bg-white text-gray-800'}
-                      ${disabledTimes.has(time) ? 'opacity-50 cursor-not-allowed' : 'hover:bg-blue-600'}
+                      w-full rounded-lg py-2 text-sm font-medium
+                      transition-colors duration-200
+                      ${workoutTime === time ? 'bg-indigo-600 text-white font-semibold' : 'bg-white text-gray-700'}
+                      ${disabledTimes.has(time) ? 'opacity-50 cursor-not-allowed' : 'hover:bg-indigo-500 hover:text-white'}
                     `}
                   >
                     <span className="text-xs">{time.slice(0, 5)}</span>
@@ -152,7 +154,7 @@ export default function EditConfirmedSession({ session, onClose, onUpdated, onSe
 
           {/* 수업 종류 라디오 */}
           <div>
-            <Label className="mb-1 block">수업 종류</Label>
+            <Label className="mb-2 block">수업 종류</Label>
             <RadioGroup
               value={sessionType}
               onValueChange={setSessionType}
@@ -174,3 +176,4 @@ export default function EditConfirmedSession({ session, onClose, onUpdated, onSe
     </div>
   )
 }
+

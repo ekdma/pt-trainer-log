@@ -492,14 +492,14 @@ export default function HealthMetricManager({
     <>
       <div className="max-w-6xl mx-auto text-gray-700">
           {/* overflow-x-auto로 좌우 스크롤 가능하게 래핑 */}
-          <div ref = {scrollRef} className="overflow-auto bg-gray-50 border-2 border-gray-200">
+          <div ref = {scrollRef} className="overflow-auto bg-gray-50 border-2 border-gray-200 relative z-0">
             <table className="table-fixed min-w-max text-sm border-separate border-spacing-0 border border-gray-300 bg-gray-50">
-              <thead className="bg-gray-100 text-gray-700 select-none">
+              <thead className="bg-gray-100 text-gray-700 select-none z-10">
                 <tr>
-                  <th className="border px-2 py-2 text-center font-semibold w-[120px] md:sticky top-0 md:left-0 bg-gray-200 md:z-40">
+                  <th className="border px-2 py-2 text-center text-xs sm:text-sm font-semibold w-[120px] md:sticky top-0 md:left-0 bg-gray-200 md:z-30">
                     TARGET
                   </th>
-                  <th className="border px-2 py-2 text-center text-sm font-semibold w-[150px] md:sticky top-0 md:left-[120px] bg-gray-200 md:z-30">
+                  <th className="border px-2 py-2 text-center text-xs sm:text-sm font-semibold w-[150px] md:sticky top-0 md:left-[120px] bg-gray-200 md:z-20">
                     HEALTH METRIC
                   </th>
 
@@ -507,7 +507,7 @@ export default function HealthMetricManager({
                   {dates.map((date) => (
                     <th
                       key={date}
-                      className="border px-1 py-1 text-center text-xs font-semibold md:sticky top-0 bg-gray-100 z-10 w-[80px] whitespace-nowrap overflow-hidden text-ellipsis"
+                      className="border px-1 py-1 text-center text-xs font-semibold md:sticky top-0 bg-gray-100 z-15 w-[80px] whitespace-nowrap overflow-hidden text-ellipsis"
                     >
                       {dayjs(date).format('YY.MM.DD')}
                     </th>
@@ -515,7 +515,7 @@ export default function HealthMetricManager({
 
                   {/* 추가 날짜 입력 열 */}
                   {addingDate !== null && (
-                    <th className="border px-1 py-1 text-center text-xs font-semibold md:sticky top-0 bg-yellow-50 z-10 w-[100px]">
+                    <th className="border px-1 py-1 text-center text-xs font-semibold md:sticky top-0 bg-yellow-50 z-15 w-[100px]">
                       <div className="flex gap-[2px]">
                         <input
                           ref={yearRef}
@@ -610,19 +610,19 @@ export default function HealthMetricManager({
                 </tr>
               </thead>
 
-              <tbody className="bg-white">
+              <tbody className="bg-white z-0">
                 {rows.map(({ metric_target, metric_type }, rowIndex) => {
                   const rowKey = `${metric_target}||${metric_type}`;
 
                   return (
                     <tr key={rowKey} className="hover:bg-blue-50 text-sm">
                       {/* TARGET */}
-                      <td className="border px-2 py-1 md:sticky left-0 z-30 font-semibold relative whitespace-normal bg-gray-100">
+                      <td className="border px-2 py-1 md:sticky left-0 z-15 text-xs sm:text-sm font-semibold relative whitespace-normal bg-gray-100">
                         {metric_target}
                       </td>
 
                       {/* TYPE */}
-                      <td className="border px-2 py-1 md:sticky left-[120px] bg-gray-100 z-20 font-semibold whitespace-normal">
+                      <td className="border px-2 py-1 md:sticky left-[120px] bg-gray-100 z-10 text-xs sm:text-sm font-semibold whitespace-normal">
                         {metric_type}
                       </td>
 
@@ -643,10 +643,10 @@ export default function HealthMetricManager({
                               className={`
                                 w-full text-center border rounded text-sm
                                 ${isDisabled
-                                  ? 'bg-gray-200 text-gray-600 border-gray-300 cursor-not-allowed'
+                                  ? 'bg-gray-200 text-gray-600 border-gray-300 cursor-not-allowed z-0'
                                   : logMap[rowKey]?.[date]?.metric_value == null
-                                    ? 'bg-sky-50 border-sky-100'
-                                    : 'border-gray-200'
+                                    ? 'bg-sky-50 border-sky-100 z-0'
+                                    : 'border-gray-200 z-0'
                                 }
                               `}
                               value={

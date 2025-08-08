@@ -144,7 +144,7 @@ export default function Header() {
           </div>
 
           {/* 메뉴 항목들 */}
-          <div className="flex flex-col gap-3 text-lg font-medium text-gray-800">
+          <div className="flex flex-col gap-3 text-sm font-medium text-gray-800">
             <Link
               href="/members"
               onClick={() => setMobileMenuOpen(false)}
