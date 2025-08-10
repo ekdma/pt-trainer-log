@@ -14,6 +14,7 @@ import {
 } from 'chart.js'
 import ChartDataLabels from 'chartjs-plugin-datalabels'
 import { Line } from 'react-chartjs-2'
+import { useLanguage } from '@/context/LanguageContext'
 
 // Chart.js에 플러그인 등록
 ChartJS.register(CategoryScale, LinearScale, PointElement, LineElement, Title, Tooltip, Legend, ChartDataLabels)
@@ -31,6 +32,7 @@ export default function EmptyStomachWeightChart() {
   const supabase = getSupabaseClient()
   const [dataPoints, setDataPoints] = useState<HealthMetric[]>([])
   const [loading, setLoading] = useState(true)
+  const { t } = useLanguage()  // 번역 함수 가져오기
 
   useEffect(() => {
     const fetchData = async () => {
@@ -67,8 +69,8 @@ export default function EmptyStomachWeightChart() {
     fetchData()
   }, [supabase])
 
-  if (loading) return <div>로딩 중...</div>
-  if (dataPoints.length === 0) return <div>공복체중 데이터가 없습니다.</div>
+  if (loading) return <div>{t('master.loading')}</div>
+  if (dataPoints.length === 0) return <div>{t('my.fastingWeightData_1')}</div>
 
   const labels = dataPoints.map((d) => {
     const date = new Date(d.measure_date)
@@ -81,7 +83,7 @@ export default function EmptyStomachWeightChart() {
     labels,
     datasets: [
       {
-        label: '공복체중',
+        label: 'Fasting Weight Data',
         data: dataPoints.map((d) => d.metric_value),
         borderColor: '#EF4444',
         backgroundColor: '#EF4444',

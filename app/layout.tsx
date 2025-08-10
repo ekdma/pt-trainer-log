@@ -4,6 +4,7 @@ import "./globals.css";
 import { Nanum_Gothic } from "next/font/google";
 import { Montserrat } from 'next/font/google'
 import { Toaster } from 'sonner'
+import { LanguageProvider } from '@/context/LanguageContext'
 
 const montserrat = Montserrat({
   weight: ['700'], // Bold
@@ -42,8 +43,10 @@ export default function RootLayout({
       <body
         className={`${geistSans.variable} ${geistMono.variable} ${nanumGothic.variable} ${montserrat.variable} font-nanum antialiased`}
       >
-        {children}
-        <Toaster position="top-right" richColors expand />
+        <LanguageProvider>
+          {children}
+          <Toaster position="top-right" richColors expand />
+        </LanguageProvider>
       </body>
     </html>
   );

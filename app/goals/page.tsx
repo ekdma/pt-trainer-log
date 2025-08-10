@@ -14,6 +14,7 @@ import {
 } from '@/components/ui/toggle-group'
 import { motion } from 'framer-motion'
 import MemberSelectListbox from '@/components/ui/MemberSelectListbox'  
+import { useLanguage } from '@/context/LanguageContext'
 
 interface Sessions {
   pt_session_cnt: number
@@ -60,6 +61,8 @@ type GoalContent = DietGoal | HydrationGoal | SleepGoal | BodyGoal
 
 export default function GoalsPage() {
   useAuthGuard()
+  const { t } = useLanguage()  // 번역 함수 가져오기
+
   const [userRole, setUserRole] = useState<'member' | 'trainer' | null>(null)
   const [members, setMembers] = useState<Member[]>([])
   const [selectedMember, setSelectedMember] = useState<Member | null>(null)
@@ -69,7 +72,7 @@ export default function GoalsPage() {
 
   // 상태 변수들
   const [mealsPerDay, setMealsPerDay] = useState(3)
-  const [importantMeal, setImportantMeal] = useState('아침')
+  const [importantMeal, setImportantMeal] = useState('breakfast')
   const [finishByHour, setFinishByHour] = useState(8)
   const [customGoal, setCustomGoal] = useState('')
   const [cupsPerDay, setCupsPerDay] = useState(2)
@@ -79,6 +82,11 @@ export default function GoalsPage() {
   const [selectedTags, setSelectedTags] = useState<string[]>([])
   const [memberTab, setMemberTab] = useState<'all' | 'active'>('active')
   const [hasAnyGoals, setHasAnyGoals] = useState(false)
+  
+  const mealKeys = ['breakfast', 'lunch', 'dinner']
+
+  const [latestMuscleMass, setLatestMuscleMass] = useState<number | null>(null)
+  const [latestBodyFatMass, setLatestBodyFatMass] = useState<number | null>(null)
 
   console.log(goals)
   useEffect(() => {
@@ -118,9 +126,10 @@ export default function GoalsPage() {
       fetchActivePackage()
       fetchFoodTemplates()
       fetchSavedGoals()
+      fetchLatestBodyMetrics()
     }
   }, [selectedMember])
-
+  
   const fetchActivePackage = async () => {
     const today = new Date().toISOString().split('T')[0]
     const { data, error } = await supabase
@@ -155,6 +164,35 @@ export default function GoalsPage() {
         : [...prev, tag]
     )
   }
+
+  const fetchLatestBodyMetrics = async () => {
+    if (!selectedMember) return
+  
+    const { data, error } = await supabase
+      .from('health_metrics')
+      .select('metric_type, metric_value, measure_date')
+      .eq('member_id', selectedMember.member_id)
+      .in('metric_type', ['Skeletal Muscle Mass', 'Body Fat Mass'])
+      .order('measure_date', { ascending: false })
+  
+    if (error) {
+      console.error('체성분 데이터 조회 실패:', error)
+      return
+    }
+  
+    if (data && data.length > 0) {
+      // 가장 최근 측정일 기준으로 필터
+      const latestByType = data.reduce((acc, cur) => {
+        if (!acc[cur.metric_type]) {
+          acc[cur.metric_type] = cur
+        }
+        return acc
+      }, {} as Record<string, typeof data[0]>)
+  
+      setLatestMuscleMass(latestByType['Skeletal Muscle Mass']?.metric_value ?? null)
+      setLatestBodyFatMass(latestByType['Body Fat Mass']?.metric_value ?? null)
+    }
+  }
   
 	const fetchSavedGoals = async () => {
 		const { data, error } = await supabase
@@ -181,7 +219,7 @@ export default function GoalsPage() {
       const diet = latestGoals.get('diet') as DietGoal | undefined
       if (diet) {
         setMealsPerDay(diet.meals_per_day ?? 3)
-        setImportantMeal(diet.important_meal ?? '아침')
+        setImportantMeal(diet.important_meal ?? 'breakfast')
         setFinishByHour(diet.finish_by_hour ?? 8)
         setCustomGoal(diet.custom ?? '')
         setSelectedTags(diet.hashtags ?? [])
@@ -273,7 +311,7 @@ export default function GoalsPage() {
 
   const setDefaultGoals = () => {
     setMealsPerDay(3)
-    setImportantMeal('아침')
+    setImportantMeal('breakfast')
     setFinishByHour(8)
     setCustomGoal('')
     setSelectedTags([])
@@ -286,7 +324,6 @@ export default function GoalsPage() {
 
     setHasAnyGoals(true)
   }
-
 
   return (
     <div className="min-h-screen bg-gray-50">
@@ -344,7 +381,9 @@ export default function GoalsPage() {
 
         {selectedMember ? (
           <>
-						<h2 className="text-lg font-bold text-gray-800 mb-6">목표 설정</h2>
+						<h2 className="text-lg font-bold text-gray-800 mb-6">
+              {t('goals.goalsTitle')}
+            </h2>
               <motion.div
                 key={selectedMember?.member_id}
                 initial={{ opacity: 0, y: 20 }}
@@ -374,16 +413,18 @@ export default function GoalsPage() {
                     {/* 식단 목표 카드 */}
                     <section className="bg-white rounded-2xl shadow-md p-6 border border-gray-200 hover:shadow-lg transition flex flex-col">
                       <h3 className="text-lg font-semibold text-gray-600 mb-4 flex items-center gap-2">
-                        <span>🥗</span> 식단 목표
+                        <span>🥗</span> {t('my.dietGoals')}
                       </h3>
 
                       <div className="flex flex-col gap-3 mb-4">
-                        <label className="text-sm text-gray-600 mb-1 block">📌 식사 패턴</label>
+                        <label className="text-sm text-gray-600 mb-1 block">📌 {t('goals.mealPattern')}</label>
 
                         {/* 1. 끼 수 */}
                         <div className="flex items-center gap-2">
                           <span className="text-gray-400 text-lg">•</span>
-                          <span className="text-sm">하루</span>
+                          <span className="text-sm">
+                            {t('my.dietGoals_1')}
+                          </span>
                           <select
                             className="text-sm form-select w-12 rounded border border-gray-300 px-2 py-1"
                             value={mealsPerDay}
@@ -393,27 +434,38 @@ export default function GoalsPage() {
                               <option key={n}>{n}</option>
                             ))}
                           </select>
-                          <span className="text-sm">끼 챙겨먹기</span>
+                          <span className="text-sm">
+                            {t('my.dietGoals_2')}
+                          </span>
                         </div>
 
                         {/* 2. 중요한 끼니 */}
                         <div className="flex items-center gap-2">
                           <span className="text-gray-400 text-lg">•</span>
+                          <span className="text-sm">
+                              {t('my.dietGoals_3')}
+                          </span>
                           <select
                             className="text-sm form-select w-18 rounded border border-gray-300 px-2 py-1"
                             value={importantMeal}
                             onChange={(e) => setImportantMeal(e.target.value)}
                           >
-                            {['아침', '점심', '저녁'].map((meal) => (
-                              <option key={meal}>{meal}</option>
+                            
+                            {mealKeys.map((key) => (
+                              <option key={key} value={key}>
+                                {t(`master.${key}`)}
+                              </option>
                             ))}
                           </select>
-                          <span className="text-sm">챙겨먹기</span>
+                          <span className="text-sm">{t('my.dietGoals_4')}</span>
                         </div>
 
                         {/* 3. 마감 시간 */}
                         <div className="flex items-center gap-2">
                           <span className="text-gray-400 text-lg">•</span>
+                          <span className="text-sm">
+                              {t('my.dietGoals_5')}
+                          </span>
                           <select
                             className="text-sm form-select w-18 rounded border border-gray-300 px-2 py-1"
                             value={finishByHour}
@@ -423,25 +475,25 @@ export default function GoalsPage() {
                               <option key={h}>{h}</option>
                             ))}
                           </select>
-                          <span className="text-sm">시 이전에 하루 식사 종료하기</span>
+                          <span className="text-sm">{t('my.dietGoals_6')}</span>
                         </div>
                       </div>
 
 
                       <div className="mb-4">
-                        <label className="text-sm text-gray-600 mb-1 block">📌 개인 식단 목표</label>
+                        <label className="text-sm text-gray-600 mb-1 block">📌 {t('goals.personalGoals')}</label>
                         <input
                           type="text"
                           value={customGoal}
                           onChange={(e) => setCustomGoal(e.target.value)}
                           className="w-full border border-gray-300 rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-gray-400"
-                          placeholder="예: 영양제 챙겨먹기"
+                          placeholder={t('goals.personalGoalsEG')}
                         />
                       </div>
 
                       {/* 해시태그 토글 버튼 그룹 */}
                       <div>
-                        <label className="block text-sm text-gray-600 mb-2"># 해시태그 추천</label>
+                        <label className="block text-sm text-gray-600 mb-2"># {t('my.hashtagGoals')}</label>
                         <div className="flex flex-wrap gap-2">
                           {templates.map((t) => {
                             const isSelected = selectedTags.includes(t.hashtag_content)
@@ -467,10 +519,12 @@ export default function GoalsPage() {
                     {/* 수분 섭취 카드 */}
                     <section className="bg-white rounded-2xl shadow-md p-6 border border-gray-200 hover:shadow-lg transition">
                       <h3 className="text-lg font-semibold text-gray-600 mb-4 flex items-center gap-2">
-                        <span>💧</span> 수분 섭취
+                        <span>💧</span> {t('my.waterIntakeGoal')}
                       </h3>
                       <div className="flex items-center gap-2">
-                        <span className="text-sm">하루</span>
+                        <span className="text-sm">
+                          {t('my.waterIntakeGoal_1')}
+                        </span>
                         <select
                           className="text-sm form-select w-18 rounded border border-gray-300 px-2 py-1"
                           value={cupsPerDay}
@@ -480,17 +534,21 @@ export default function GoalsPage() {
                             <option key={n}>{n}</option>
                           ))}
                         </select>
-                        <span className="text-sm">잔 마시기 (500ml 기준)</span>
+                        <span className="text-sm">
+                          {t('my.waterIntakeGoal_2')}
+                        </span>
                       </div>
                     </section>
 
                     {/* 수면 패턴 카드 */}
                     <section className="bg-white rounded-2xl shadow-md p-6 border border-gray-200 hover:shadow-lg transition">
                       <h3 className="text-lg font-semibold text-gray-600 mb-4 flex items-center gap-2">
-                        <span>🛌</span> 수면 패턴
+                        <span>🛌</span> {t('my.sleepGoal')}
                       </h3>
                       <div className="flex items-center gap-2">
-                        <span className="text-sm">하루</span>
+                        <span className="text-sm">
+                          {t('my.sleepGoal_1')}
+                        </span>
                         <select
                           className="text-sm form-select w-18 rounded border border-gray-300 px-2 py-1"
                           value={sleepHours}
@@ -500,19 +558,23 @@ export default function GoalsPage() {
                             <option key={h}>{h}</option>
                           ))}
                         </select>
-                        <span className="text-sm">시간 수면하기</span>
+                        <span className="text-sm">
+                          {t('my.sleepGoal_2')}
+                        </span>
                       </div>
                     </section>
 
                     {/* 체성분 목표 카드 */}
                     <section className="bg-white rounded-2xl shadow-md p-6 border border-gray-200 hover:shadow-lg transition">
                       <h3 className="text-lg font-semibold text-gray-600 mb-4 flex items-center gap-2">
-                        <span>📈</span> 체성분 목표
+                        <span>📈</span> {t('my.bodycompositionGoal')}
                       </h3>
                         
                       <div className="flex items-center gap-2">
                         <span className="text-gray-400 text-lg">•</span>
-                        <span className="text-sm">매달 근육량</span>
+                        <span className="text-sm">
+                          {t('my.bodycompositionGoal_1')}
+                        </span>
                         <input
                           type="number"
                           value={muscleGain}
@@ -532,11 +594,30 @@ export default function GoalsPage() {
                             -moz-appearance: textfield;
                           }
                         `}</style>
-                        <span className="text-sm">kg 증량하기</span>
+                        <span className="text-sm">
+                          kg {t('my.bodycompositionGoal_2')}
+                        </span>
                       </div>
+                      <div className='text-sm text-gray-700 list-disc pl-5 space-y-3'>
+                        <div className="mt-1 ml-1 text-sm text-gray-500">
+                          📊
+                          <span className="font-medium text-gray-700">
+                            {latestMuscleMass !== null ? `${latestMuscleMass}kg` : `${t('master.noData')})`}
+                          </span>
+                         {hasAnyGoals && latestMuscleMass !== null && (
+                            <span className="font-medium text-gray-700"> 
+                              → 
+                              {(latestMuscleMass + muscleGain)}kg
+                            </span>
+                          )}  
+                        </div>
+                      </div>
+
                       <div className="flex items-center gap-2">
                         <span className="text-gray-400 text-lg">•</span>
-                        <span className="text-sm">매달 체지방량</span>
+                        <span className="text-sm">
+                          {t('my.bodycompositionGoal_3')}
+                        </span>
                         <input
                           type="number"
                           value={fatLoss}
@@ -556,7 +637,23 @@ export default function GoalsPage() {
                             -moz-appearance: textfield;
                           }
                         `}</style>
-                        <span className="text-sm">kg 감량하기</span>
+                        <span className="text-sm">
+                          kg {t('my.bodycompositionGoal_4')}
+                        </span>
+                      </div>
+                      <div className='text-sm text-gray-700 list-disc pl-5 space-y-3'>
+                        <div className="mt-1 ml-1 text-sm text-gray-500">
+                          📊
+                          <span className="font-medium text-gray-700">
+                            {latestBodyFatMass !== null ? `${latestBodyFatMass}kg` : `${t('master.noData')})`}
+                          </span>
+                          {hasAnyGoals && latestBodyFatMass !== null && (
+                            <span className="font-medium text-gray-700"> 
+                              → 
+                              {(latestBodyFatMass - fatLoss)}kg
+                            </span>
+                          )}
+                        </div>
                       </div>
                     </section>
                   </div>
@@ -574,7 +671,7 @@ export default function GoalsPage() {
                         onClick={handleSaveGoals}
                         variant="darkGray" 
                         className="mt-6 text-sm rounded-full shadow px-6 py-3">
-                        목표 저장하기
+                        {t('master.save')}
                       </Button>
                     </div>
                   {/* )} */}

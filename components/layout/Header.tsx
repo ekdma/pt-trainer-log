@@ -4,11 +4,14 @@ import Link from 'next/link'
 import { useEffect, useState } from 'react'
 import { usePathname } from 'next/navigation'
 import { Menu, X } from 'lucide-react'
+import LanguageToggle from '@/components/LanguageToggle'
+import { useLanguage } from '@/context/LanguageContext'
 
 export default function Header() {
   const [memberName, setMemberName] = useState<string | null>(null)
   const pathname = usePathname()
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false)
+  const { t } = useLanguage()  // 번역 함수 가져오기
 
   useEffect(() => {
     const raw = localStorage.getItem('litpt_member')
@@ -20,17 +23,17 @@ export default function Header() {
           setMemberName(displayName)
         }
       } catch {
-        // JSON 파싱 실패 무시
+        // 무시
       }
     }
   }, [])
 
   const navItems = [
-    { href: '/my-calendar', label: '일정' },
-    { href: '/food-diary', label: '식단' },
-    { href: '/workout', label: '운동' },
-    { href: '/health-metric', label: '건강' },
-    { href: '/goals', label: '목표설정' },
+    { href: '/my-calendar', label: t('header.schedule') },
+    { href: '/food-diary', label: t('header.diet') },
+    { href: '/workout', label: t('header.workout') },
+    { href: '/health-metric', label: t('header.health') },
+    { href: '/goals', label: t('header.setGoals') },
   ]
 
   return (
@@ -39,10 +42,12 @@ export default function Header() {
         {/* 로고 및 이름 */}
         <Link
           href="/my"
-          className="text-xl font-bold text-rose-600 flex items-center min-w-0"
+          className="text-xl font-bold flex items-center min-w-0"
         >
-          <span className="shrink-0">LiT</span>
-          <span style={{ color: '#595959' }} className="ml-1 shrink-0">PT</span>
+          <span className="shrink-0" style={({color: '#FF8000'})}>LiT</span>
+          <span style={{ color: '#595959' }} className="ml-1 shrink-0">
+            PT
+          </span>
           {memberName && (
             <span
               className="text-sm sm:text-base font-medium text-gray-800 ml-3 truncate"
@@ -53,33 +58,42 @@ export default function Header() {
           )}
         </Link>
 
-        {/* 모바일 햄버거 버튼 */}
-        <button
-          className="sm:hidden p-2"
-          onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
-        >
-          {mobileMenuOpen ? <X size={24} /> : <Menu size={24} />}
-        </button>
+        {/* 데스크탑: 메뉴 + 언어 토글 한 줄, 오른쪽 정렬 */}
+        <div className="hidden sm:flex items-center gap-4">
+          <nav className="flex gap-2 text-sm text-gray-700">
+            {navItems.map((item) => {
+              const isActive = pathname === item.href
+              return (
+                <Link
+                  key={item.href}
+                  href={item.href}
+                  className={`px-2 py-1 rounded-md transition ${
+                    isActive
+                      ? 'bg-rose-100 text-rose-600 font-semibold'
+                      : 'hover:text-rose-600'
+                  }`}
+                >
+                  {item.label}
+                </Link>
+              )
+            })}
+          </nav>
+          <div className="flex items-center">
+            <LanguageToggle />
+          </div>
+        </div>
 
-        {/* 데스크탑 메뉴 */}
-        <nav className="hidden sm:flex gap-2 text-sm text-gray-700 shrink-0">
-          {navItems.map((item) => {
-            const isActive = pathname === item.href
-            return (
-              <Link
-                key={item.href}
-                href={item.href}
-                className={`px-2 py-1 rounded-md transition ${
-                  isActive
-                    ? 'bg-rose-100 text-rose-600 font-semibold'
-                    : 'hover:text-rose-600'
-                }`}
-              >
-                {item.label}
-              </Link>
-            )
-          })}
-        </nav>
+        {/* 모바일: 언어 토글 + 햄버거 버튼 같이 한 줄 */}
+        <div className="sm:hidden flex items-center gap-2">
+          <LanguageToggle />
+          <button
+            className="p-2"
+            onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
+            aria-label="Toggle menu"
+          >
+            {mobileMenuOpen ? <X size={24} /> : <Menu size={24} />}
+          </button>
+        </div>
       </div>
 
       {/* 모바일 메뉴 */}
@@ -87,7 +101,7 @@ export default function Header() {
         <div className="fixed inset-0 z-50 bg-white flex flex-col px-6 py-8 sm:hidden overflow-y-auto">
           {/* 닫기 버튼 */}
           <div className="flex justify-end mb-6">
-            <button onClick={() => setMobileMenuOpen(false)}>
+            <button onClick={() => setMobileMenuOpen(false)} aria-label="Close menu">
               <X size={28} />
             </button>
           </div>

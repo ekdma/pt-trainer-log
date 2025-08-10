@@ -5,6 +5,7 @@ import dayjs from 'dayjs'
 import { getSupabaseClient } from '@/lib/supabase'
 import { Button } from '@/components/ui/button'
 import { toast } from 'sonner'
+import { useLanguage } from '@/context/LanguageContext'
 
 interface Props {
   memberId: string
@@ -34,6 +35,8 @@ export default function FoodDiaryMemberView({ memberId, memberName }: Props) {
   const [availableHashtags, setAvailableHashtags] = useState<Record<string, string[]>>({})
   const [selectedTags, setSelectedTags] = useState<Record<string, string[]>>({})
   const [showHashtags, setShowHashtags] = useState<Record<string, boolean>>({})
+
+  const { t } = useLanguage()  // 번역 함수 가져오기
 
   const fetchHealthMetrics = async () => {
     const { data, error } = await supabase
@@ -264,15 +267,15 @@ export default function FoodDiaryMemberView({ memberId, memberName }: Props) {
               
       <div className="bg-white shadow rounded-xl p-4 space-y-3 border border-gray-100">
         <div className="flex justify-between items-center">
-          <button onClick={() => handleDateChange('prev')} className="text-sm text-rose-600">{'<'} 이전</button>
+          <button onClick={() => handleDateChange('prev')} className="text-sm text-rose-600">{'<'} {t('master.previous')}</button>
           <div className="text-center font-semibold">
             {selectedDate.format('YYYY.MM.DD')} ({selectedDate.format('ddd')})
           </div>
-          <button onClick={() => handleDateChange('next')} className="text-sm text-rose-600">다음 {'>'}</button>
+          <button onClick={() => handleDateChange('next')} className="text-sm text-rose-600">{t('master.next')} {'>'}</button>
         </div>
         <div className="flex flex-wrap gap-4">
           <div className="flex-1 min-w-[140px] max-w-xs">
-            <label className="block text-sm font-semibold text-gray-700 mb-1">공복 체중 (kg)</label>
+            <label className="block text-sm font-semibold text-gray-700 mb-1">{t('my.fastingWeightData')} (kg)</label>
             <input
               type="number"
               inputMode="decimal"
@@ -280,11 +283,13 @@ export default function FoodDiaryMemberView({ memberId, memberName }: Props) {
               value={weight}
               onChange={(e) => setWeight(e.target.value)}
               className="w-full text-sm border border-gray-300 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-rose-400"
-              placeholder="예: 67.5"
+              placeholder="e.g. 67.5"
             />
           </div>
           <div className="flex-1 min-w-[140px] max-w-xs">
-            <label className="block text-sm font-semibold text-gray-700 mb-1">수면 시간 (시간)</label>
+            <label className="block text-sm font-semibold text-gray-700 mb-1">
+              {t('food_diary.sleepHours')}
+            </label>
             <input
               type="number"
               inputMode="decimal"
@@ -292,12 +297,14 @@ export default function FoodDiaryMemberView({ memberId, memberName }: Props) {
               value={sleepHours}
               onChange={(e) => setSleepHours(e.target.value)}
               className="w-full text-sm border border-gray-300 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-rose-400"
-              placeholder="예: 7.5"
+              placeholder="e.g. 7.5"
             />
           </div>
         </div>
         <div className="mt-6">
-          <label className="block text-sm font-semibold text-gray-700 mb-2">수분 섭취 (컵)</label>
+          <label className="block text-sm font-semibold text-gray-700 mb-2">
+            {t('food_diary.waterIntake')}
+          </label>
           <div className="flex gap-4">
             {[1, 2, 3, 4].map((index) => (
               <div
@@ -341,7 +348,7 @@ export default function FoodDiaryMemberView({ memberId, memberName }: Props) {
               rows={meal.key.includes('Snack') ? 1 : 3}
               value={diary[meal.key] || ''}
               onChange={(e) => setDiary({ ...diary, [meal.key]: e.target.value })}
-              placeholder={`${meal.label}에 먹은 음식 입력`}
+              placeholder={`${meal.label}${t('food_diary.writeFood')}`}
             />
             
             {/* # 버튼 */}
@@ -411,7 +418,7 @@ export default function FoodDiaryMemberView({ memberId, memberName }: Props) {
           variant="darkGray" 
           className="text-sm"
         >
-          저장
+          {t('master.save')}
         </Button>
       </div>
 

@@ -17,9 +17,12 @@ import {
 } from '@/components/ui/toggle-group'
 import { motion } from 'framer-motion'
 import MemberSelectListbox from '@/components/ui/MemberSelectListbox'  
+import { useLanguage } from '@/context/LanguageContext'
 
 export default function MembersHealthPage() {
   useAuthGuard()
+  const { t } = useLanguage()  // 번역 함수 가져오기
+
   const supabase = getSupabaseClient()
   
   const [userRole, setUserRole] = useState<'member' | 'trainer' | null>(null)
@@ -146,7 +149,9 @@ export default function MembersHealthPage() {
         {selectedMember ? (
           <>
             <div className="flex items-center gap-3 mb-6">
-              <h2 className="text-lg font-semibold text-gray-800">건강기록 관리</h2>
+              <h2 className="text-lg font-semibold text-gray-800">
+                {t('health.healthTitle')}
+              </h2>
               {userRole === 'trainer' && (
                 <button
                   onClick={() => setShowGlobalOrderModal(true)}
@@ -171,7 +176,7 @@ export default function MembersHealthPage() {
                 onClick={() => setActiveTab('records')}
                 className='text-xs sm:text-sm'
               >
-                기록지
+                {t('workout.log')}
               </Button>
 
               <Button
@@ -180,7 +185,7 @@ export default function MembersHealthPage() {
                 onClick={() => setActiveTab('graphs')}
                 className='text-xs sm:text-sm'
               >
-                그래프
+                {t('workout.graph')}
               </Button>
             </div>
                 

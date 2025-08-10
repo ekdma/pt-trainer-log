@@ -1,0 +1,113 @@
+{
+    "master": {
+      "loading": "로딩 중 ...",
+      "close": "닫기",
+      "yesCancel": "네, 취소",
+      "no": "아니오",
+      "requested": "신청",
+      "confirmed": "확정",
+      "canceled": "취소",
+      "previous": "이전",
+      "next": "다음",
+      "save": "저장",
+      "breakfast": "아침",
+      "lunch": "점심",
+      "dinner": "저녁",
+      "noData": "데이터 없음"
+    },
+    "header": {
+      "schedule": "일정",
+      "diet": "식단",
+      "workout": "운동 기록",
+      "health": "건강 기록",
+      "setGoals": "목표 설정"
+    },
+    "app": {
+      "title": "Personal Training Log",
+      "description": "LiT PT 회원의 운동 데이터를 기록하고 시각화하여\n건강한 피트니스 라이프를 돕는 시스템입니다 🙌"
+    },
+    "login": {
+      "title": "로그인",
+      "name": "이름",
+      "password": "전화번호 끝 4자리",
+      "adminCode": "관리자 코드",
+      "member": "회원",
+      "coach": "코치",
+      "button": "로그인",
+      "noMatch": "일치하는 회원이 없습니다 😥",
+      "wrongPassword": "비밀번호가 올바르지 않습니다.",
+      "wrongAdmin": "관리자 코드를 올바르게 입력해주세요 😁"
+    },
+    "my": {
+      "fastingWeightData": "아침 공복 체중",
+      "fastingWeightData_1": "데이터가 없습니다",
+      "goals": "목표",
+      "schedule": "일정",
+      "dietGoals": "식단 목표",
+      "waterIntakeGoal": "수분 섭취 목표",
+      "sleepGoal": "수면 목표",
+      "bodycompositionGoal": "체성분 목표",
+      "dietGoals_1": "하루",
+      "dietGoals_2": "끼 챙겨먹기",
+      "dietGoals_3": " ",
+      "dietGoals_4": "챙겨먹기",
+      "dietGoals_5": " ",
+      "dietGoals_6": "시 이전에 마지막 식사 끝내기",
+      "waterIntakeGoal_1": "하루",
+      "waterIntakeGoal_2": "잔 마시기 (500ml 기준)",
+      "sleepGoal_1": "하루 ",
+      "sleepGoal_2": "시간 수면하기",
+      "bodycompositionGoal_1": "골격근량 +",
+      "bodycompositionGoal_2": " 증량",
+      "bodycompositionGoal_3": "체지방량 -",
+      "bodycompositionGoal_4": " 감량",
+      "hashtagGoals": "해시태그 목표",
+      "hashtagGoals_1": "은 최근 7일 동안 ",
+      "hashtagGoals_2": "회 챙겼어요!",
+      "sessionClose": "내 세션 닫기",
+      "sessionView": "내 세션 보기"
+    },
+    "my_calendar": {
+      "myCalendar": "내 일정",
+      "viewApplication": "내 예약 보기",
+      "closeApplication": "내 예약 닫기",
+      "assignedCoach": "담당 코치: ",
+      "remainingSessions": "남은 세션 수",
+      "remainingSessions_1": "세션",
+      "remainingSessions_2": "사용",
+      "remainingSessions_3": "잔여 ",
+      "remainingSessions_4": "회",
+      "selectTime": "시간 선택",
+      "sessionType": "수업 종류",
+      "bookClass": "수업 신청하기",
+      "cancelSessionQ": "세션 취소 사유를 입력해주세요",
+      "cancelApplySessionQ": "이 세션을 취소하시겠습니까?",
+      "sessionList": "신청 내역",
+      "seletedDate": "선택 날짜",
+      "allDates": "모든 날짜",
+      "seletedDateNoClass": "선택한 날짜에 수업이 없습니다",
+      "noClass": "등록된 수업이 없습니다"
+    },
+    "food_diary": {
+      "sleepHours": "수면 시간",
+      "waterIntake": "수분 섭취 (텀블러)",
+      "writeFood": " — 음식 기록하기"
+    },
+    "workout": {
+      "workoutTitle": "운동 기록",
+      "allWorkouts": "모든 운동",
+      "favorites": "즐겨찾기",
+      "log": "기록지",
+      "graph": "그래프"
+    },
+    "health": {
+      "healthTitle": "건강 기록"
+    },
+    "goals": {
+      "goalsTitle": "목표 설정",
+      "mealPattern": "식사 계획",
+      "personalGoals": "나만의 식단 목표",
+      "personalGoalsEG": "예: 각 식사마다 단백질 30g 먹기"
+    }
+  }
+  

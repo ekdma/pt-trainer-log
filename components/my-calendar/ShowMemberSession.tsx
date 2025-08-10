@@ -4,6 +4,7 @@ import { useEffect, useState } from 'react'
 import { getSupabaseClient } from '@/lib/supabase'
 import dayjs from 'dayjs'
 import { XMarkIcon } from '@heroicons/react/24/solid'
+import { useLanguage } from '@/context/LanguageContext'
 
 interface Session {
   calendar_sessions_id: string
@@ -29,6 +30,12 @@ export default function ShowMemberSession({ selectedDate, memberId, onClose }: S
   const [activeTab, setActiveTab] = useState<'selected' | 'all'>('selected')
   const supabase = getSupabaseClient()
   const formattedDate = dayjs(selectedDate).format('YYYY-MM-DD')
+  const { t } = useLanguage()  // 번역 함수 가져오기
+  const statusKeyMap: Record<string, string> = {
+    '확정': 'confirmed',
+    '취소': 'canceled',
+    '신청': 'requested',
+  }
 
   useEffect(() => {
     if (!memberId) return
@@ -66,7 +73,9 @@ export default function ShowMemberSession({ selectedDate, memberId, onClose }: S
           <XMarkIcon className="h-6 w-6" />
         </button>
 
-        <h3 className="text-lg font-bold text-gray-800 mb-4 text-center">신청 내역</h3>
+        <h3 className="text-lg font-bold text-gray-800 mb-4 text-center">
+          {t('my_calendar.sessionList')}
+        </h3>
 
         {/* 탭 선택 */}
         <div className="flex justify-center space-x-4 border-b border-gray-200 mb-4">
@@ -74,20 +83,20 @@ export default function ShowMemberSession({ selectedDate, memberId, onClose }: S
             onClick={() => setActiveTab('selected')}
             className={`pb-2 font-semibold ${activeTab === 'selected' ? 'border-b-2 border-rose-500 text-rose-600' : 'text-gray-500 hover:text-rose-600'}`}
           >
-            선택일자
+            {t('my_calendar.seletedDate')}
           </button>
           <button
             onClick={() => setActiveTab('all')}
             className={`pb-2 font-semibold ${activeTab === 'all' ? 'border-b-2 border-rose-500 text-rose-600' : 'text-gray-500 hover:text-rose-600'}`}
           >
-            전체일자
+            {t('my_calendar.allDates')}
           </button>
         </div>
 
         {/* 세션 리스트 */}
         {sessions.length === 0 ? (
           <p className="text-gray-500 text-sm text-center">
-            {activeTab === 'selected' ? '선택한 날짜에 수업이 없습니다.' : '등록된 수업이 없습니다.'}
+            {activeTab === 'selected' ? t('my_calendar.seletedDateNoClass') : t('my_calendar.noClass')}
           </p>
         ) : (
           <ul className="divide-y divide-gray-200">
@@ -113,7 +122,7 @@ export default function ShowMemberSession({ selectedDate, memberId, onClose }: S
                         : 'bg-yellow-100 text-yellow-700'
                     }`}
                   >
-                    {session.status}
+                    {t(`master.${statusKeyMap[session.status] || 'requested'}`)}
                   </span>
                 </div>
 

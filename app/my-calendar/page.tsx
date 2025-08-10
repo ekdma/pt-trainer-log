@@ -11,12 +11,15 @@ import 'react-calendar/dist/Calendar.css'
 import { getSupabaseClient } from '@/lib/supabase'
 import { ChevronLeftIcon, ChevronRightIcon, ChevronDoubleLeftIcon, ChevronDoubleRightIcon } from '@heroicons/react/24/solid'
 import { formatInTimeZone, format } from 'date-fns-tz'
+import { useLanguage } from '@/context/LanguageContext'
 
 type SessionInfo = Record<string, { status: string; type: string }[]>
 
 export default function MyCalendarPage() {
   const supabase = getSupabaseClient()
   useAuthGuard()
+  const { t } = useLanguage()  // 번역 함수 가져오기
+
   // const [selectedDate, setSelectedDate] = useState<Date | null>(new Date())
   const [selectedDate, setSelectedDate] = useState<Date>(new Date())
 
@@ -66,7 +69,9 @@ export default function MyCalendarPage() {
       <div className="min-h-screen bg-gray-50">
         <Header />
         <main className="max-w-4xl mx-auto px-4 py-6">
-          <h2 className="text-xl font-bold text-gray-800 mb-4">My Calendar</h2>
+          <h2 className="text-xl font-bold text-gray-800 mb-4">
+            {t('my_calendar.myCalendar')}
+          </h2>
 
           <div className="flex flex-col md:flex-row gap-1">
             <div className="bg-white p-4 rounded shadow w-full md:w-1/2">
@@ -137,7 +142,7 @@ export default function MyCalendarPage() {
                 onClick={() => setShowSessionInfo(!showSessionInfo)}
                 className="text-sm mt-4 w-full bg-[#a1a1a1] text-white py-2 rounded font-semibold hover:bg-[#a1a1a1] transition"
               >
-                {showSessionInfo ? '신청내역 닫기' : '신청내역 보기'}
+                {showSessionInfo ? t('my_calendar.closeApplication') : t('my_calendar.viewApplication')}
               </button>
             </div>
 

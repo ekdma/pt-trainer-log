@@ -11,6 +11,7 @@ import AddWorkout from '@/components/workout/AddWorkout'
 import { Button } from '@/components/ui/button'
 import { Member, WorkoutRecord, WorkoutType } from '@/components/members/types'
 import { toast } from 'sonner'
+import { useLanguage } from '@/context/LanguageContext'
 
 interface WorkoutLogManagerProps {
   member: Member
@@ -58,6 +59,8 @@ export default function WorkoutLogManager({
   onRefreshAllTypes,
   splitWorkouts,
 }: WorkoutLogManagerProps) {
+  const { t } = useLanguage()  // 번역 함수 가져오기
+
   const [isTrainer, setIsTrainer] = useState(false)
 
   const [dates, setDates] = useState<string[]>([])
@@ -783,13 +786,13 @@ export default function WorkoutLogManager({
               <tr>
                 <th className="sticky top-0 left-0 bg-gray-200 z-30 border px-2 py-2 text-center text-xs sm:text-sm font-semibold w-[35px] md:w-[100px]">
                   <span className="block md:hidden">{''}</span>
-                  <span className="hidden md:block">LEVEL</span>
+                  <span className="hidden md:block">Level</span>
                 </th>
                 <th className="hidden md:table-cell sticky top-0 md:left-[100px] bg-gray-200 z-[25] border px-2 py-2 text-center text-xs sm:text-sm font-semibold w-[90px]">
-                  TARGET
+                  Target
                 </th>
                 <th className="border px-2 py-2 text-center text-xs sm:text-sm font-semibold w-[120px] sticky top-0 left-[35px] md:left-[190px] bg-gray-200 z-20">
-                  WORKOUT
+                  Workout
                 </th>
 
                 {/* 날짜 열 */}
@@ -1125,7 +1128,7 @@ export default function WorkoutLogManager({
               onClick={cancelAddingDate}
               className="h-9 text-sm"
             >
-              취소
+              {t('master.close')}
             </button>
           )}
 
@@ -1135,7 +1138,7 @@ export default function WorkoutLogManager({
             variant="darkGray" 
             className="text-sm"
           >
-            저장
+            {t('master.save')}
           </Button>
           {/* <button 
             onClick={saveAllChanges} 

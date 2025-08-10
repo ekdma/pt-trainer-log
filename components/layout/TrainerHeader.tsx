@@ -4,6 +4,7 @@ import Link from 'next/link'
 import { useEffect, useState, useRef } from 'react'
 import { usePathname } from 'next/navigation'
 import { Menu, X } from 'lucide-react' // 아이콘 사용
+import LanguageToggle from '@/components/LanguageToggle'  // 추가
 
 export default function Header() {
   const [memberName, setMemberName] = useState<string | null>(null)
@@ -66,15 +67,7 @@ export default function Header() {
           )}
         </Link>
 
-        {/* Mobile Hamburger Button */}
-        <button
-          className="sm:hidden p-2"
-          onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
-        >
-          {mobileMenuOpen ? <X size={24} /> : <Menu size={24} />}
-        </button>
-
-        {/* Desktop Nav */}
+        {/* Desktop Nav + Language Toggle */}
         <nav className="hidden sm:flex gap-2 items-center text-sm text-gray-700">
           {/* 회원 드롭다운 */}
           <div className="relative" ref={dropdownRef}>
@@ -126,7 +119,23 @@ export default function Header() {
               </Link>
             )
           })}
+
+          {/* Language Toggle 추가 */}
+          <div className="ml-4">
+            <LanguageToggle />
+          </div>
         </nav>
+
+        {/* Mobile Hamburger Button + Language Toggle */}
+        <div className="sm:hidden flex items-center gap-2">
+          <LanguageToggle />
+          <button
+            className="p-2"
+            onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
+          >
+            {mobileMenuOpen ? <X size={24} /> : <Menu size={24} />}
+          </button>
+        </div>
       </div>
 
       {/* Mobile Nav */}
@@ -187,7 +196,6 @@ export default function Header() {
           </div>
         </div>
       )}
-
     </header>
   )
 }

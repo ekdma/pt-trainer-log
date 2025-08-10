@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from 'react'
 import { getSupabaseClient } from '@/lib/supabase'
+import { useLanguage } from '@/context/LanguageContext'
 
 interface DietGoal {
   meals_per_day: number
@@ -43,6 +44,11 @@ export default function MemberGoalsPart() {
   const [templates, setTemplates] = useState<HashtagTemplate[]>([])
   const latestGoals: MemberGoals = {}
   const [hashtagCounts, setHashtagCounts] = useState<Record<string, number>>({})
+
+  const [latestMuscleMass, setLatestMuscleMass] = useState<number | null>(null)
+  const [latestBodyFatMass, setLatestBodyFatMass] = useState<number | null>(null)
+
+  const { t } = useLanguage()  // 번역 함수 가져오기
 
   const fetchGoals = async () => {
     const raw = localStorage.getItem('litpt_member')
@@ -113,15 +119,41 @@ export default function MemberGoalsPart() {
     setHashtagCounts(counts)
   }
 
+  const fetchLatestBodyMetrics = async (memberId: string) => {
+    const { data, error } = await supabase
+      .from('health_metrics')
+      .select('metric_type, metric_value, measure_date')
+      .eq('member_id', memberId)
+      .in('metric_type', ['Skeletal Muscle Mass', 'Body Fat Mass'])
+      .order('measure_date', { ascending: false })
+
+    if (error || !data) return
+
+    const latestByType = data.reduce((acc, cur) => {
+      if (!acc[cur.metric_type]) {
+        acc[cur.metric_type] = cur
+      }
+      return acc
+    }, {} as Record<string, typeof data[0]>)
+
+    setLatestMuscleMass(latestByType['Skeletal Muscle Mass']?.metric_value ?? null)
+    setLatestBodyFatMass(latestByType['Body Fat Mass']?.metric_value ?? null)
+  }
+
   useEffect(() => {
+    const raw = localStorage.getItem('litpt_member')
+    const member = raw ? JSON.parse(raw) : null
+    if (!member) return
+
     fetchGoals()
     fetchTemplates()
+    fetchLatestBodyMetrics(member.member_id)
 
-    // 페이지가 다시 포커스될 때 목표 다시 불러오기
     const handleVisibility = () => {
       if (document.visibilityState === 'visible') {
         fetchGoals()
         fetchTemplates()
+        fetchLatestBodyMetrics(member.member_id)
       }
     }
 
@@ -144,7 +176,9 @@ export default function MemberGoalsPart() {
   
     return (
       <div className="mt-4 border-t pt-3">
-        <div className="text-sm text-gray-500 mb-2">📌 해시태그 목표</div>
+        <div className="text-sm text-gray-500 mb-2">
+          📌 {t('my.hashtagGoals')}
+        </div>
         <div className="flex flex-col gap-2">
           {goals.diet.hashtags.map((tag: string) => {
             const template = templates.find(t => t.hashtag_content === tag)
@@ -155,9 +189,9 @@ export default function MemberGoalsPart() {
                 </div>
                 <div className="text-xs mt-2 text-rose-600 whitespace-pre-line bg-rose-50 p-2 rounded">
                   {hashtagCounts[tag] != null ? (
-                    <div>💬 {`${tag}은 최근 7일 동안 ${hashtagCounts[tag]}번 챙겼어요!`}</div>
+                    <div>💬 {`${tag}${t('my.hashtagGoals_1')} ${hashtagCounts[tag]}${t('my.hashtagGoals_2')}`}</div>
                   ) : (
-                    <div>💬 로딩 중...</div>
+                    <div>💬 {t('master.loading')}</div>
                   )}
                 </div>
               </div>
@@ -176,12 +210,22 @@ export default function MemberGoalsPart() {
         {goals.diet && (
           <div className="bg-white rounded-2xl shadow p-4 border">
             <div className="flex items-center justify-between mb-2">
-              <span className="text-lg font-semibold text-rose-600">🥗 식단 목표</span>
+              <span className="text-lg font-semibold text-rose-600">
+                🥗 {t('my.dietGoals')}
+              </span>
             </div>
             <ul className="text-sm text-gray-700 list-disc pl-5 space-y-1">
-              <li>하루 <span className="font-medium">{goals.diet.meals_per_day}</span>끼 챙겨먹기</li>
-              <li><span className="font-medium">{goals.diet.important_meal}</span> 챙겨먹기</li>
-              <li><span className="font-medium">{goals.diet.finish_by_hour}</span>시 이전에 식사 종료</li>
+              <li>
+                {t('my.dietGoals_1')} <span className="font-medium">{goals.diet.meals_per_day}</span>{t('my.dietGoals_2')}
+              </li>
+              <li>
+                {t('my.dietGoals_3')}
+                <span className="font-medium">{t(`master.${goals.diet.important_meal}`)}</span>
+                {t('my.dietGoals_4')}
+              </li>
+              <li>
+                {t('my.dietGoals_5')}<span className="font-medium">{goals.diet.finish_by_hour}</span>{t('my.dietGoals_6')}
+              </li>
               {goals.diet.custom && <li>{goals.diet.custom}</li>}
             </ul>
             {renderHashtags()}
@@ -191,26 +235,69 @@ export default function MemberGoalsPart() {
         {/* 수분 섭취 */}
         {goals.hydration && (
           <div className="bg-white rounded-2xl shadow p-4 border">
-            <div className="text-lg font-semibold text-sky-600 mb-2">💧 수분 섭취</div>
-            <p className="text-sm text-gray-700">하루 <span className="font-medium">{goals.hydration.cups_per_day}</span>잔 마시기 (500ml 기준)</p>
+            <div className="text-lg font-semibold text-sky-600 mb-2">
+              💧 {t('my.waterIntakeGoal')}
+            </div>
+            <p className="text-sm text-gray-700">{t('my.waterIntakeGoal_1')} <span className="font-medium">{goals.hydration.cups_per_day}</span>{t('my.waterIntakeGoal_2')}</p>
           </div>
         )}
 
         {/* 수면 패턴 */}
         {goals.sleep && (
           <div className="bg-white rounded-2xl shadow p-4 border">
-            <div className="text-lg font-semibold text-purple-600 mb-2">🛌 수면 패턴</div>
-            <p className="text-sm text-gray-700">하루 <span className="font-medium">{goals.sleep.hours_per_day}</span>시간 수면하기</p>
+            <div className="text-lg font-semibold text-purple-600 mb-2">
+              🛌 {t('my.sleepGoal')}
+            </div>
+            <p className="text-sm text-gray-700">{t('my.sleepGoal_1')} <span className="font-medium">{goals.sleep.hours_per_day}</span>{t('my.sleepGoal_2')}</p>
           </div>
         )}
 
         {/* 체성분 목표 */}
         {goals.body && (
           <div className="bg-white rounded-2xl shadow p-4 border">
-            <div className="text-lg font-semibold text-emerald-600 mb-2">📈 체성분 목표</div>
-            <ul className="text-sm text-gray-700 list-disc pl-5 space-y-1">
-              <li>매달 근육량 <span className="font-medium">{goals.body.muscle_gain_kg}</span>kg 증량</li>
-              <li>매달 체지방량 <span className="font-medium">{goals.body.fat_loss_kg}</span>kg 감량</li>
+            <div className="text-lg font-semibold text-emerald-600 mb-2">
+              📈 {t('my.bodycompositionGoal')}
+            </div>
+            <ul className="text-sm text-gray-700 list-disc pl-5 space-y-3">
+              <li>
+                <span className="font-medium  ">
+                  {t('my.bodycompositionGoal_1')}
+                  {goals.body.muscle_gain_kg}kg
+                  {t('my.bodycompositionGoal_2')}
+                </span>
+                <div className="mt-1 ml-1 text-sm text-gray-500">
+                  📊 
+                  <span className="font-medium text-gray-700">
+                    {latestMuscleMass !== null ? ` ${latestMuscleMass}kg` : t('master.noData')}
+                  </span>
+                  {goals.body.muscle_gain_kg > 0 && latestMuscleMass !== null && (
+                    <span className="font-medium text-gray-700"> 
+                      → 
+                      {(latestMuscleMass + goals.body.muscle_gain_kg)}kg
+                    </span>
+                  )}
+                </div>
+              </li>
+
+              <li>
+                <span className="font-medium ">
+                  {t('my.bodycompositionGoal_3')}
+                  {goals.body.fat_loss_kg}kg
+                  {t('my.bodycompositionGoal_4')}
+                </span>
+                <div className="mt-1 ml-1 text-sm text-gray-500">
+                  📊 
+                  <span className="font-medium text-gray-700">
+                    {latestBodyFatMass !== null ? ` ${latestBodyFatMass}kg` : t('master.noData')}
+                  </span>
+                  {goals.body.fat_loss_kg > 0 && latestBodyFatMass !== null && (
+                    <span className="font-medium text-gray-700"> 
+                      → 
+                      {(latestBodyFatMass - goals.body.fat_loss_kg)}kg
+                    </span>
+                  )}
+                </div>
+              </li>
             </ul>
           </div>
         )}

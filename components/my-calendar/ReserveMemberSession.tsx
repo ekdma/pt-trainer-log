@@ -7,7 +7,9 @@ import { getSupabaseClient } from '@/lib/supabase'
 import { toast } from 'sonner'
 import { format, isWithinInterval } from 'date-fns'
 import { addDays, parse, isAfter } from 'date-fns'
-import DeleteSession from './DeleteSession' // 상대 경로는 위치에 맞게 조절하세요
+import DeleteSession from './DeleteSession' 
+import { useLanguage } from '@/context/LanguageContext'
+
 
 function getSessionDateTime(dateStr: string, timeStr: string) {
   // dateStr: 'yyyy-MM-dd', timeStr: 'HH:mm'
@@ -68,6 +70,7 @@ export default function ReserveMemberSession({
   const [myPendingSessions, setMyPendingSessions] = useState<PendingSession[]>([])
   
   const supabase = getSupabaseClient()
+  const { t } = useLanguage()  // 번역 함수 가져오기
 
   // 시간 초기화
   useEffect(() => {
@@ -365,12 +368,14 @@ export default function ReserveMemberSession({
   return (
     <div className="space-y-6 bg-white p-6 rounded-lg shadow-md max-w-md mx-auto">
       <p className="text-gray-800 font-semibold text-lg">
-        담당 트레이너: <span className="font-bold">{trainerName}</span>
+        {t('my_calendar.assignedCoach')} <span className="font-bold">{trainerName}</span>
       </p>
       <hr className="border-t border-gray-300" />
 
       <div>
-        <p className="text-gray-800 font-bold text-sm mb-2">남은 세션 횟수</p>
+        <p className="text-gray-800 font-bold text-sm mb-2">
+        {t('my_calendar.remainingSessions')}
+        </p>
         <div className="grid grid-cols-1 gap-2 text-sm">
           {Object.entries(remainingSessions).map(([type, data]) => {
             if (data && data.total > 0) {
@@ -382,9 +387,12 @@ export default function ReserveMemberSession({
               const c = colors[type as keyof typeof colors]
               return (
                 <div key={type} className={`rounded-md border ${c.border} ${c.bg} p-3 ${c.text}`}>
-                  <span className="font-semibold">{type} 세션:</span>{' '}
-                  {data.total - data.remain}/{data.total}회 사용
-                  <span className={`ml-2 text-xs ${c.sub}`}>(남은 {data.remain}회)</span>
+                  <span className="font-semibold">
+                    {type} {t('my_calendar.remainingSessions_1')}:
+                  </span>{' '}
+                  {data.total - data.remain}/{data.total} {t('my_calendar.remainingSessions_2')}{' '}
+                  <span className={`ml-2 text-xs ${c.sub}`}>
+                    ({t('my_calendar.remainingSessions_3')}{data.remain} {t('my_calendar.remainingSessions_4')})</span>
                 </div>
               )
             }
@@ -395,7 +403,9 @@ export default function ReserveMemberSession({
       </div>
       <hr className="border-t border-gray-300" />
 
-      <p className="block mb-2 text-gray-800 font-semibold text-sm">시간 선택</p>
+      <p className="block mb-2 text-gray-800 font-semibold text-sm">
+        {t('my_calendar.selectTime')}
+      </p>
       <div className="grid grid-cols-3 sm:grid-cols-4 gap-3">
         {availableTimes.map((time) => {
           const isSelected = selectedHour === time
@@ -514,7 +524,9 @@ export default function ReserveMemberSession({
       <hr className="border-t border-gray-300" />
       {sessionOptions.length > 0 && (
         <>
-          <p className="mb-2 block text-gray-800 font-semibold text-sm">수업 종류</p>
+          <p className="mb-2 block text-gray-800 font-semibold text-sm">
+            {t('my_calendar.sessionType')}
+          </p>
           <RadioGroup
             value={selectedSessionType}
             onValueChange={setSelectedSessionType}
@@ -569,7 +581,8 @@ export default function ReserveMemberSession({
         <div className="fixed inset-0 bg-black/30 flex items-center justify-center z-50">
           <div className="bg-white p-6 rounded-lg shadow-xl space-y-4 max-w-xs text-center">
             <p className="text-gray-800 font-medium text-sm">
-              이 세션을 취소하시겠습니까?
+              {/* 이 세션을 취소하시겠습니까? */}
+              {t('my_calendar.cancelApplySessionQ')}
             </p>
             <div className="flex justify-center gap-3 mt-4">
               <Button 
@@ -577,7 +590,8 @@ export default function ReserveMemberSession({
                 className="text-sm"
                 onClick={() => setConfirmOnlyTime(null)}
               >
-                닫기
+                {/* 닫기 */}
+                {t('master.no')}
               </Button>
               <Button
                 onClick={async () => {
@@ -587,7 +601,8 @@ export default function ReserveMemberSession({
                 variant="darkGray" 
                 className="text-sm"
               >
-                네. 취소합니다.
+                {/* 네. 취소합니다. */}
+                {t('master.yesCancel')}
               </Button>
             </div>
           </div>
@@ -601,7 +616,7 @@ export default function ReserveMemberSession({
         onClick={handleReserve}
         disabled={!selectedHour || !selectedSessionType}
       >
-        수업 신청하기
+        {t('my_calendar.bookClass')}
       </Button>
     </div>
   )

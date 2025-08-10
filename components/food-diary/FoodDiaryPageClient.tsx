@@ -6,6 +6,7 @@ import { useAuthGuard } from '@/hooks/useAuthGuard'
 import FoodDiaryMemberView from './FoodDiaryMemberView'
 import FoodDiaryTrainerView from './FoodDiaryTrainerView'
 import type { Member } from '@/components/members/types'
+import { useLanguage } from '@/context/LanguageContext'
 
 type Role = 'member' | 'trainer'
 
@@ -28,6 +29,7 @@ export default function FoodDiaryPageClient() {
   const memberNameFromQuery = searchParams.get('memberName') || ''
 
   useAuthGuard()
+  const { t } = useLanguage()  // 번역 함수 가져오기
 
   useEffect(() => {
     const raw = localStorage.getItem('litpt_member')
@@ -51,7 +53,7 @@ export default function FoodDiaryPageClient() {
     }
   }, [router])
 
-  if (loading) return <div className="p-6">로딩 중...</div>
+  if (loading) return <div className="p-6">{t('master.loading')}</div>
   if (!user) return <div className="p-6">사용자 정보를 불러올 수 없습니다.</div>
 
   if (user.role === 'member') {

@@ -10,6 +10,7 @@ import AddHealthMetric from '@/components/health-metric/AddHealthMetric'
 import { Button } from '@/components/ui/button'
 import type { Member, HealthMetric, HealthMetricType } from '@/components/members/types'
 import { toast } from 'sonner'
+import { useLanguage } from '@/context/LanguageContext'
 
 interface HealthMetricManagerProps {
   member: Member
@@ -73,6 +74,8 @@ export default function HealthMetricManager({
   const dayRef = useRef<HTMLInputElement>(null);
   const dateInputRef = useRef<HTMLInputElement | null>(null);
   const [openAddMetric, setOpenAddMetric] = React.useState(false)
+
+  const { t } = useLanguage()  // 번역 함수 가져오기
 
   // useEffect(() => {
   //   fetchLogs();
@@ -497,10 +500,10 @@ export default function HealthMetricManager({
               <thead className="bg-gray-100 text-gray-700 select-none z-10">
                 <tr>
                   <th className="border px-2 py-2 text-center text-xs sm:text-sm font-semibold w-[120px] md:sticky top-0 md:left-0 bg-gray-200 md:z-30">
-                    TARGET
+                    Target
                   </th>
                   <th className="border px-2 py-2 text-center text-xs sm:text-sm font-semibold w-[150px] md:sticky top-0 md:left-[120px] bg-gray-200 md:z-20">
-                    HEALTH METRIC
+                    Health metric
                   </th>
 
                   {/* 날짜 열 */}
@@ -738,7 +741,7 @@ export default function HealthMetricManager({
                 onClick={cancelAddingDate}
                 className="h-9 text-sm"
               >
-                취소
+                {t('master.close')}
               </button>
             )}
 
@@ -749,7 +752,7 @@ export default function HealthMetricManager({
               variant="darkGray" 
               className="text-sm"
             >
-              저장
+              {t('master.save')}
             </Button>
             {/* <button 
               onClick={saveAllChanges} 

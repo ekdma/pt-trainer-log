@@ -8,6 +8,7 @@ import dayjs from 'dayjs'
 import { ChevronLeftIcon, ChevronRightIcon, ChevronDoubleLeftIcon, ChevronDoubleRightIcon } from '@heroicons/react/24/solid'
 import { Eye, EyeClosedIcon } from 'lucide-react';
 import { format } from 'date-fns-tz'
+import { useLanguage } from '@/context/LanguageContext'
 
 type SessionDates = {
   pt: string[]
@@ -28,6 +29,8 @@ export default function MemberCalendar() {
   const [showSessionList, setShowSessionList] = useState(true)
   const supabase = getSupabaseClient()
   const [member, setMember] = useState<Member | null>(null)
+
+  const { t } = useLanguage()  // 번역 함수 가져오기
 
   useEffect(() => {
     const raw = localStorage.getItem('litpt_member')
@@ -92,12 +95,12 @@ export default function MemberCalendar() {
         {showSessionList ? (
             <>
             <EyeClosedIcon className="w-4 h-4" />
-            세션 닫기
+            {t('my.sessionClose')}
             </>
         ) : (
             <>
             <Eye className="w-4 h-4" />
-            세션 보기
+            {t('my.sessionView')}
             </>
         )}
       </button>

@@ -21,9 +21,12 @@ import {
 } from '@/components/ui/toggle-group'
 import { motion } from 'framer-motion'
 import MemberSelectListbox from '@/components/ui/MemberSelectListbox'  
+import { useLanguage } from '@/context/LanguageContext'
 
 export default function MembersPage() {
   useAuthGuard()
+  const { t } = useLanguage()  // 번역 함수 가져오기
+
   const supabase = getSupabaseClient()
 
   const [userRole, setUserRole] = useState<'member' | 'trainer' | null>(null)
@@ -253,7 +256,7 @@ export default function MembersPage() {
             <div className="mb-6 flex flex-col sm:flex-row sm:items-center gap-4">
               {/* 1. 운동기록관리 */}
               <h2 className="text-lg font-semibold text-gray-800 whitespace-nowrap">
-                운동기록 관리
+                {t('workout.workoutTitle')}
               </h2>
 
               {/* 2. level + 즐겨찾기 버튼 */}
@@ -284,12 +287,12 @@ export default function MembersPage() {
                   {showFavoritesOnly ? (
                     <>
                       <FaStar className="text-yellow-300" />
-                      즐겨찾기
+                      {t('workout.favorites')}
                     </>
                   ) : (
                     <>
                       <FaRegStar className="text-gray-500" />
-                      전체운동
+                      {t('workout.allWorkouts')}
                     </>
                   )}
                 </button>
@@ -373,7 +376,7 @@ export default function MembersPage() {
                 onClick={() => setActiveTab('records')}
                 className='text-xs sm:text-sm'
               >
-                기록지
+                {t('workout.log')}
               </Button>
 
               <Button
@@ -382,7 +385,7 @@ export default function MembersPage() {
                 onClick={() => setActiveTab('graphs')}
                 className='text-xs sm:text-sm'
               >
-                그래프
+                {t('workout.graph')}
               </Button>
 
               {userRole === 'trainer' && (

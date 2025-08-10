@@ -1,0 +1,112 @@
+{
+    "master": {
+      "loading": "Loading ...",
+      "close": "Close",
+      "yesCancel": "Yes, Cancel",
+      "no": "No",
+      "requested": "Requested",
+      "confirmed": "Confirmed",
+      "canceled": "Canceled",
+      "previous": "Prev",
+      "next": "Next",
+      "save": "Save",
+      "breakfast": "Breakfast",
+      "lunch": "Lunch",
+      "dinner": "Dinner",
+      "noData": "No Data"
+    },
+    "header": {
+      "schedule": "Schedule",
+      "diet": "Diet",
+      "workout": "Workout",
+      "health": "Health",
+      "setGoals": "Set Goals"
+    },
+    "app": {
+      "title": "Personal Training Log",
+      "description": "Track and visualize your fitness data\nwith LiT PT for a healthier lifestyle 🙌"
+    },
+    "login": {
+      "title": "Log In",
+      "name": "Name",
+      "password": "Last 4 Digits Of Phone Number",
+      "adminCode": "Admin Code",
+      "member": "Member",
+      "coach": "Coach",
+      "button": "Log In",
+      "noMatch": "No matching member found 😥",
+      "wrongPassword": "Incorrect password.",
+      "wrongAdmin": "Please enter the correct admin code 😁"
+    },
+    "my": {
+      "fastingWeightData": "Fasting Weight",
+      "fastingWeightData_1": "No data available",
+      "goals": "Goals",
+      "schedule": "Schedule",
+      "dietGoals": "Diet Goals",
+      "waterIntakeGoal": "Water Intake Goal",
+      "sleepGoal": "Sleep Goal",
+      "bodycompositionGoal": "Body Composition Goal",
+      "dietGoals_1": "Have",
+      "dietGoals_2": " meals per day",
+      "dietGoals_3": "Eat ",
+      "dietGoals_4": " ",
+      "dietGoals_5": "Finish eating before ",
+      "dietGoals_6": " ",
+      "waterIntakeGoal_1": "Drink",
+      "waterIntakeGoal_2": " tumbler(s) per day (500ml each)",
+      "sleepGoal_1": "Sleep for ",
+      "sleepGoal_2": " hours per day",
+      "bodycompositionGoal_1": "Muscle mass: +",
+      "bodycompositionGoal_2": " ",
+      "bodycompositionGoal_3": "Body fat: -",
+      "bodycompositionGoal_4": " ",
+      "hashtagGoals": "Hashtag Goals",
+      "hashtagGoals_1": " ",
+      "hashtagGoals_2": " tracked in the past 7 days!",
+      "sessionClose": "Close my session",
+      "sessionView": "View my session"
+    },
+    "my_calendar": {
+      "myCalendar": "My Schedule",
+      "viewApplication": "View My Bookings",
+      "closeApplication": "Close My Bookings",
+      "assignedCoach": "My Coach: ",
+      "remainingSessions": "Remaining Sessions",
+      "remainingSessions_1": "Sessions",
+      "remainingSessions_2": "used",
+      "remainingSessions_3": " ",
+      "remainingSessions_4": " remaing",
+      "selectTime": "Select Time",
+      "sessionType": "Class Type",
+      "bookClass": "Book Class",
+      "cancelSessionQ": "Please enter the reason for canceling your session",
+      "cancelApplySessionQ": "Do you want to cancel this session?",
+      "sessionList": "Booking History",
+      "seletedDate": "Seleted Date",
+      "allDates": "All Dates",
+      "seletedDateNoClass": "No classes on the selected date",
+      "noClass": "No classes registered"
+    },
+    "food_diary": {
+      "sleepHours": "Hours Slept",
+      "waterIntake": "Water Intake (tumblers)",
+      "writeFood": " — Log food"
+    },
+    "workout": {
+      "workoutTitle": "Workout Log",
+      "allWorkouts": "All Workouts",
+      "favorites": "Favorites",
+      "log": "Log",
+      "graph": "Graph"
+    },
+    "health": {
+      "healthTitle": "Health Log"
+    },
+    "goals": {
+      "goalsTitle": "Set Goals",
+      "mealPattern": "Meal Plan",
+      "personalGoals": "My Diet Goal",
+      "personalGoalsEG": "e.g. Eat 30g protein per meal"
+    }
+  }
