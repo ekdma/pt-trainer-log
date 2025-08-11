@@ -30,7 +30,7 @@ export default function MemberCalendar() {
   const supabase = getSupabaseClient()
   const [member, setMember] = useState<Member | null>(null)
   const [packagePeriod, setPackagePeriod] = useState<{ start: string; end: string } | null>(null)
-  const [selectedDate, setSelectedDate] = useState<Date>(new Date())   
+  // const [selectedDate, setSelectedDate] = useState<Date>(new Date())   
 
   const renderedSessionCount =
     (sessionDates.pt.length > 0 ? 1 : 0) +
