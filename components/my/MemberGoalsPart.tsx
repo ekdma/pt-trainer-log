@@ -3,6 +3,7 @@
 import { useEffect, useState } from 'react'
 import { getSupabaseClient } from '@/lib/supabase'
 import { useLanguage } from '@/context/LanguageContext'
+import { subDays } from 'date-fns'
 
 interface DietGoal {
   meals_per_day: number
@@ -47,6 +48,9 @@ export default function MemberGoalsPart() {
 
   const [latestMuscleMass, setLatestMuscleMass] = useState<number | null>(null)
   const [latestBodyFatMass, setLatestBodyFatMass] = useState<number | null>(null)
+
+  const [avgSleepHours, setAvgSleepHours] = useState<number | null>(null)
+  const [avgWaterIntake, setAvgWaterIntake] = useState<number | null>(null)
 
   const { t } = useLanguage()  // 번역 함수 가져오기
 
@@ -140,6 +144,33 @@ export default function MemberGoalsPart() {
     setLatestBodyFatMass(latestByType['Body Fat Mass']?.metric_value ?? null)
   }
 
+  const fetchAvgHealthMetrics = async (memberId: number) => {
+    const fromDate = subDays(new Date(), 6) // 오늘 포함 최근 7일 (0~6일 전)
+
+    const { data, error } = await supabase
+      .from('health_metrics')
+      .select('metric_type, metric_value')
+      .eq('member_id', memberId)
+      .in('metric_type', ['Sleep Hours', 'Water'])
+      .gte('measure_date', fromDate.toISOString().substring(0,10)) // 날짜 문자열만 비교
+      .lte('measure_date', new Date().toISOString().substring(0,10))
+
+    if (error || !data) {
+      console.error('평균 건강 지표 조회 오류:', error)
+      setAvgSleepHours(null)
+      setAvgWaterIntake(null)
+      return
+    }
+
+    const sleepValues = data.filter(d => d.metric_type === 'Sleep Hours').map(d => Number(d.metric_value))
+    const waterValues = data.filter(d => d.metric_type === 'Water').map(d => Number(d.metric_value))
+
+    const avg = (arr: number[]) => arr.length ? arr.reduce((a,b) => a+b, 0) / arr.length : null
+
+    setAvgSleepHours(avg(sleepValues))
+    setAvgWaterIntake(avg(waterValues))
+  }
+
   useEffect(() => {
     const raw = localStorage.getItem('litpt_member')
     const member = raw ? JSON.parse(raw) : null
@@ -148,12 +179,14 @@ export default function MemberGoalsPart() {
     fetchGoals()
     fetchTemplates()
     fetchLatestBodyMetrics(member.member_id)
+    fetchAvgHealthMetrics(member.member_id)
 
     const handleVisibility = () => {
       if (document.visibilityState === 'visible') {
         fetchGoals()
         fetchTemplates()
         fetchLatestBodyMetrics(member.member_id)
+        fetchAvgHealthMetrics(member.member_id)
       }
     }
 
@@ -238,7 +271,14 @@ export default function MemberGoalsPart() {
             <div className="text-lg font-semibold text-sky-600 mb-2">
               💧 {t('my.waterIntakeGoal')}
             </div>
-            <p className="text-sm text-gray-700">{t('my.waterIntakeGoal_1')} <span className="font-medium">{goals.hydration.cups_per_day}</span>{t('my.waterIntakeGoal_2')}</p>
+            <p className="text-sm text-gray-700">
+              {t('my.waterIntakeGoal_1')} <span className="font-medium">{goals.hydration.cups_per_day}</span>{t('my.waterIntakeGoal_2')}
+            </p>
+            {avgWaterIntake !== null && (
+              <div className="text-xs mt-2 text-rose-600 whitespace-pre-line bg-rose-50 p-2 rounded">
+                💬 {t('my.waterIntakeGoal_3')}<span className="font-semibold">{avgWaterIntake.toFixed(1)}</span> {t('my.waterIntakeGoal_4')}
+              </div>
+            )}
           </div>
         )}
 
@@ -248,9 +288,17 @@ export default function MemberGoalsPart() {
             <div className="text-lg font-semibold text-purple-600 mb-2">
               🛌 {t('my.sleepGoal')}
             </div>
-            <p className="text-sm text-gray-700">{t('my.sleepGoal_1')} <span className="font-medium">{goals.sleep.hours_per_day}</span>{t('my.sleepGoal_2')}</p>
+            <p className="text-sm text-gray-700">
+              {t('my.sleepGoal_1')} <span className="font-medium">{goals.sleep.hours_per_day}</span>{t('my.sleepGoal_2')}
+            </p>
+            {avgSleepHours !== null && (
+              <div className="text-xs mt-2 text-rose-600 whitespace-pre-line bg-rose-50 p-2 rounded">
+                💬 {t('my.sleepGoal_3')} <span className="font-semibold">{avgSleepHours.toFixed(1)}</span> {t('my.sleepGoal_4')}
+              </div>
+            )}
           </div>
         )}
+
 
         {/* 체성분 목표 */}
         {goals.body && (
@@ -258,49 +306,55 @@ export default function MemberGoalsPart() {
             <div className="text-lg font-semibold text-emerald-600 mb-2">
               📈 {t('my.bodycompositionGoal')}
             </div>
-            <ul className="text-sm text-gray-700 list-disc pl-5 space-y-3">
-              <li>
-                <span className="font-medium  ">
+
+            {/* 골격근량 */}
+            <div className="p-3 rounded-xl border border-gray-100 bg-gray-50 space-y-2">
+              <div className="flex items-center gap-2">
+                <span className="text-gray-400 text-lg">•</span>
+                <span className="text-sm font-medium">
                   {t('my.bodycompositionGoal_1')}
-                  {goals.body.muscle_gain_kg}kg
+                  <span className="text-emerald-600 font-semibold"> {goals.body.muscle_gain_kg}kg </span>
                   {t('my.bodycompositionGoal_2')}
                 </span>
-                <div className="mt-1 ml-1 text-sm text-gray-500">
-                  📊 
-                  <span className="font-medium text-gray-700">
-                    {latestMuscleMass !== null ? ` ${latestMuscleMass}kg` : t('master.noData')}
+              </div>
+              <div className="ml-6 text-sm text-gray-500 flex items-center gap-2">
+                📊
+                <span className="font-medium text-gray-700">
+                  {latestMuscleMass !== null ? `${latestMuscleMass}kg` : t('master.noData')}
+                </span>
+                {goals.body.muscle_gain_kg > 0 && latestMuscleMass !== null && (
+                  <span className="font-semibold text-emerald-600">
+                    → {(latestMuscleMass + goals.body.muscle_gain_kg)}kg
                   </span>
-                  {goals.body.muscle_gain_kg > 0 && latestMuscleMass !== null && (
-                    <span className="font-medium text-gray-700"> 
-                      → 
-                      {(latestMuscleMass + goals.body.muscle_gain_kg)}kg
-                    </span>
-                  )}
-                </div>
-              </li>
+                )}
+              </div>
+            </div>
 
-              <li>
-                <span className="font-medium ">
+            {/* 체지방량 */}
+            <div className="p-3 rounded-xl border border-gray-100 bg-gray-50 space-y-2">
+              <div className="flex items-center gap-2">
+                <span className="text-gray-400 text-lg">•</span>
+                <span className="text-sm font-medium">
                   {t('my.bodycompositionGoal_3')}
-                  {goals.body.fat_loss_kg}kg
+                  <span className="text-rose-600 font-semibold"> {goals.body.fat_loss_kg}kg </span>
                   {t('my.bodycompositionGoal_4')}
                 </span>
-                <div className="mt-1 ml-1 text-sm text-gray-500">
-                  📊 
-                  <span className="font-medium text-gray-700">
-                    {latestBodyFatMass !== null ? ` ${latestBodyFatMass}kg` : t('master.noData')}
+              </div>
+              <div className="ml-6 text-sm text-gray-500 flex items-center gap-2">
+                📊
+                <span className="font-medium text-gray-700">
+                  {latestBodyFatMass !== null ? `${latestBodyFatMass}kg` : t('master.noData')}
+                </span>
+                {goals.body.fat_loss_kg > 0 && latestBodyFatMass !== null && (
+                  <span className="font-semibold text-rose-600">
+                    → {(latestBodyFatMass - goals.body.fat_loss_kg)}kg
                   </span>
-                  {goals.body.fat_loss_kg > 0 && latestBodyFatMass !== null && (
-                    <span className="font-medium text-gray-700"> 
-                      → 
-                      {(latestBodyFatMass - goals.body.fat_loss_kg)}kg
-                    </span>
-                  )}
-                </div>
-              </li>
-            </ul>
+                )}
+              </div>
+            </div>
           </div>
         )}
+
       </section>
     </>
   )

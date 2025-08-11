@@ -254,7 +254,7 @@ export default function HealthMetricManager({
     // ✅ 날짜 중복 검사
     if (addingDate && dates.includes(addingDate)) {
       // alert(`이미 존재하는 날짜입니다: ${dayjs(addingDate).format('YYYY-MM-DD')} ☹`)
-      toast.warning(`이미 존재하는 날짜입니다: ${dayjs(addingDate).format('YYYY-MM-DD')} ☹`)
+      toast.warning(`${t('alert.workout_warning_1')} ${dayjs(addingDate).format('YYYY-MM-DD')} ☹`)
       return
     }
   
@@ -281,7 +281,7 @@ export default function HealthMetricManager({
     if (addingDate) {
       if (!isTrainer && !isDateWithinLast7Days(addingDate)) {
         // alert('7일 이내의 날짜만 추가할 수 있습니다 😥');
-        toast.warning('7일 이내의 날짜만 추가할 수 있습니다 😥');
+        toast.warning(t('alert.workout_warning_2'));
         return;
       }
 
@@ -326,10 +326,10 @@ export default function HealthMetricManager({
   
     if (updateErrors.length > 0) {
       // alert('일부 저장 실패: ' + updateErrors.join(', '))
-      toast.error('일부 저장 실패: ' + updateErrors.join(', '))
+      toast.error(t('alert.workout_error_1') + updateErrors.join(', '))
     } else {
       // alert('기록 수정을 완료하였습니다 😊')
-      toast.success('기록 수정을 완료하였습니다 😊')
+      toast.success(t('alert.workout_success_1'))
       setModifiedCells([])
       setAddingDate(null)
       setAddingRow(false)
@@ -340,7 +340,7 @@ export default function HealthMetricManager({
   const handleAddType = async () => {
     if (!newTarget || !newWorkout) {
       // alert('모든 필드를 입력해주세요 😎')
-      toast.warning('모든 필드를 입력해주세요 😎')
+      toast.warning(t('alert.workout_warning_3'))
       return
     }
   
@@ -567,7 +567,7 @@ export default function HealthMetricManager({
                               if (normalized) {
                                 if (!isTrainer && !isDateWithinLast7Days(normalized)) {
                                   // alert('7일 이내의 날짜만 추가할 수 있습니다 😥');
-                                  toast.warning('7일 이내의 날짜만 추가할 수 있습니다 😥');
+                                  toast.warning(t('alert.workout_warning_2'));
                                   return;
                                 }
                                 // if (dates.includes(normalized)) {
@@ -576,7 +576,7 @@ export default function HealthMetricManager({
                                 // }
                                 if (dates.some(date => dayjs(date).format('YYYY-MM-DD') === normalized)) {
                                   // alert(`이미 존재하는 날짜입니다: ${normalized} ☹`);
-                                  toast.warning(`이미 존재하는 날짜입니다: ${normalized} ☹`);
+                                  toast.warning(`${t('alert.workout_warning_1')} ${normalized} ☹`);
                                   return;
                                 }
                                 setAddingDate(normalized);

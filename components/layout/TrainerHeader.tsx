@@ -58,7 +58,7 @@ export default function Header() {
           href="/trainer"
           className="text-xl font-bold text-rose-600 flex items-center"
         >
-          <span>LiT</span>
+          <span style={({color: '#FF8000'})}>LiT</span>
           <span style={{ color: '#595959' }} className="ml-1">PT</span>
           {memberName && (
             <span className="text-base font-semibold text-gray-800 ml-3 whitespace-nowrap">

@@ -45,7 +45,7 @@ export default function EmptyStomachWeightChart() {
         .select('*')
         .eq('member_id', member.member_id)
         .eq('metric_target', 'Overall Fitness')
-        .eq('metric_type', 'Empty Stomach Weight')
+        .eq('metric_type', 'Fasting Weight Data')
         .order('measure_date', { ascending: true })
 
       if (error) {

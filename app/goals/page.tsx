@@ -303,9 +303,9 @@ export default function GoalsPage() {
 
     if (error) {
       console.error('저장 실패:', error.message)
-      toast.error('저장 중 오류가 발생했어요.')
+      toast.error(t('alert.goal_error'))
     } else {
-      toast.success('목표가 저장되었습니다!')
+      toast.error(t('alert.goal_save'))
     }
   }
 
@@ -565,97 +565,70 @@ export default function GoalsPage() {
                     </section>
 
                     {/* 체성분 목표 카드 */}
-                    <section className="bg-white rounded-2xl shadow-md p-6 border border-gray-200 hover:shadow-lg transition">
-                      <h3 className="text-lg font-semibold text-gray-600 mb-4 flex items-center gap-2">
+                    <section className="bg-white rounded-2xl shadow-md p-6 border border-gray-200 hover:shadow-lg transition space-y-2">
+                      <h3 className="text-lg font-semibold text-gray-600 flex items-center gap-2">
                         <span>📈</span> {t('my.bodycompositionGoal')}
                       </h3>
-                        
-                      <div className="flex items-center gap-2">
-                        <span className="text-gray-400 text-lg">•</span>
-                        <span className="text-sm">
-                          {t('my.bodycompositionGoal_1')}
-                        </span>
-                        <input
-                          type="number"
-                          value={muscleGain}
-                          onChange={(e) => setMuscleGain(Number(e.target.value))}
-                          min={0}
-                          className="border border-gray-300 px-1 py-1 rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-gray-400 no-spinner"
-                          style={{ width: '42px' }}
-                          placeholder="0"
-                        />
-                        <style jsx global>{`
-                          input[type=number].no-spinner::-webkit-inner-spin-button,
-                          input[type=number].no-spinner::-webkit-outer-spin-button {
-                            -webkit-appearance: none;
-                            margin: 0;
-                          }
-                          input[type=number].no-spinner {
-                            -moz-appearance: textfield;
-                          }
-                        `}</style>
-                        <span className="text-sm">
-                          kg {t('my.bodycompositionGoal_2')}
-                        </span>
-                      </div>
-                      <div className='text-sm text-gray-700 list-disc pl-5 space-y-3'>
-                        <div className="mt-1 ml-1 text-sm text-gray-500">
+
+                      {/* 골격근량 */}
+                      <div className="p-3 rounded-xl border border-gray-100 bg-gray-50 space-y-2">
+                        <div className="flex items-center gap-4">
+                          <span className="text-gray-400 text-lg">•</span>
+                          <span className="text-sm">{t('my.bodycompositionGoal_1')}</span>
+                          <input
+                            type="number"
+                            value={muscleGain}
+                            onChange={(e) => setMuscleGain(Number(e.target.value))}
+                            min={0}
+                            className="border border-gray-300 px-2 py-1 rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-emerald-400 no-spinner"
+                            style={{ width: '50px' }}
+                            placeholder="0"
+                          />
+                          <span className="text-sm">kg {t('my.bodycompositionGoal_2')}</span>
+                        </div>
+                        <div className="ml-6 text-sm text-gray-500 flex items-center gap-2">
                           📊
                           <span className="font-medium text-gray-700">
                             {latestMuscleMass !== null ? `${latestMuscleMass}kg` : `${t('master.noData')})`}
                           </span>
-                         {hasAnyGoals && latestMuscleMass !== null && (
-                            <span className="font-medium text-gray-700"> 
-                              → 
-                              {(latestMuscleMass + muscleGain)}kg
+                          {hasAnyGoals && latestMuscleMass !== null && (
+                            <span className="font-semibold text-emerald-600">
+                              → {(latestMuscleMass + muscleGain)}kg
                             </span>
-                          )}  
+                          )}
                         </div>
                       </div>
 
-                      <div className="flex items-center gap-2">
-                        <span className="text-gray-400 text-lg">•</span>
-                        <span className="text-sm">
-                          {t('my.bodycompositionGoal_3')}
-                        </span>
-                        <input
-                          type="number"
-                          value={fatLoss}
-                          onChange={(e) => setFatLoss(Number(e.target.value))}
-                          min={0}
-                          className="border border-gray-300 px-1 py-1 rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-gray-400"
-                          style={{ width: '42px' }}
-                          placeholder="0"
-                        />
-                        <style jsx global>{`
-                          input[type=number].no-spinner::-webkit-inner-spin-button,
-                          input[type=number].no-spinner::-webkit-outer-spin-button {
-                            -webkit-appearance: none;
-                            margin: 0;
-                          }
-                          input[type=number].no-spinner {
-                            -moz-appearance: textfield;
-                          }
-                        `}</style>
-                        <span className="text-sm">
-                          kg {t('my.bodycompositionGoal_4')}
-                        </span>
-                      </div>
-                      <div className='text-sm text-gray-700 list-disc pl-5 space-y-3'>
-                        <div className="mt-1 ml-1 text-sm text-gray-500">
+                      {/* 체지방량 */}
+                      <div className="p-3 rounded-xl border border-gray-100 bg-gray-50 space-y-2">
+                        <div className="flex items-center gap-2">
+                          <span className="text-gray-400 text-lg">•</span>
+                          <span className="text-sm">{t('my.bodycompositionGoal_3')}</span>
+                          <input
+                            type="number"
+                            value={fatLoss}
+                            onChange={(e) => setFatLoss(Number(e.target.value))}
+                            min={0}
+                            className="border border-gray-300 px-2 py-1 rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-rose-400 no-spinner"
+                            style={{ width: '50px' }}
+                            placeholder="0"
+                          />
+                          <span className="text-sm">kg {t('my.bodycompositionGoal_4')}</span>
+                        </div>
+                        <div className="ml-6 text-sm text-gray-500 flex items-center gap-2">
                           📊
                           <span className="font-medium text-gray-700">
                             {latestBodyFatMass !== null ? `${latestBodyFatMass}kg` : `${t('master.noData')})`}
                           </span>
                           {hasAnyGoals && latestBodyFatMass !== null && (
-                            <span className="font-medium text-gray-700"> 
-                              → 
-                              {(latestBodyFatMass - fatLoss)}kg
+                            <span className="font-semibold text-rose-600">
+                              → {(latestBodyFatMass - fatLoss)}kg
                             </span>
                           )}
                         </div>
                       </div>
                     </section>
+
                   </div>
 
                   {/* 저장 버튼 */}
@@ -678,13 +651,13 @@ export default function GoalsPage() {
                 </>
               ) : (
                 <div className="text-gray-500 text-center text-sm space-y-4">
-                  <p>🎯 목표를 설정해주세요.</p>
+                  <p>🎯 {t('goals.pleaseSetGoal')}</p>
                   <Button 
                     onClick={setDefaultGoals} 
                     variant="outline" 
                     className="text-sm rounded-full px-5 py-2 border-gray-400"
                   >
-                    목표 설정
+                    {t('goals.goalSetting')}
                   </Button>
                 </div>
               )}

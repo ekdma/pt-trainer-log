@@ -15,6 +15,28 @@
       "dinner": "Dinner",
       "noData": "No Data"
     },
+    "alert": {
+      "goal_error": "An error occurred while saving",
+      "goal_save": "Goal has been saved!",
+      "diet_save": "Saved successfully 💪",
+      "diet_warning": "Only entries within the last 7 days are allowed",
+      "schedule_error_1": "No valid package found",
+      "schedule_error_2": "No package is available for the selected date",
+      "schedule_error_3": "An error occurred while fetching session information",
+      "schedule_error_4": "Please select all fields",
+      "schedule_error_5": "Cannot book any more sessions",
+      "schedule_error_6": "This time slot is already booked. Please select another time",
+      "schedule_error_7": "An error occurred during class registration",
+      "schedule_success_1": " class has been booked!",
+      "schedule_error_8": "Please enter a cancellation reason",
+      "schedule_error_9": "An error occurred while canceling the session",
+      "schedule_success_2": "The session has been canceled",
+      "workout_warning_1": "Date already exists: ",
+      "workout_warning_2": "You can only add dates within the last 7 days 😥",
+      "workout_warning_3": "Please fill in all fields 😎",
+      "workout_error_1": "Partial save failure: ",
+      "workout_success_1": "Record updated successfully 😊"
+    },
     "header": {
       "schedule": "Schedule",
       "diet": "Diet",
@@ -32,7 +54,7 @@
       "password": "Last 4 Digits Of Phone Number",
       "adminCode": "Admin Code",
       "member": "Member",
-      "coach": "Coach",
+      "coach": "Trainer",
       "button": "Log In",
       "noMatch": "No matching member found 😥",
       "wrongPassword": "Incorrect password.",
@@ -65,13 +87,17 @@
       "hashtagGoals_1": " ",
       "hashtagGoals_2": " tracked in the past 7 days!",
       "sessionClose": "Close my session",
-      "sessionView": "View my session"
+      "sessionView": "View my session",
+      "waterIntakeGoal_3": "Over the past 7 days, you drank an average of ",
+      "waterIntakeGoal_4": "cup(s)!",
+      "sleepGoal_3": "Over the past 7 days, you slept an average of ",
+      "sleepGoal_4": "hour(s)!"
     },
     "my_calendar": {
       "myCalendar": "My Schedule",
       "viewApplication": "View My Bookings",
       "closeApplication": "Close My Bookings",
-      "assignedCoach": "My Coach: ",
+      "assignedCoach": "My Trainer: ",
       "remainingSessions": "Remaining Sessions",
       "remainingSessions_1": "Sessions",
       "remainingSessions_2": "used",
@@ -107,6 +133,8 @@
       "goalsTitle": "Set Goals",
       "mealPattern": "Meal Plan",
       "personalGoals": "My Diet Goal",
-      "personalGoalsEG": "e.g. Eat 30g protein per meal"
+      "personalGoalsEG": "e.g. Eat 30g protein per meal",
+      "pleaseSetGoal": "Please set your goal",
+      "goalSetting": "Goal Setting"
     }
   }

@@ -169,7 +169,7 @@ export default function ReserveMemberSession({
       if (error || !packages || packages.length === 0) {
         setSessionOptions([])
         setRemainingSessions({})
-        toast.error('유효한 패키지를 찾을 수 없어요.')
+        toast.error(t('alert.schedule_error_1'))
         return
       }
   
@@ -180,7 +180,7 @@ export default function ReserveMemberSession({
       })
   
       if (!activePackage) {
-        toast.error('현재 선택한 날짜에 사용할 수 있는 패키지가 없어요.', { id: 'no-package-error' })
+        toast.error(t('alert.schedule_error_2'), { id: 'no-package-error' })
         setSessionOptions([])
         setRemainingSessions({})
         return
@@ -200,7 +200,7 @@ export default function ReserveMemberSession({
         .lte('workout_date', activePackage.end_date)
 
       if (sessionError) {
-        toast.error('세션 정보 조회 중 오류가 발생했어요.')
+        toast.error(t('alert.schedule_error_3'))
         console.error(sessionError)
         return
       }
@@ -259,14 +259,14 @@ export default function ReserveMemberSession({
   // 저장 버튼 핸들러 (항상 새 수업 추가)
   const handleReserve = async () => {
     if (!selectedHour || !selectedSessionType || !trainerId) {
-      toast.error('모든 항목을 선택해주세요.')
+      toast.error(t('alert.schedule_error_4'))
       return
     }
 
     // 남은 세션 체크
     const sessionInfo = remainingSessions[selectedSessionType as keyof typeof remainingSessions]
     if (sessionInfo && sessionInfo.remain <= 0) {
-      toast.error(`${selectedSessionType} 세션은 더 이상 신청할 수 없습니다.`)
+      toast.error(`${selectedSessionType} ${t('alert.schedule_error_5')}`)
       return
     }
     
@@ -274,7 +274,7 @@ export default function ReserveMemberSession({
 
     // 시간 중복 체크 (blockedTimes는 이미 확정된 시간만)
     if (blockedTimes.includes(selectedHour)) {
-      toast.error('이미 예약된 시간입니다. 다른 시간을 선택해주세요.')
+      toast.error(t('alert.schedule_error_6'))
       return
     }
 
@@ -288,10 +288,10 @@ export default function ReserveMemberSession({
     })
 
     if (error) {
-      toast.error('수업 등록 중 오류가 발생했어요.')
+      toast.error(t('alert.schedule_error_7'))
       console.error(error)
     } else {
-      toast.success(`${dateStr} ${selectedHour} 수업이 신청되었어요!`)
+      toast.success(`${dateStr} ${selectedHour} ${t('alert.schedule_success_1')}`)
       setMyPendingTimes((prev) => [...prev, selectedHour])
 
       setMyPendingSessions((prev) => [
@@ -321,7 +321,7 @@ export default function ReserveMemberSession({
   // 추가: 취소 진행 함수
   async function handleCancelSession(time: string, requireReason: boolean) {
     if (requireReason && !cancelReason.trim()) {
-      toast.error('취소 사유를 입력해주세요.')
+      toast.error(t('alert.schedule_error_8'))
       return
     }
 
@@ -342,12 +342,12 @@ export default function ReserveMemberSession({
       .in('status', ['신청', '확정'])
 
     if (error) {
-      toast.error('세션 취소 중 오류가 발생했습니다.')
+      toast.error(t('alert.schedule_error_9'))
       console.error(error)
       return
     }
   
-    toast.success('세션이 취소되었습니다.')
+    toast.success(t('alert.schedule_success_2'))
   
     // ✅ UI 즉시 반영
     setMyPendingSessions((prev) => prev.filter(p => p.time !== time))
@@ -539,7 +539,9 @@ export default function ReserveMemberSession({
 
       {cancelTargetTime && (
         <DeleteSession
+          date={format(selectedDate, 'yyyy-MM-dd')}
           time={cancelTargetTime}
+          sessionType={selectedSessionType}
           reason={cancelReason}
           setReason={setCancelReason}
           onClose={() => {
@@ -548,7 +550,7 @@ export default function ReserveMemberSession({
           }}
           onCancel={async () => {
             if (!cancelReason.trim()) {
-              toast.error('취소 사유를 입력해주세요.')
+              toast.error(t('alert.schedule_error_8'))
               return
             }
             const dateStr = format(selectedDate, 'yyyy-MM-dd')
@@ -562,10 +564,10 @@ export default function ReserveMemberSession({
               .eq('status', myPendingTimes.includes(cancelTargetTime) ? '신청' : '확정')
           
             if (error) {
-              toast.error('세션 취소 중 오류가 발생했습니다.')
+              toast.error(t('alert.schedule_error_9'))
               console.error(error)
             } else {
-              toast.success('세션이 취소되었습니다.')
+              toast.success(t('alert.schedule_success_2'))
               setCancelTargetTime(null)
               setCancelReason('')
               // 상태 다시 불러오기

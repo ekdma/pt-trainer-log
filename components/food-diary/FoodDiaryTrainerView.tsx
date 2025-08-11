@@ -120,7 +120,7 @@ export default function FoodDiaryTrainerView({ initialSelectedMember = null }: F
       .select('measure_date, metric_type, metric_value')
       .eq('member_id', selectedMember.member_id)
       .eq('metric_target', 'Overall Fitness')
-      .in('metric_type', ['Empty Stomach Weight', 'Sleep Hours', 'Water'])
+      .in('metric_type', ['Fasting Weight Data', 'Sleep Hours', 'Water'])
       .in('measure_date', weekDates)
   
     if (error) {
@@ -487,7 +487,7 @@ export default function FoodDiaryTrainerView({ initialSelectedMember = null }: F
                 
                 <tbody>
                   {[
-                    { label: '공복체중(kg)', type: 'Empty Stomach Weight', bg: 'bg-yellow-100', text: 'text-yellow-800', cell: 'bg-yellow-50' },
+                    { label: '공복체중(kg)', type: 'Fasting Weight Data', bg: 'bg-yellow-100', text: 'text-yellow-800', cell: 'bg-yellow-50' },
                     { label: '수면시간(h)', type: 'Sleep Hours', bg: 'bg-emerald-100', text: 'text-emerald-800', cell: 'bg-emerald-50' },
                     { label: '수분섭취(컵)', type: 'Water', bg: 'bg-blue-100', text: 'text-blue-800', cell: 'bg-blue-50' },
                   ].map(({ label, type, bg, text, cell }) => (

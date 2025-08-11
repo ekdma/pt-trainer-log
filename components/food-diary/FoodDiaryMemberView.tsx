@@ -61,7 +61,7 @@ export default function FoodDiaryMemberView({ memberId, memberName }: Props) {
     data?.forEach((row) => {
       const { metric_type, metric_value } = row
       switch (metric_type) {
-        case 'Empty Stomach Weight':
+        case 'Fasting Weight Data':
           setWeight(String(metric_value))
           break
         case 'Sleep Hours':
@@ -196,7 +196,7 @@ export default function FoodDiaryMemberView({ memberId, memberName }: Props) {
         member_id: memberId,
         measure_date: selectedDate.format('YYYY-MM-DD'),
         metric_target: 'Overall Fitness',
-        metric_type: 'Empty Stomach Weight',
+        metric_type: 'Fasting Weight Data',
         metric_value: parseFloat(weight),
       })
     }
@@ -235,7 +235,7 @@ export default function FoodDiaryMemberView({ memberId, memberName }: Props) {
     }
 
     await saveSelectedHashtags()
-    toast.success('저장되었습니다 💪')
+    toast.success(t('alert.diet_save'))
     // alert('저장되었습니다 💪')
   }
 
@@ -245,7 +245,7 @@ export default function FoodDiaryMemberView({ memberId, memberName }: Props) {
       : selectedDate.add(1, 'day')
   
     if (newDate.isBefore(maxPast) || newDate.isAfter(maxFuture)) {
-      toast.warning('7일 이내의 입력만 가능합니다')
+      toast.warning(t('alert.diet_warning'))
       // alert('7일 이내의 입력만 가능합니다')
       return
     }
