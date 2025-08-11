@@ -124,6 +124,10 @@ export default function EmptyStomachWeightChart() {
         ticks: {
           maxRotation: 45,
           minRotation: 45,
+          autoSkip: false,
+          font: {
+            size: 10,  // 기본 12~14에서 줄여보기
+          },
         },
       },
     },
