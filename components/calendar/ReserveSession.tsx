@@ -367,11 +367,40 @@ export default function ReserveMemberSession({ selectedDate, trainerId, onSessio
     const sessionType = selectedPendingSession.session_type
 
     try {
+      // 1️⃣ DB에서 상태 업데이트
+      const { error } = await supabase
+        .from('calendar_sessions')
+        .update({ status: '취소' })
+        .eq('trainer_id', trainerId)
+        .eq('workout_date', dateStr)
+        .eq('workout_time', timeStr)
+        .eq('member_id', memberId)
+  
+      if (error) {
+        toast.error('세션 취소 실패')
+        console.error(error)
+        return
+      }
+  
+      // 2️⃣ 상태 변경된 세션으로 UI 업데이트
+      setBlockedSessions(prev =>
+        prev.map(s =>
+          s.calendar_sessions_id === selectedPendingSession.calendar_sessions_id
+            ? { ...s, status: '취소' }
+            : s
+        )
+      )
+      setSelectedPendingSession(null)
+      onSessionChange?.()
+  
+      // 3️⃣ 카카오톡 발송
       await fetch('/api/sendKakao', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          phone: member.phone.startsWith('82') ? member.phone : `82${member.phone.replace(/^0/, '')}`,
+          phone: member.phone.startsWith('82')
+            ? member.phone
+            : `82${member.phone.replace(/^0/, '')}`,
           name: member.name,
           date: dateStr,
           time: timeStr,
@@ -380,14 +409,12 @@ export default function ReserveMemberSession({ selectedDate, trainerId, onSessio
           templateCode: 'RESERVE_CANCEL',  
         }),
       })
-      toast.success('취소 알림톡이 발송되었습니다.')
+  
+      toast.success('세션이 취소되고 알림톡이 발송되었습니다.')
     } catch (err) {
       console.error('카카오톡 발송 실패:', err)
-      toast.error('취소 알림톡 발송 실패')
+      toast.error('취소 처리 중 오류가 발생했습니다.')
     }
-
-    // 실제 세션 삭제/취소 처리 로직 필요하면 여기서 supabase update/delete 수행
-    setConfirmingCancelSession(null)
   }
 
   return (

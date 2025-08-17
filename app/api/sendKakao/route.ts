@@ -26,7 +26,8 @@ export async function POST(req: Request) {
         'X-Secret-Key': process.env.NHN_SECRET_KEY!,
         'Content-Length': Buffer.byteLength(data),
       },
-      rejectUnauthorized: process.env.NODE_ENV !== 'development',
+      // rejectUnauthorized: process.env.NODE_ENV !== 'development',
+      rejectUnauthorized: false,
     }
 
     const response = await new Promise((resolve, reject) => {
@@ -37,7 +38,7 @@ export async function POST(req: Request) {
           console.log('Send Data:', data)
           console.log('NHN Response:', body) // 🔍 응답 로그 찍기
           console.log("Using templateCode:", templateCode)
-          console.log("Using plusFriendId:", '@litpt')
+          console.log('statusCode:', res.statusCode)
           resolve(JSON.parse(body))
         })
       })
