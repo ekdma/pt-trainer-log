@@ -5,11 +5,11 @@ import { Button } from '@/components/ui/button'
 import RadioGroup from '@/components/ui/radio-group'
 import { getSupabaseClient } from '@/lib/supabase'
 import { toast } from 'sonner'
-import { format, isWithinInterval } from 'date-fns'
+import { format } from 'date-fns'
 import { addDays, parse, isAfter } from 'date-fns'
 import DeleteSession from './DeleteSession' 
 import { useLanguage } from '@/context/LanguageContext'
-import { useRouter } from 'next/navigation'
+// import { useRouter } from 'next/navigation'
 
 function getSessionDateTime(dateStr: string, timeStr: string) {
   // dateStr: 'yyyy-MM-dd', timeStr: 'HH:mm'
@@ -71,7 +71,7 @@ export default function ReserveMemberSession({
   
   const supabase = getSupabaseClient()
   const { t } = useLanguage()  // 번역 함수 가져오기
-  const router = useRouter()
+  // const router = useRouter()
 
   // 시간 초기화
   useEffect(() => {
