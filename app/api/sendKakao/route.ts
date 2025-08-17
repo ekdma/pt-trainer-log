@@ -17,6 +17,12 @@ export async function POST(req: Request) {
       ],
     })
 
+    const secretKey = process.env.NHN_SECRET_KEY;
+    if (!secretKey) {
+      console.error('NHN_SECRET_KEY 환경변수가 설정되지 않았습니다.');
+      return NextResponse.json({ error: 'NHN_SECRET_KEY not set' }, { status: 500 });
+    }
+
     const options = {
       hostname: 'api-alimtalk.cloud.toast.com',
       path: `/alimtalk/v2.3/appkeys/${process.env.NHN_APP_KEY}/messages`,
@@ -26,8 +32,8 @@ export async function POST(req: Request) {
         'X-Secret-Key': process.env.NHN_SECRET_KEY!,
         'Content-Length': Buffer.byteLength(data),
       },
-      // rejectUnauthorized: process.env.NODE_ENV !== 'development',
-      rejectUnauthorized: false,
+      rejectUnauthorized: process.env.NODE_ENV !== 'development',
+      // rejectUnauthorized: false,
     }
 
     const response = await new Promise((resolve, reject) => {
