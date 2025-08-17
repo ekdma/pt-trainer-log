@@ -3,6 +3,22 @@ import { NextResponse } from 'next/server'
 import https from 'https' 
 
 export async function POST(req: Request) {
+
+  console.log('NODE_ENV:', process.env.NODE_ENV)
+  console.log('NHN_SECRET_KEY raw:', JSON.stringify(process.env.NHN_SECRET_KEY))
+  console.log('NHN_APP_KEY raw:', JSON.stringify(process.env.NHN_APP_KEY))
+  console.log('NHN_SENDER_KEY raw:', JSON.stringify(process.env.NHN_SENDER_KEY))
+
+  const secretKey = process.env.NHN_SECRET_KEY
+  const appKey = process.env.NHN_APP_KEY
+  const senderKey = process.env.NHN_SENDER_KEY
+
+  if (!secretKey || !appKey || !senderKey) {
+    console.error('환경변수 미설정:', { secretKey, appKey, senderKey })
+    return NextResponse.json({ error: 'Environment variables not set' }, { status: 500 })
+  }
+
+
   const { phone, name, date, time, status, sessionType, templateCode } = await req.json()
 
   try {
