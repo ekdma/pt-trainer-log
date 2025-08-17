@@ -2,6 +2,8 @@
 import { NextResponse } from 'next/server'
 import https from 'https' 
 
+export const runtime = 'nodejs';
+
 export async function POST(req: Request) {
   const secretKey = process.env.NHN_SECRET_KEY
   const appKey = process.env.NHN_APP_KEY
