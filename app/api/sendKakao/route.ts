@@ -1,6 +1,6 @@
 // app/api/sendKakao/route.ts
 import { NextResponse } from 'next/server'
-import https from 'https'
+import https from 'https' 
 
 export async function POST(req: Request) {
   const { phone, name, date, time, status, sessionType, templateCode } = await req.json()
