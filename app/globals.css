@@ -165,6 +165,11 @@ body {
   color: #1e40af !important;
 }
 
+.react-calendar__tile.package-active-selected {
+  background-color: #4b5563; /* 진한 회색 bg */
+  color: white;              /* 글씨 흰색 */
+  border-radius: 50%;
+}
 
 [data-sonner-toast] {
   font-family: 'Nanum Gothic', sans-serif !important;

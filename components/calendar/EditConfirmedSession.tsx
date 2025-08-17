@@ -82,6 +82,12 @@ export default function EditConfirmedSession({ session, onClose, onUpdated, onSe
   }
 
   const handleUpdate = async () => {
+    // 기존 세션 정보 백업
+    const oldDate = session.workout_date
+    const oldTime = session.workout_time
+    const oldType = session.session_type
+    const memberName = session.members.name
+
     const { data, error } = await supabase
       .from('calendar_sessions')
       .update({
@@ -90,23 +96,60 @@ export default function EditConfirmedSession({ session, onClose, onUpdated, onSe
         workout_time: workoutTime,
       })
       .eq('calendar_sessions_id', session.calendar_sessions_id)
-      .select('calendar_sessions_id, workout_date, workout_time, session_type, member_id, status, notes, members(name)')
+      .select('calendar_sessions_id, workout_date, workout_time, session_type, member_id, status, notes, members(name, phone)')
       .single()
 
     if (error || !data) {
       toast.error('수정 실패')
-    } else {
-      toast.success('수업이 수정되었습니다.')
-    
-      // 'members'가 배열일 경우 첫 번째 값으로 보정
-      const fixedSession: CalendarSession = {
-        ...data,
-        members: Array.isArray(data.members) ? data.members[0] : data.members
-      }
-    
-      onUpdated(fixedSession)
-      onSessionChange?.()
+      return 
+    } 
+    // members 배열 처리
+    const memberInfo = Array.isArray(data.members) ? data.members[0] : data.members
+    const memberPhone = memberInfo?.phone
+
+    try {
+      // 2️⃣ 기존 일정 취소 메시지
+      await fetch('/api/sendKakao', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          phone: memberPhone?.startsWith('82') ? memberPhone : `82${memberPhone?.replace(/^0/, '')}`,
+          name: memberName,
+          date: oldDate,
+          time: oldTime,
+          status: '취소',
+          sessionType: oldType,
+          templateCode: 'RESERVE_CANCEL',
+        }),
+      })
+
+      // 3️⃣ 새 일정 확정 메시지
+      await fetch('/api/sendKakao', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          phone: memberPhone?.startsWith('82') ? memberPhone : `82${memberPhone?.replace(/^0/, '')}`,
+          name: memberName,
+          date: workoutDate,
+          time: workoutTime,
+          status: '확정',
+          sessionType: sessionType,
+          templateCode: 'RESERVE_CONFIRM',
+        }),
+      })
+    } catch (err) {
+      console.error('카카오톡 발송 실패:', err)
     }
+
+    toast.success('수업이 수정되었습니다.')
+
+    const fixedSession: CalendarSession = {
+      ...data,
+      members: memberInfo,
+    }
+
+    onUpdated(fixedSession)
+    onSessionChange?.()
   }
 
   return (

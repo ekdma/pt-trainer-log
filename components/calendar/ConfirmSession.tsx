@@ -51,7 +51,8 @@ export default function ConfirmSession({ trainerId, onClose, onSessionChange }: 
         status,
         updated_at,
         member:members!calendar_sessions_member_id_fkey (
-          name
+          name,
+          phone
         )
       `)
       .eq('status', '신청')
@@ -119,15 +120,62 @@ export default function ConfirmSession({ trainerId, onClose, onSessionChange }: 
   }
 
   const updateStatus = async (id: string, status: '확정' | '취소') => {
-    const { error } = await supabase
+    const { error, data } = await supabase
       .from('calendar_sessions')
       .update({ status })
       .eq('calendar_sessions_id', id)
+      .select(`
+        calendar_sessions_id,
+        member_id,
+        workout_date,
+        workout_time,
+        session_type,
+        status,
+        updated_at,
+        member:members!calendar_sessions_member_id_fkey (
+          name,
+          phone
+        )
+      `)
 
-      if (!error) {
-        fetchSessions()
-        onSessionChange?.() 
+    if (!error && data && data.length > 0) {
+      const session = data[0]
+  
+      // member는 배열이므로 첫 번째 요소를 가져오기
+      const memberInfo = Array.isArray(session.member) ? session.member[0] : session.member
+  
+      const memberName = memberInfo?.name || ''
+      const memberPhone = memberInfo?.phone
+  
+      if (memberPhone) {
+        const dateStr = dayjs(session.workout_date).format('YYYY-MM-DD')
+        const timeStr = session.workout_time
+        const sessionType = session.session_type
+  
+        try {
+          await fetch('/api/sendKakao', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              phone: memberPhone.startsWith('82')
+                ? memberPhone
+                : `82${memberPhone.replace(/^0/, '')}`,
+              name: memberName,
+              date: dateStr,
+              time: timeStr,
+              status,
+              sessionType,
+              templateCode: status === '확정' ? 'RESERVE_CONFIRM' : 'RESERVE_CANCEL',
+            }),
+          })
+        } catch (err) {
+          console.error('카카오톡 발송 실패:', err)
+        }
       }
+  
+      fetchSessions()
+      onSessionChange?.()
+    }
   }
 
   useEffect(() => {

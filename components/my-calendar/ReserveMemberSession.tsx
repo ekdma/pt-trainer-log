@@ -9,7 +9,7 @@ import { format, isWithinInterval } from 'date-fns'
 import { addDays, parse, isAfter } from 'date-fns'
 import DeleteSession from './DeleteSession' 
 import { useLanguage } from '@/context/LanguageContext'
-
+import { useRouter } from 'next/navigation'
 
 function getSessionDateTime(dateStr: string, timeStr: string) {
   // dateStr: 'yyyy-MM-dd', timeStr: 'HH:mm'
@@ -71,6 +71,7 @@ export default function ReserveMemberSession({
   
   const supabase = getSupabaseClient()
   const { t } = useLanguage()  // 번역 함수 가져오기
+  const router = useRouter()
 
   // 시간 초기화
   useEffect(() => {
@@ -174,9 +175,11 @@ export default function ReserveMemberSession({
       }
   
       const activePackage = packages.find((pkg) => {
-        const start = new Date(pkg.start_date)
-        const end = new Date(pkg.end_date)
-        return isWithinInterval(selectedDate, { start, end })
+        const start = format(new Date(pkg.start_date), 'yyyy-MM-dd')
+        const end = format(new Date(pkg.end_date), 'yyyy-MM-dd')
+        const selected = format(selectedDate, 'yyyy-MM-dd')
+      
+        return selected >= start && selected <= end
       })
   
       if (!activePackage) {
@@ -278,6 +281,18 @@ export default function ReserveMemberSession({
       return
     }
 
+    // 회원정보
+    const { data: member, error: memberError } = await supabase
+      .from('members')
+      .select('name, phone')
+      .eq('member_id', memberId)
+      .single()
+
+    if (memberError || !member) {
+      toast.error('회원 정보를 불러올 수 없습니다.')
+      return
+    }
+
     const { error } = await supabase.from('calendar_sessions').insert({
       trainer_id: trainerId,
       member_id: memberId,
@@ -290,31 +305,50 @@ export default function ReserveMemberSession({
     if (error) {
       toast.error(t('alert.schedule_error_7'))
       console.error(error)
-    } else {
-      toast.success(`${dateStr} ${selectedHour} ${t('alert.schedule_success_1')}`)
-      setMyPendingTimes((prev) => [...prev, selectedHour])
+      return
+    } 
+    
+    toast.success(`${dateStr} ${selectedHour} ${t('alert.schedule_success_1')}`)
+    setMyPendingTimes((prev) => [...prev, selectedHour])
 
-      setMyPendingSessions((prev) => [
+    setMyPendingSessions((prev) => [
+      ...prev,
+      { time: selectedHour, sessionType: selectedSessionType }
+    ])
+
+    // ✅ 잔여 세션 수 즉시 반영
+    setRemainingSessions((prev) => {
+      const sessionKey = selectedSessionType as keyof typeof prev
+      if (!prev[sessionKey]) return prev
+      return {
         ...prev,
-        { time: selectedHour, sessionType: selectedSessionType }
-      ])
+        [sessionKey]: {
+          ...prev[sessionKey]!,
+          remain: Math.max(prev[sessionKey]!.remain - 1, 0),
+        },
+      }
+    })
 
-      // ✅ 잔여 세션 수 즉시 반영
-      setRemainingSessions((prev) => {
-        const sessionKey = selectedSessionType as keyof typeof prev
-        if (!prev[sessionKey]) return prev
-        return {
-          ...prev,
-          [sessionKey]: {
-            ...prev[sessionKey]!,
-            remain: Math.max(prev[sessionKey]!.remain - 1, 0),
-          },
-        }
+    setSelectedHour('')
+    setSelectedSessionType('')
+    onSessionChange?.()
+
+    try {
+      await fetch('/api/sendKakao', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          phone: member.phone.startsWith('82') ? member.phone : `82${member.phone.replace(/^0/, '')}`,
+          name: member.name,
+          date: dateStr,
+          time: selectedHour,
+          status: '신청',
+          sessionType: selectedSessionType, 
+          templateCode: 'RESERVE_REQUEST',
+        }),
       })
-
-      setSelectedHour('')
-      setSelectedSessionType('')
-      onSessionChange?.()
+    } catch (err) {
+      console.error('카카오톡 발송 실패:', err)
     }
   }
 
@@ -327,6 +361,10 @@ export default function ReserveMemberSession({
 
     const dateStr = format(selectedDate, 'yyyy-MM-dd')
     // const statusToMatch = myPendingTimes.includes(time) ? '신청' : '확정'
+    const canceledSession =
+      myConfirmedTimes.find(c => c.time === time) ||
+      myPendingSessions.find(p => p.time === time)
+    const canceledSessionType = canceledSession?.sessionType || 'SELF'
 
     const updateData: { status: string; notes?: string } = { status: '취소' }
     if (requireReason) updateData.notes = cancelReason.trim()
@@ -362,6 +400,34 @@ export default function ReserveMemberSession({
     await loadSessionTimes()
     await loadBlockedTimes()
     onSessionChange?.()
+
+    try {
+      const { data: member, error: memberError } = await supabase
+        .from('members')
+        .select('name, phone')
+        .eq('member_id', memberId)
+        .single()
+  
+      if (!memberError && member) {
+        await fetch('/api/sendKakao', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            phone: member.phone.startsWith('82')
+              ? member.phone
+              : `82${member.phone.replace(/^0/, '')}`,
+            name: member.name,
+            date: dateStr,
+            time,
+            status: '취소',
+            sessionType: canceledSessionType, // ✅ 여기서 안전하게 전달
+            templateCode: 'RESERVE_CANCEL',
+          }),
+        })
+      }
+    } catch (err) {
+      console.error('카카오톡 발송 실패:', err)
+    }
   }
 
 
@@ -420,7 +486,17 @@ export default function ReserveMemberSession({
           const isPT = matchedConfirmed?.sessionType === 'PT'
           const isSELF = matchedConfirmed?.sessionType === 'SELF'
 
-          const baseStyle = isBlocked
+          // 현재 시간 이전인지 체크
+          const now = new Date()
+          const sessionDateTime = getSessionDateTime(format(selectedDate, 'yyyy-MM-dd'), time)
+          const isPastTime = format(selectedDate, 'yyyy-MM-dd') === format(now, 'yyyy-MM-dd') 
+            ? isAfter(now, sessionDateTime)
+            : false
+
+          // 시각적으로 막힌 상태 표시
+          const isUnavailable = isBlocked || isPastTime
+
+          const baseStyle = isUnavailable
             ? 'bg-gray-200 text-gray-400 cursor-not-allowed'
             : 'hover:bg-gray-100'
 
@@ -461,9 +537,7 @@ export default function ReserveMemberSession({
             : ''
 
           // isCancelable 변수 선언 (여기 꼭 넣어야 함)
-          const dateStr = format(selectedDate, 'yyyy-MM-dd')
-          const sessionDateTime = getSessionDateTime(dateStr, time)
-          const now = new Date()
+          // const dateStr = format(selectedDate, 'yyyy-MM-dd')
           const canCancel = isMyConfirmed || isMyPending
           const isCancelable = canCancel && isAfter(sessionDateTime, addDays(now, 1))
 
@@ -493,8 +567,8 @@ export default function ReserveMemberSession({
               <Button
                 variant="outline"
                 className={`text-xs relative z-[5] w-full py-2 transition ${baseStyle} ${confirmedStyle} ${pendingStyle} ${selectedStyle}`}
-                onClick={() => !isBlocked && setSelectedHour(time)}
-                disabled={isBlocked}
+                onClick={() => !isUnavailable && setSelectedHour(time)}
+                disabled={isUnavailable}
               >
                 {time}
                 {(isMyConfirmed || isMyPending) && (
@@ -597,15 +671,18 @@ export default function ReserveMemberSession({
               </Button>
               <Button
                 onClick={async () => {
-                  await handleCancelSession(confirmOnlyTime, false) // 사유 없이 취소
-                  setConfirmOnlyTime(null)
+                  try {
+                    await handleCancelSession(confirmOnlyTime, false)
+                  } finally {
+                    setConfirmOnlyTime(null) // ✅ 성공/실패 상관없이 닫기
+                  }
                 }}
-                variant="darkGray" 
+                variant="darkGray"
                 className="text-sm"
               >
-                {/* 네. 취소합니다. */}
                 {t('master.yesCancel')}
               </Button>
+
             </div>
           </div>
         </div>

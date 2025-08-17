@@ -45,7 +45,7 @@ export default function ReserveMemberSession({ selectedDate, trainerId, onSessio
   const [selectedHour, setSelectedHour] = useState<string | null>(null)
   const [selectedSessionType, setSelectedSessionType] = useState<string>('PT')
   const [selectedMemberId, setSelectedMemberId] = useState<number | null>(null)
-  const [memberList, setMemberList] = useState<{ id: number; name: string }[]>([])
+  const [memberList, setMemberList] = useState<{ id: number; name: string; phone:string }[]>([])
   const [selectedPendingSession, setSelectedPendingSession] = useState<CalendarSession | null>(null)
   const [editingSession, setEditingSession] = useState<CalendarSession | null>(null)
   const [selectedConfirmedSession, setSelectedConfirmedSession] = useState<CalendarSession | null>(null)
@@ -107,11 +107,11 @@ export default function ReserveMemberSession({ selectedDate, trainerId, onSessio
 
       const { data: members } = await supabase
         .from('members')
-        .select('member_id, name')
+        .select('member_id, name, phone')
         .in('member_id', memberIds)
 
       if (members) {
-        setMemberList(members.map((m) => ({ id: m.member_id, name: m.name })))
+        setMemberList(members.map((m) => ({ id: m.member_id, name: m.name, phone: m.phone })))
       }
     }
 
@@ -288,6 +288,24 @@ export default function ReserveMemberSession({ selectedDate, trainerId, onSessio
       setEditingSession(null)
   
       onSessionChange?.()
+
+      try {
+        await fetch('/api/sendKakao', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            phone: memberList.find(m => m.id === newSession.member_id)?.phone, // 전화번호
+            name: memberName,
+            date: workout_date,
+            time: selectedHour,
+            status: '확정',
+            sessionType: selectedSessionType,
+            templateCode: 'RESERVE_CONFIRM', // 예약 신청 템플릿
+          }),
+        })
+      } catch (err) {
+        console.error('카카오톡 발송 실패:', err)
+      }
     }
   }
 
@@ -316,13 +334,60 @@ export default function ReserveMemberSession({ selectedDate, trainerId, onSessio
       setAllConfirmedSessions((prev) => [...prev, confirmedSession])
       setSelectedPendingSession(null)
       onSessionChange?.()
+
+      const memberName = selectedPendingSession.members?.name || ''
+      try {
+        await fetch('/api/sendKakao', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            phone: memberList.find(m => m.name === memberName)?.phone, // 전화번호
+            name: memberName,
+            date: format(selectedDate, 'yyyy-MM-dd'),
+            time: selectedPendingSession.workout_time,
+            status: '확정',
+            sessionType: selectedPendingSession.session_type,
+            templateCode: 'RESERVE_CONFIRM', // 확정 템플릿
+          }),
+        })
+      } catch (err) {
+        console.error('카카오톡 발송 실패:', err)
+      }
     }
   }
   
-  const handleCancel = () => {
-    if (selectedPendingSession) {
-      setConfirmingCancelSession(selectedPendingSession)
+  const handleCancel  = async () => {
+    if (!selectedPendingSession) return
+    const memberId = selectedPendingSession.member_id
+    const member = memberList.find(m => m.id.toString() === memberId.toString())
+    if (!member) return
+
+    const dateStr = format(selectedDate, 'yyyy-MM-dd')
+    const timeStr = selectedPendingSession.workout_time
+    const sessionType = selectedPendingSession.session_type
+
+    try {
+      await fetch('/api/sendKakao', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          phone: member.phone.startsWith('82') ? member.phone : `82${member.phone.replace(/^0/, '')}`,
+          name: member.name,
+          date: dateStr,
+          time: timeStr,
+          status: '취소',
+          sessionType: sessionType,
+          templateCode: 'RESERVE_CANCEL',  
+        }),
+      })
+      toast.success('취소 알림톡이 발송되었습니다.')
+    } catch (err) {
+      console.error('카카오톡 발송 실패:', err)
+      toast.error('취소 알림톡 발송 실패')
     }
+
+    // 실제 세션 삭제/취소 처리 로직 필요하면 여기서 supabase update/delete 수행
+    setConfirmingCancelSession(null)
   }
 
   return (
@@ -666,6 +731,32 @@ export default function ReserveMemberSession({ selectedDate, trainerId, onSessio
                     } else {
                       setSelectedConfirmedSession(null)
                       setEditingSession(null)
+                    }
+
+                    const memberName = confirmingCancelSession.members?.name || ''
+                    const memberPhone = memberList.find(m => m.name === memberName)?.phone
+                    const dateStr = format(selectedDate, 'yyyy-MM-dd')
+                    const timeStr = confirmingCancelSession.workout_time
+                    const sessionType = confirmingCancelSession.session_type
+
+                    if (memberPhone) {
+                      try {
+                        await fetch('/api/sendKakao', {
+                          method: 'POST',
+                          headers: { 'Content-Type': 'application/json' },
+                          body: JSON.stringify({
+                            phone: memberPhone.startsWith('82') ? memberPhone : `82${memberPhone.replace(/^0/, '')}`,
+                            name: memberName,
+                            date: dateStr,
+                            time: timeStr,
+                            status: '취소',
+                            sessionType,
+                            templateCode: 'RESERVE_CANCEL',
+                          }),
+                        })
+                      } catch (err) {
+                        console.error('카카오톡 발송 실패:', err)
+                      }
                     }
 
                     setConfirmingCancelSession(null)

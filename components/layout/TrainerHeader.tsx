@@ -4,7 +4,7 @@ import Link from 'next/link'
 import { useEffect, useState, useRef } from 'react'
 import { usePathname } from 'next/navigation'
 import { Menu, X } from 'lucide-react' // 아이콘 사용
-import LanguageToggle from '@/components/LanguageToggle'  // 추가
+// import LanguageToggle from '@/components/LanguageToggle'  // 추가
 
 export default function Header() {
   const [memberName, setMemberName] = useState<string | null>(null)
@@ -121,14 +121,14 @@ export default function Header() {
           })}
 
           {/* Language Toggle 추가 */}
-          <div className="ml-4">
+          {/* <div className="ml-4">
             <LanguageToggle />
-          </div>
+          </div> */}
         </nav>
 
         {/* Mobile Hamburger Button + Language Toggle */}
         <div className="sm:hidden flex items-center gap-2">
-          <LanguageToggle />
+          {/* <LanguageToggle /> */}
           <button
             className="p-2"
             onClick={() => setMobileMenuOpen(!mobileMenuOpen)}

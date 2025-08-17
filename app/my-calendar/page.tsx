@@ -26,6 +26,25 @@ export default function MyCalendarPage() {
   const [memberId, setMemberId] = useState<string | null>(null)
   const [showSessionInfo, setShowSessionInfo] = useState(false)
   const [sessionMap, setSessionMap] = useState<SessionInfo>({})
+  const [packages, setPackages] = useState<{ start_date: string; end_date: string }[]>([])
+
+  useEffect(() => {
+    if (!memberId) return
+  
+    const fetchPackages = async () => {
+      const { data, error } = await supabase
+        .from('member_packages')
+        .select('start_date, end_date')
+        .eq('member_id', memberId)
+        .eq('status', 'active')
+  
+      if (!error && data) {
+        setPackages(data)
+      }
+    }
+  
+    fetchPackages()
+  }, [memberId])
 
   useEffect(() => {
     // 예: localStorage에서 memberId 가져오기
@@ -86,45 +105,37 @@ export default function MyCalendarPage() {
                   const sessionList = sessionMap[formatted]
                   const isSelected = formatInTimeZone(selectedDate, 'Asia/Seoul', 'yyyy-MM-dd') === formatted
                 
-                  if (isSelected) {
-                    return 'react-calendar__tile--selected-custom'
+                  // 패키지 기간 체크
+                  const isInPackage = packages.some(pkg => {
+                    const start = formatInTimeZone(new Date(pkg.start_date), 'Asia/Seoul', 'yyyy-MM-dd')
+                    const end = formatInTimeZone(new Date(pkg.end_date), 'Asia/Seoul', 'yyyy-MM-dd')
+                    return formatted >= start && formatted <= end
+                  })
+                
+                  const classes: string[] = []
+                
+                  if (isSelected && isInPackage) {
+                    classes.push('react-calendar__tile--selected-custom')
+                  } else {
+                    if (isInPackage) classes.push('package-active')
+                    if (isSelected) classes.push('react-calendar__tile--selected-custom')
                   }
                 
-                  if (!sessionList) {
-                    return ''
+                  if (sessionList) {
+                    const statuses = sessionList.map(s => s.status)
+                    if (statuses.includes('신청')) {
+                      classes.push('bg-status-pending')
+                    } else if (sessionList.some(s => s.status === '확정' && s.type === 'PT')) {
+                      classes.push('bg-status-confirmed_pt')
+                    } else if (
+                      sessionList.some(s => s.status === '확정' && s.type === 'SELF')
+                    ) {
+                      // ✅ "SELF 확정"이 있을 때만 색상 적용
+                      classes.push('bg-status-confirmed_self')
+                    }
+                    // ✅ 모든 세션이 취소라면 색상 없음 (else 없음)
                   }
-                
-                  const statuses = sessionList.map((s) => s.status)
-                  const hasPending = statuses.includes('신청')
-                
-                  if (hasPending) {
-                    return 'bg-status-pending'
-                  }
-                
-                  const hasConfirmedPT = sessionList.some(
-                    (s) => s.status === '확정' && s.type === 'PT'
-                  )
-                
-                  if (hasConfirmedPT) {
-                    return 'bg-status-confirmed_pt'
-                  }
-                
-                  const allCancelled = sessionList.every((s) => s.status === '취소')
-                  if (allCancelled) {
-                    return ''
-                  }
-                
-                  const hasOnlySelfOrCancelled = sessionList.every(
-                    (s) =>
-                      (s.status === '확정' && s.type === 'SELF') ||
-                      s.status === '취소'
-                  )
-                
-                  if (hasOnlySelfOrCancelled) {
-                    return 'bg-status-confirmed_self'
-                  }
-                
-                  return ''
+                  return classes.join(' ')
                 }}
 
                 formatShortWeekday={(_locale, date) => date.toLocaleDateString('en-US', { weekday: 'short' })}
