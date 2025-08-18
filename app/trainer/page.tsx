@@ -264,6 +264,7 @@ export default function HomePage() {
                             {cellSessions.length > 0 ? (
                               cellSessions.map((session, idx) => (
                                 <motion.div
+                                  key={session.calendar_sessions_id || idx}  
                                   onClick={() => {
                                     // setSelectedMemberId(session.member_id) // 기존 기능 유지
                                     // 신청일 때만 /calendar 이동
