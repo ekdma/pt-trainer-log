@@ -11,15 +11,24 @@ import { getSupabaseClient } from '@/lib/supabase'
 import ConfirmSession from '@/components/calendar/ConfirmSession'
 import ReserveSession from '@/components/calendar/ReserveSession'
 import { formatInTimeZone, format } from 'date-fns-tz'
+import { useRouter, useSearchParams } from 'next/navigation'
 
 type SessionInfo = Record<string, { status: string; type: string }[]>
 
 export default function TrainerCalendarPage() {
   const supabase = getSupabaseClient()
-  const [selectedDate, setSelectedDate] = useState(new Date())
+  // const [selectedDate, setSelectedDate] = useState(new Date())
   const [memberId, setMemberId] = useState<string | null>(null)
   const [showConfirmModal, setShowConfirmModal] = useState(false)
   const [sessionMap, setSessionMap] = useState<SessionInfo>({})
+  const router = useRouter()
+  const searchParams = useSearchParams()
+  
+  const initialDate = searchParams.get('date')
+  ? new Date(searchParams.get('date')!)
+  : new Date()
+
+  const [selectedDate, setSelectedDate] = useState<Date>(initialDate)
 
   useEffect(() => {
     // 예: localStorage에서 memberId 가져오기
@@ -67,7 +76,11 @@ export default function TrainerCalendarPage() {
           <div className="bg-white p-4 rounded shadow">
             <Calendar
               onChange={(value) => {
-                if (value instanceof Date) setSelectedDate(value)
+                if (value instanceof Date) {
+                  setSelectedDate(value)
+                  const formatted = format(value, 'yyyy-MM-dd')
+                  router.push(`/calendar?date=${formatted}`)
+                }
               }}
               value={selectedDate}
               calendarType="gregory"

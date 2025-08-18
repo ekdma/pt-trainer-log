@@ -7,6 +7,7 @@ import { useAuthGuard } from '@/hooks/useAuthGuard'
 import TrainerHeader from '@/components/layout/TrainerHeader'
 import { motion, AnimatePresence } from 'framer-motion'
 import { useSwipeable } from 'react-swipeable'
+import { useRouter } from 'next/navigation'
 
 interface CalendarSession {
   calendar_sessions_id: string
@@ -30,7 +31,8 @@ export default function HomePage() {
   const [currentWeekStart, setCurrentWeekStart] = useState<Date>(() => startOfWeek(new Date(), { weekStartsOn: 1 }))
   const [selectedMemberId, setSelectedMemberId] = useState<string | number | null>(null)
   const [now, setNow] = useState(new Date())
-  
+  const router = useRouter()
+
   useEffect(() => {
     const timer = setInterval(() => {
       setNow(new Date())
@@ -42,8 +44,16 @@ export default function HomePage() {
   const currentMinute = now.getMinutes()
   const minutePosition = (currentMinute / 60) * 100 // 셀 안에서의 위치(백분율)
   
-  const getColorStyleForMember = (memberId: string | number | null | undefined) => {
+  const getColorStyleForMember = (memberId: string | number | null | undefined, status?: string) => {
     if (memberId == null) return {}
+    
+    if (status === '신청') {
+      return {
+        backgroundColor: 'rgba(254, 202, 202, 0.5)', // tailwind rose-200 반투명
+        color: '#b91c1c', // tailwind rose-800 정도
+      }
+    }
+
     const strId = String(memberId)
     let hash = 0
     for (let i = 0; i < strId.length; i++) {
@@ -70,7 +80,7 @@ export default function HomePage() {
       const { data, error } = await supabase
         .from('calendar_sessions')
         .select('calendar_sessions_id, workout_date, workout_time, session_type, member_id, status, members(name)')
-        .eq('status', '확정')
+        .in('status', ['확정', '신청'])
         .gte('workout_date', startDateStr)
         .lte('workout_date', endDateStr)
         .order('workout_date', { ascending: true })
@@ -221,12 +231,15 @@ export default function HomePage() {
                         {hour}:00
                       </td>
                       {weekDays.map((day) => {
-                        const session = sessions.find(
+                        const cellSessions = sessions.filter(
                           (s) =>
                             s.workout_date === format(day, 'yyyy-MM-dd') &&
                             s.workout_time.startsWith(hourStr) &&
                             (selectedMemberId === null || s.member_id === selectedMemberId)
                         )
+                      
+                        // 신청 상태만 카운트
+                        const applyCount = cellSessions.filter(s => s.status === '신청').length
 
                         return (
                           <td
@@ -248,26 +261,46 @@ export default function HomePage() {
                               />
                             )}
 
-                            {session ? (
-                              <motion.div
-                                onClick={() => setSelectedMemberId(session.member_id)}
-                                layout
-                                whileHover={{ scale: 1.04 }}
-                                whileTap={{ scale: 0.97 }}
-                                initial={{ opacity: 0, y: 10 }}
-                                animate={{ opacity: 1, y: 0 }}
-                                transition={{ duration: 0.3 }}
-                                style={getColorStyleForMember(session.member_id)}
-                                className="rounded px-1 py-0.5 text-[10px] sm:text-[12px] font-semibold truncate cursor-pointer relative group flex flex-col items-center justify-center text-center"
-                                title={`${session.workout_time} | ${session.session_type}`}
-                              >
-                                {session.workout_time?.slice(0, 5)} <br />
-                                {session.session_type} <br />
-                                {session.members?.name || '이름 없음'}
-                                <div className="absolute z-5 bottom-full left-1/2 -translate-x-1/2 mb-1 hidden group-hover:block bg-black text-white text-[10px] sm:text-[12px] px-2 py-1 rounded shadow-lg whitespace-nowrap">
-                                  {session.members?.name}
-                                </div>
-                              </motion.div>
+                            {cellSessions.length > 0 ? (
+                              cellSessions.map((session, idx) => (
+                                <motion.div
+                                  onClick={() => {
+                                    // setSelectedMemberId(session.member_id) // 기존 기능 유지
+                                    // 신청일 때만 /calendar 이동
+                                    if (session.status === '신청') {
+                                      router.push(`/calendar?date=${session.workout_date}`)
+                                    } else {
+                                      setSelectedMemberId(session.member_id)
+                                    }
+                                  }}
+                                  layout
+                                  whileHover={{ scale: 1.04 }}
+                                  whileTap={{ scale: 0.97 }}
+                                  initial={{ opacity: 0, y: 10 }}
+                                  animate={{ opacity: 1, y: 0 }}
+                                  transition={{ duration: 0.3 }}
+                                  style={getColorStyleForMember(session.member_id, session.status)}
+                                  className={`
+                                    relative rounded px-1 py-0.5 text-[10px] sm:text-[12px] font-semibold truncate cursor-pointer 
+                                    flex flex-col items-center justify-center text-center
+                                    min-h-[24px]
+                                    ${session.status === '신청' ? 'opacity-80 border border-dashed border-rose-400' : ''}
+                                  `}
+                                  title={`${session.workout_time} | ${session.status}`}
+                                >
+                                  {session.status === '신청' ? (
+                                    <span className="absolute top-0.5  bg-rose-500 text-white text-[8px] px-1 py-0.5 rounded-full">
+                                      신청 {applyCount}
+                                    </span>
+                                  ) : (
+                                    <>
+                                      {session.workout_time?.slice(0, 5)} <br />
+                                      {session.session_type} <br />
+                                      {session.members?.name || '이름 없음'}
+                                    </>
+                                  )}
+                                </motion.div>
+                              ))
                             ) : (
                               <div className="text-gray-300 text-xs text-center select-none">-</div>
                             )}
