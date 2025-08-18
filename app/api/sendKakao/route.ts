@@ -5,6 +5,12 @@ import https from 'https'
 export const runtime = 'nodejs';
 
 export async function POST(req: Request) {
+
+  console.log('NODE_ENV:', process.env.NODE_ENV);
+  console.log('NHN_APP_KEY exists?', !!process.env.NHN_APP_KEY);
+  console.log('Runtime:', process.env.NEXT_RUNTIME);
+
+
   const secretKey = process.env.NHN_SECRET_KEY
   const appKey = process.env.NHN_APP_KEY
   const senderKey = process.env.NHN_SENDER_KEY
