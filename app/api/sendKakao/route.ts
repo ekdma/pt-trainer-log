@@ -4,8 +4,15 @@ import https from 'https'
 import { serverEnv } from '@/lib/config'
 
 export const runtime = 'nodejs';
+export const dynamic = 'force-dynamic';
 
 export async function POST(req: Request) {
+
+  console.log("NEXT_RUNTIME:", process.env.NEXT_RUNTIME);
+  console.log("process.env keys:", Object.keys(process.env).filter(k => k.includes("NHN")));
+
+  console.log("process.env keys sample:", Object.keys(process.env).slice(0,20));
+
 
   console.log('NODE_ENV:', process.env.NODE_ENV);
   console.log('NHN_APP_KEY exists?', !!process.env.NHN_APP_KEY);
