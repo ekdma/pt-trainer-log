@@ -1,6 +1,7 @@
 // app/api/sendKakao/route.ts
 import { NextResponse } from 'next/server'
 import https from 'https' 
+import { serverEnv } from '@/lib/config'
 
 export const runtime = 'nodejs';
 
@@ -10,13 +11,10 @@ export async function POST(req: Request) {
   console.log('NHN_APP_KEY exists?', !!process.env.NHN_APP_KEY);
   console.log('Runtime:', process.env.NEXT_RUNTIME);
 
+  const { NHN_SECRET_KEY, NHN_APP_KEY, NHN_SENDER_KEY } = serverEnv
 
-  const secretKey = process.env.NHN_SECRET_KEY
-  const appKey = process.env.NHN_APP_KEY
-  const senderKey = process.env.NHN_SENDER_KEY
-
-  if (!secretKey || !appKey || !senderKey) {
-    console.error('환경변수 미설정:', { secretKey, appKey, senderKey })
+  if (!NHN_SECRET_KEY || !NHN_APP_KEY || !NHN_SENDER_KEY) {
+    console.error('환경변수 미설정:', { NHN_SECRET_KEY, NHN_APP_KEY, NHN_SENDER_KEY })
     return NextResponse.json({ error: 'Environment variables not set' }, { status: 500 })
   }
 
