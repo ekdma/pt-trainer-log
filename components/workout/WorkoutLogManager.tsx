@@ -1094,7 +1094,7 @@ export default function WorkoutLogManager({
 
         {isEmptyLog && (
           <div className="mt-4 text-center text-sm text-gray-500">
-            등록된 운동 로그가 없습니다. 기록을 추가해주세요 😎
+            {t("workout.emptydata")}
           </div>
         )}          
 

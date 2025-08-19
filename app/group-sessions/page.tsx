@@ -17,6 +17,7 @@ import {
   Search,
 } from 'lucide-react'
 import { Button } from '@/components/ui/button'
+// import { useAuth } from '@/context/AuthContext'
 
 export default function GroupSessionPage() {
   const supabase = getSupabaseClient()
@@ -27,6 +28,7 @@ export default function GroupSessionPage() {
   const [selectedSession, setSelectedSession] = useState<GroupSession | null>(null)
   const [showAll, setShowAll] = useState(false)
   const [allSessions, setAllSessions] = useState<GroupSession[]>([]) // ✅ 원본 전체 세션
+  // const { user } = useAuth()
 
   useAuthGuard()
 

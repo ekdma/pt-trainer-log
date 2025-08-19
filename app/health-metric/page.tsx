@@ -18,14 +18,17 @@ import {
 import { motion } from 'framer-motion'
 import MemberSelectListbox from '@/components/ui/MemberSelectListbox'  
 import { useLanguage } from '@/context/LanguageContext'
+import { useAuth } from '@/context/AuthContext'
 
 export default function MembersHealthPage() {
   useAuthGuard()
   const { t } = useLanguage()  // 번역 함수 가져오기
+  const { user } = useAuth()
 
   const supabase = getSupabaseClient()
   
-  const [userRole, setUserRole] = useState<'member' | 'trainer' | null>(null)
+  const userRole = user?.role
+  // const [userRole, setUserRole] = useState<'member' | 'trainer' | null>(null)
   const [members, setMembers] = useState<Member[]>([])
   const [selectedMember, setSelectedMember] = useState<Member | null>(null)
   
@@ -35,18 +38,27 @@ export default function MembersHealthPage() {
   const [allTypes, setAllTypes] = useState<HealthMetricType[]>([])
   const [memberTab, setMemberTab] = useState<'all' | 'active'>('active')
 
+  // useEffect(() => {
+  //   const raw = localStorage.getItem('litpt_member')
+  //   const user = raw ? JSON.parse(raw) : null
+  //   if (user) {
+  //     setUserRole(user.role)
+  //     if (user.role === 'member') {
+  //       setSelectedMember(user)
+  //     } else {
+  //       fetchAllMembers()
+  //     }
+  //   }
+  // }, [])
   useEffect(() => {
-    const raw = localStorage.getItem('litpt_member')
-    const user = raw ? JSON.parse(raw) : null
-    if (user) {
-      setUserRole(user.role)
-      if (user.role === 'member') {
-        setSelectedMember(user)
-      } else {
-        fetchAllMembers()
-      }
+    if (!user) return
+    // setUserRole(user.role)
+    if (user.role === 'member') {
+      setSelectedMember(user) // 바로 Member 타입이므로 문제 없음
+    } else {
+      fetchAllMembers()
     }
-  }, [])
+  }, [user])
 
   const fetchAllMembers = async () => {
     const query = supabase.from('members').select('*')

@@ -9,6 +9,7 @@ import { HealthMetric, Member, HealthMetricType } from '@/types/healthMetricType
 import TargetSelectListbox from '@/components/ui/TargetSelectListbox'
 import ViewModeSelectListbox from '@/components/ui/ViewModeSelectListbox'
 import { motion } from 'framer-motion'
+import { useLanguage } from '@/context/LanguageContext'
 
 interface Props {
   healthLogs: HealthMetric[];
@@ -68,6 +69,7 @@ const MemberHealthGraphsClient: React.FC<Props> = ({ healthLogs, member, allType
   // const [allTypes, setAllTypes] = useState<HealthMetricType[]>([]);
   const [viewMode, setViewMode] = useState<'daily' | 'monthly'>('daily');
   const [isMobile, setIsMobile] = useState(false)
+  const { t } = useLanguage()  // 번역 함수 가져오기
 
   useEffect(() => {
     const checkMobile = () => {
@@ -208,7 +210,9 @@ const MemberHealthGraphsClient: React.FC<Props> = ({ healthLogs, member, allType
         >
           {/* 그래프 영역 */}
           {currentTargets.length === 0 || currentTargets.every(target => !targetGroups[target] || targetGroups[target].length === 0) ? (
-            <p className="text-center text-gray-500 mt-8">등록된 건강 지표가 없습니다.</p>
+            <p className="text-center text-gray-500 mt-8">
+              {t("health.emptydata")}
+            </p>
           ) : (
             currentTargets.map(target => {
               const groupLogs = targetGroups[target];

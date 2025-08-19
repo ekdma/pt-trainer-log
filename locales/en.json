@@ -42,7 +42,8 @@
       "diet": "Diet",
       "workout": "Workout",
       "health": "Health",
-      "setGoals": "Set Goals"
+      "setGoals": "Set Goals",
+      "logout": "Log Out"
     },
     "app": {
       "title": "Personal Training Log",
@@ -124,10 +125,12 @@
       "allWorkouts": "All Workouts",
       "favorites": "Favorites",
       "log": "Log",
-      "graph": "Graph"
+      "graph": "Graph",
+      "emptydata": "You haven't logged any workouts yet. Add your first record! 😎"
     },
     "health": {
-      "healthTitle": "Health Log"
+      "healthTitle": "Health Log",
+      "emptydata": "You haven't logged any health metrics yet. Add your first record! 😎"
     },
     "goals": {
       "goalsTitle": "Set Goals",

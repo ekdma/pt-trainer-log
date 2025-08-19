@@ -12,6 +12,7 @@ import { getSupabaseClient } from '@/lib/supabase'
 import { ChevronLeftIcon, ChevronRightIcon, ChevronDoubleLeftIcon, ChevronDoubleRightIcon } from '@heroicons/react/24/solid'
 import { formatInTimeZone, format } from 'date-fns-tz'
 import { useLanguage } from '@/context/LanguageContext'
+import { useAuth } from '@/context/AuthContext'
 
 type SessionInfo = Record<string, { status: string; type: string }[]>
 
@@ -19,6 +20,7 @@ export default function MyCalendarPage() {
   const supabase = getSupabaseClient()
   useAuthGuard()
   const { t } = useLanguage()  // 번역 함수 가져오기
+  const { user } = useAuth()
 
   // const [selectedDate, setSelectedDate] = useState<Date | null>(new Date())
   const [selectedDate, setSelectedDate] = useState<Date>(new Date())
@@ -28,6 +30,11 @@ export default function MyCalendarPage() {
   const [sessionMap, setSessionMap] = useState<SessionInfo>({})
   const [packages, setPackages] = useState<{ start_date: string; end_date: string }[]>([])
 
+  useEffect(() => {
+    if (!user) return
+    setMemberId(String(user.member_id))
+  }, [user])
+  
   useEffect(() => {
     if (!memberId) return
   
@@ -46,16 +53,16 @@ export default function MyCalendarPage() {
     fetchPackages()
   }, [memberId])
 
-  useEffect(() => {
-    // 예: localStorage에서 memberId 가져오기
-    const raw = localStorage.getItem('litpt_member')
-    if (raw) {
-      try {
-        const user = JSON.parse(raw)
-        if (user?.member_id) setMemberId(user.member_id)
-      } catch {}
-    }
-  }, [])
+  // useEffect(() => {
+  //   // 예: localStorage에서 memberId 가져오기
+  //   const raw = localStorage.getItem('litpt_member')
+  //   if (raw) {
+  //     try {
+  //       const user = JSON.parse(raw)
+  //       if (user?.member_id) setMemberId(user.member_id)
+  //     } catch {}
+  //   }
+  // }, [])
 
   useEffect(() => {
     if (!memberId) return

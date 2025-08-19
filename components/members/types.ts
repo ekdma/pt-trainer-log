@@ -13,6 +13,7 @@ export type Member = {
   description: string
   nickname: string
   status: string
+  expiresAt: number | null 
 }
 
 export type MemberCounsel = {

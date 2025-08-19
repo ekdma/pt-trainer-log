@@ -13,28 +13,41 @@ import {
 } from '@/components/ui/toggle-group'
 import { motion } from 'framer-motion'
 import MemberSelectListbox from '@/components/ui/MemberSelectListbox'  
+import { useAuth } from '@/context/AuthContext'
 
 export default function HomePage() {
   useAuthGuard()
   const supabase = getSupabaseClient()
+  const { user } = useAuth() // AuthContext에서 user 가져오기
 
   const [members, setMembers] = useState<Member[]>([])
-  const [userRole, setUserRole] = useState<'member' | 'trainer' | null>(null)
+  // const [userRole, setUserRole] = useState<'member' | 'trainer' | null>(null)
+  const userRole = user?.role
   const [selectedMember, setSelectedMember] = useState<Member | null>(null)
   const [memberTab, setMemberTab] = useState<'all' | 'active'>('active')
 
+  // useEffect(() => {
+  //   const raw = localStorage.getItem('litpt_member')
+  //   const user = raw ? JSON.parse(raw) : null
+  //   if (user) {
+  //     setUserRole(user.role)
+  //     if (user.role === 'member') {
+  //       setSelectedMember(user)
+  //     } else {
+  //       fetchAllMembers()
+  //     }
+  //   }
+  // }, [])
+
   useEffect(() => {
-    const raw = localStorage.getItem('litpt_member')
-    const user = raw ? JSON.parse(raw) : null
-    if (user) {
-      setUserRole(user.role)
-      if (user.role === 'member') {
-        setSelectedMember(user)
-      } else {
-        fetchAllMembers()
-      }
+    if (!user) return
+    // setUserRole(user.role)
+    if (user.role === 'member') {
+      setSelectedMember(user)
+    } else {
+      fetchAllMembers()
     }
-  }, [])
+  }, [user])
 
   const fetchAllMembers = async () => {
     const query = supabase.from('members').select('*')

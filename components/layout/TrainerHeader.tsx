@@ -2,28 +2,32 @@
 
 import Link from 'next/link'
 import { useEffect, useState, useRef } from 'react'
-import { usePathname } from 'next/navigation'
+import { usePathname, useRouter } from 'next/navigation'
 import { Menu, X } from 'lucide-react' // 아이콘 사용
 // import LanguageToggle from '@/components/LanguageToggle'  // 추가
+import { useAuth } from '@/context/AuthContext'
+import { LogOut } from 'lucide-react';
 
 export default function Header() {
-  const [memberName, setMemberName] = useState<string | null>(null)
+  // const [memberName, setMemberName] = useState<string | null>(null)
+  const { user, logout } = useAuth()
+  const router = useRouter()
   const pathname = usePathname()
   const [showDropdown, setShowDropdown] = useState(false)
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false)
   const dropdownRef = useRef<HTMLDivElement>(null)
 
-  useEffect(() => {
-    const raw = localStorage.getItem('litpt_member')
-    if (raw) {
-      try {
-        const user = JSON.parse(raw)
-        if (user && user.name) {
-          setMemberName(user.name)
-        }
-      } catch {}
-    }
-  }, [])
+  // useEffect(() => {
+  //   const raw = localStorage.getItem('litpt_member')
+  //   if (raw) {
+  //     try {
+  //       const user = JSON.parse(raw)
+  //       if (user && user.name) {
+  //         setMemberName(user.name)
+  //       }
+  //     } catch {}
+  //   }
+  // }, [])
 
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
@@ -50,6 +54,11 @@ export default function Header() {
     { href: '/before-after', label: '비포애프터' },
   ]
 
+  const handleLogout = () => {
+    logout()
+    router.push('/')
+  }
+
   return (
     <header className="bg-white shadow-sm border-b sticky top-0 z-10 w-full">
       <div className="max-w-7xl mx-auto px-4 py-3 flex items-center justify-between">
@@ -60,9 +69,9 @@ export default function Header() {
         >
           <span style={({color: '#FF8000'})}>LiT</span>
           <span style={{ color: '#595959' }} className="ml-1">PT</span>
-          {memberName && (
+          {user && (
             <span className="text-base font-semibold text-gray-800 ml-3 whitespace-nowrap">
-              | {memberName}
+              | {user.nickname || user.name}
             </span>
           )}
         </Link>
@@ -124,6 +133,13 @@ export default function Header() {
           {/* <div className="ml-4">
             <LanguageToggle />
           </div> */}
+
+          <button
+            onClick={handleLogout}
+            className="text-sm bg-white px-3 py-1 rounded hover:bg-gray-100 transition flex items-center justify-center"
+          >
+            <LogOut size={18} className="text-gray-500" />
+          </button>
         </nav>
 
         {/* Mobile Hamburger Button + Language Toggle */}
@@ -193,6 +209,16 @@ export default function Header() {
                 </Link>
               )
             })}
+
+            <div className="flex justify-center mt-4">
+              <button
+                onClick={handleLogout}
+                className="w-1/2 bg-white border border-gray-300 py-2 rounded hover:bg-gray-50 transition flex items-center justify-center gap-2"
+              >
+                <LogOut size={20} className="text-gray-500" />
+                <span className="text-gray-700 font-medium">Logout</span>
+              </button>
+            </div>
           </div>
         </div>
       )}

@@ -15,6 +15,7 @@ import {
 import { motion } from 'framer-motion'
 import MemberSelectListbox from '@/components/ui/MemberSelectListbox'  
 import { useLanguage } from '@/context/LanguageContext'
+import { useAuth } from '@/context/AuthContext'
 
 interface Sessions {
   pt_session_cnt: number
@@ -62,8 +63,10 @@ type GoalContent = DietGoal | HydrationGoal | SleepGoal | BodyGoal
 export default function GoalsPage() {
   useAuthGuard()
   const { t } = useLanguage()  // 번역 함수 가져오기
+  const { user } = useAuth() 
 
-  const [userRole, setUserRole] = useState<'member' | 'trainer' | null>(null)
+  const userRole = user?.role
+  // const [userRole, setUserRole] = useState<'member' | 'trainer' | null>(null)
   const [members, setMembers] = useState<Member[]>([])
   const [selectedMember, setSelectedMember] = useState<Member | null>(null)
   const [goals, setGoals] = useState<Goals>({})
@@ -89,18 +92,28 @@ export default function GoalsPage() {
   const [latestBodyFatMass, setLatestBodyFatMass] = useState<number | null>(null)
 
   console.log(goals)
+  
+  // useEffect(() => {
+  //   const raw = localStorage.getItem('litpt_member')
+  //   const user = raw ? JSON.parse(raw) : null
+  //   if (user) {
+  //     setUserRole(user.role)
+  //     if (user.role === 'member') {
+  //       setSelectedMember(user)
+  //     } else {
+  //       fetchAllMembers()
+  //     }
+  //   }
+  // }, [])
   useEffect(() => {
-    const raw = localStorage.getItem('litpt_member')
-    const user = raw ? JSON.parse(raw) : null
-    if (user) {
-      setUserRole(user.role)
-      if (user.role === 'member') {
-        setSelectedMember(user)
-      } else {
-        fetchAllMembers()
-      }
+    if (!user) return
+    // setUserRole(user.role)
+    if (user.role === 'member') {
+      setSelectedMember(user) // 바로 Member 타입이므로 문제 없음
+    } else {
+      fetchAllMembers()
     }
-  }, [])
+  }, [user])
 
   // 트레이너: 회원 목록 조회
   const fetchAllMembers = async () => {

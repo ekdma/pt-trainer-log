@@ -4,6 +4,7 @@ import { useRouter } from 'next/navigation'
 import { getSupabaseClient } from '@/lib/supabase'
 import { useLanguage } from '@/context/LanguageContext'
 import LanguageToggle from '@/components/LanguageToggle'
+import { useAuth } from '@/context/AuthContext'
 
 export default function LoginPage() {
   const { t } = useLanguage()
@@ -14,6 +15,9 @@ export default function LoginPage() {
   const [error, setError] = useState('')
   const router = useRouter()
   const supabase = getSupabaseClient()
+  const { setUser } = useAuth()
+
+  const SESSION_DURATION = 30 * 60 * 1000 // 15분
 
   const ADMIN_CODE = process.env.NEXT_PUBLIC_ADMIN_CODE || 'secret123'
 
@@ -61,8 +65,10 @@ export default function LoginPage() {
       return
     }
 
-    const memberWithLoginBy = { ...member, loginBy }
-    localStorage.setItem('litpt_member', JSON.stringify(memberWithLoginBy))
+    const expiresAt = Date.now() + SESSION_DURATION
+    const memberWithSession = { ...member, loginBy, expiresAt }
+    // localStorage.setItem('litpt_member', JSON.stringify(memberWithSession))
+    setUser(memberWithSession)
     router.push(member.role === 'trainer' ? '/trainer' : '/my')
   }
 

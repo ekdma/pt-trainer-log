@@ -9,6 +9,7 @@ import {
 import TargetSelectListbox from '@/components/ui/TargetSelectListbox'
 import ViewModeSelectListbox from '@/components/ui/ViewModeSelectListbox'
 import { motion } from 'framer-motion'
+import { useLanguage } from '@/context/LanguageContext'
 
 type Props = {
   member: Member
@@ -128,6 +129,7 @@ export default function MemberGraphs({ member, logs: initialLogs, showFavoritesO
   const [selectedTarget, setSelectedTarget] = useState<string | null>(null)
   const [viewMode, setViewMode] = useState<'daily' | 'monthly'>('daily');
   const [isMobile, setIsMobile] = useState(false)
+  const { t } = useLanguage()  // 번역 함수 가져오기
 
   useEffect(() => {
     const checkMobile = () => {
@@ -275,7 +277,9 @@ export default function MemberGraphs({ member, logs: initialLogs, showFavoritesO
           {selectedTarget === null ? (
             // 통합 모드
             targets.length === 0 ? (
-              <p className="text-center text-gray-500 mt-8">등록된 운동 기록이 없습니다.</p>
+              <p className="text-center text-gray-500 mt-8">
+                {t("workout.emptydata")}
+              </p>
             ) : (
               targets.map((target) => {
                 const groupLogs = targetGroups[target]

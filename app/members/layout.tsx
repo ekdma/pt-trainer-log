@@ -1,29 +1,14 @@
-'use client'
+// app/members/layout.tsx (서버 컴포넌트)
+import type { Metadata } from 'next'
 
-import { useEffect } from 'react'
-import { useRouter } from 'next/navigation'
+export const metadata: Metadata = {
+  title: "회원 관리 | Members",
+  description: "전체 회원 정보를 빠르게 조회하고 편리하게 관리하세요. / Quickly view and efficiently manage all member information.",
+}
 
-export default function MembersLayout({
-  children,
-}: {
-  children: React.ReactNode
-}) {
-  const router = useRouter()
+// 클라이언트 기능 분리는 아래 컴포넌트에서
+import MembersClient from './MembersClient'
 
-  useEffect(() => {
-    try {
-      const raw = localStorage.getItem('litpt_member')
-      const member = raw ? JSON.parse(raw) : null
-
-      if (!member || member.role !== 'trainer') {
-        router.replace('/not-authorized')
-      }
-    } catch (e) {
-      console.error('Authorization error:', e)
-      router.replace('/not-authorized')
-    }
-    
-  }, [router])
-
-  return <>{children}</>
+export default function MembersLayout({ children }: { children: React.ReactNode }) {
+  return <MembersClient>{children}</MembersClient>
 }

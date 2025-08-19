@@ -1,5 +1,5 @@
+import LoginPage from './login/page'  
 import { LanguageProvider } from '@/context/LanguageContext'
-import LoginPage from '@/components/login/LoginPage'
 
 export default function Page() {
   return (

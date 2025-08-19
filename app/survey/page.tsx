@@ -13,6 +13,7 @@ import SurveySearch from '@/components/survey/SurveySearch'
 import SurveyResponseMulti from '@/components/survey/SurveyResponseMuilti'
 import { toast } from 'sonner'
 import ConfirmDeleteItem from '@/components/ui/ConfirmDeleteItem'
+import { useAuth } from '@/context/AuthContext'
 
 interface Survey {
   id: string
@@ -30,6 +31,8 @@ export default function SurveysPage() {
   const [myMemberId, setMyMemberId] = useState<number | null>(null)
   const [selectedSurveyId, setSelectedSurveyId] = useState<string | null>(null)
   const [isStartSurveyOpen, setIsStartSurveyOpen] = useState(false)
+
+  const { user } = useAuth() // AuthContext에서 user 가져오기
 
   const handleSurveyClick = (id: string) => setSelectedSurveyId(id)
   const handleBackToList = () => setSelectedSurveyId(null)
@@ -88,20 +91,29 @@ export default function SurveysPage() {
   
   useAuthGuard()
 
-  useEffect(() => {
-    try {
-      const raw = localStorage.getItem('litpt_member')
-      const loggedInMember = raw ? JSON.parse(raw) : null
+  // useEffect(() => {
+  //   try {
+  //     const raw = localStorage.getItem('litpt_member')
+  //     const loggedInMember = raw ? JSON.parse(raw) : null
 
-      if (loggedInMember?.member_id) {
-        setMyMemberId(loggedInMember.member_id)
-      } else {
-        console.warn('member_id를 찾을 수 없습니다.')
-      }
-    } catch (e) {
-      console.error('로그인 정보 읽기 실패:', e)
+  //     if (loggedInMember?.member_id) {
+  //       setMyMemberId(loggedInMember.member_id)
+  //     } else {
+  //       console.warn('member_id를 찾을 수 없습니다.')
+  //     }
+  //   } catch (e) {
+  //     console.error('로그인 정보 읽기 실패:', e)
+  //   }
+  // }, [])
+
+  useEffect(() => {
+    if (user?.member_id) {
+      setMyMemberId(user.member_id)
+    } else {
+      setMyMemberId(null)
+      console.warn('로그인된 멤버가 없습니다.')
     }
-  }, [])
+  }, [user])
 
   const fetchSurveys = async () => {
     setIsLoading(true)

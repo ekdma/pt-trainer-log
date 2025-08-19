@@ -12,6 +12,7 @@ import ConfirmSession from '@/components/calendar/ConfirmSession'
 import ReserveSession from '@/components/calendar/ReserveSession'
 import { formatInTimeZone, format } from 'date-fns-tz'
 import { useRouter, useSearchParams } from 'next/navigation'
+import { useAuth } from '@/context/AuthContext'
 
 type SessionInfo = Record<string, { status: string; type: string }[]>
 
@@ -23,23 +24,28 @@ export default function TrainerCalendarPageClient() {
   const [sessionMap, setSessionMap] = useState<SessionInfo>({})
   const router = useRouter()
   const searchParams = useSearchParams()
-  
+  const { user } = useAuth() // AuthContext에서 user 가져오기
+
   const initialDate = searchParams.get('date')
   ? new Date(searchParams.get('date')!)
   : new Date()
 
   const [selectedDate, setSelectedDate] = useState<Date>(initialDate)
 
+  // useEffect(() => {
+  //   // 예: localStorage에서 memberId 가져오기
+  //   const raw = localStorage.getItem('litpt_member')
+  //   if (raw) {
+  //     try {
+  //       const user = JSON.parse(raw)
+  //       if (user?.member_id) setMemberId(user.member_id)
+  //     } catch {}
+  //   }
+  // }, [])
   useEffect(() => {
-    // 예: localStorage에서 memberId 가져오기
-    const raw = localStorage.getItem('litpt_member')
-    if (raw) {
-      try {
-        const user = JSON.parse(raw)
-        if (user?.member_id) setMemberId(user.member_id)
-      } catch {}
-    }
-  }, [])
+    if (!user) return
+    setMemberId(String(user.member_id))
+  }, [user])
 
   useEffect(() => {
     if (!memberId) return
