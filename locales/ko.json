@@ -60,7 +60,8 @@
       "button": "로그인",
       "noMatch": "일치하는 회원이 없습니다 😥",
       "wrongPassword": "비밀번호가 올바르지 않습니다.",
-      "wrongAdmin": "관리자 코드를 올바르게 입력해주세요 😁"
+      "wrongAdmin": "관리자 코드를 올바르게 입력해주세요 😁",
+      "saveInfo": "로그인 정보 저장"
     },
     "my": {
       "fastingWeightData": "아침 공복 체중",

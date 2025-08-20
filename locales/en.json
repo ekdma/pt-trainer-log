@@ -59,7 +59,8 @@
       "button": "Log In",
       "noMatch": "No matching member found 😥",
       "wrongPassword": "Incorrect password.",
-      "wrongAdmin": "Please enter the correct admin code 😁"
+      "wrongAdmin": "Please enter the correct admin code 😁",
+      "saveInfo": "Saving login information"
     },
     "my": {
       "fastingWeightData": "Fasting Weight",

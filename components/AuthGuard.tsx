@@ -34,6 +34,7 @@ export default function AuthGuard({ children }: { children: React.ReactNode }) {
   // 초기 mount 시와 user 변경 시 타이머 시작
   useEffect(() => {
     if (user) startLogoutTimer()
+    return () => clearTimer()
   }, [user])
 
   // 사용자 활동 감지 시 세션 연장
@@ -46,6 +47,8 @@ export default function AuthGuard({ children }: { children: React.ReactNode }) {
         if (currentUser) {
           setUser(currentUser, true)  // expiresAt 갱신
           startLogoutTimer()          // 타이머 재설정
+        } else {
+          logoutAndRedirect() // ✅ 세션 없으면 강제 로그아웃
         }
         throttleTimer = null
       }, 500) // 0.5초 제한

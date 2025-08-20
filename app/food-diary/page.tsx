@@ -1,6 +1,6 @@
 'use client'
 
-import { Suspense, useEffect, useState } from 'react'
+import { Suspense, useEffect } from 'react'
 import FoodDiaryPageClient from '../../components/food-diary/FoodDiaryPageClient'
 import Header from '@/components/layout/Header'
 import TrainerHeader from '@/components/layout/TrainerHeader'
