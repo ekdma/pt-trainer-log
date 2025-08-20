@@ -86,6 +86,7 @@ export default function FoodDiaryPageClient() {
       description: '',
       nickname: '',
       status: '',
+      expiresAt: null,
     }
   : null
   // const initialSelectedMember = memberIdFromQuery
