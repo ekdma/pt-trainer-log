@@ -56,7 +56,7 @@ export default function ReserveMemberSession({ selectedDate, trainerId, onSessio
   const [allConfirmedSessions, setAllConfirmedSessions] = useState<CalendarSession[]>([])
 
   useEffect(() => {
-    setAvailableTimes(Array.from({ length: 12 }, (_, i) => `${9 + i}:00`))
+    setAvailableTimes(Array.from({ length: 15 }, (_, i) => `${9 + i}:00`))
   }, [])
 
   useEffect(() => {
@@ -532,10 +532,10 @@ export default function ReserveMemberSession({ selectedDate, trainerId, onSessio
                   {memberName && (
                     (status === '확정' ||
                       (status === '신청' && matchedSessions.filter(s => s.status === '신청').length <= 1)) && (
-                        <span className="ml-2 text-xs text-gray-500 truncate">
+                        <span className="block text-xs text-gray-500 text-center mt-1 break-words">
                           {memberName}
                           <br />
-                          <span className="ml-1 text-[10px] text-gray-400">
+                          <span className="text-[10px] text-gray-400">
                             {sessionType ? ` [${sessionType.toUpperCase()}]` : ''}
                           </span>
                           {(() => {
@@ -577,7 +577,7 @@ export default function ReserveMemberSession({ selectedDate, trainerId, onSessio
 
                             if (currentIndex >= 0) {
                               return (
-                                <span className="ml-1 text-[10px] text-gray-400">
+                                <span className="text-[10px] text-gray-400">
                                   ({currentIndex + 1}/{total})
                                 </span>
                               )
