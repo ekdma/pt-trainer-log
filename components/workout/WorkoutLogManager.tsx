@@ -352,18 +352,18 @@ export default function WorkoutLogManager({
     }
   };
     
-  const levelWorkoutsMap = rows.reduce((acc, { level, target, workout }) => {
-    if (!acc[level]) acc[level] = new Set()
-    acc[level].add(`${target}||${workout}`)
-    return acc
-  }, {} as Record<string, Set<string>>)
+  // const levelWorkoutsMap = rows.reduce((acc, { level, target, workout }) => {
+  //   if (!acc[level]) acc[level] = new Set()
+  //   acc[level].add(`${target}||${workout}`)
+  //   return acc
+  // }, {} as Record<string, Set<string>>)
 
-  const beforeSet = levelWorkoutsMap[member.before_level] || new Set()
-  const afterSet = levelWorkoutsMap[member.level] || new Set()
+  // const beforeSet = levelWorkoutsMap[member.before_level] || new Set()
+  // const afterSet = levelWorkoutsMap[member.level] || new Set()
 
-  const commonWorkouts = Array.from(
-    new Set([...beforeSet].filter((item) => afterSet.has(item)))
-  )
+  // const commonWorkouts = Array.from(
+  //   new Set([...beforeSet].filter((item) => afterSet.has(item)))
+  // )
 
   const dateInputRef = useRef<HTMLInputElement | null>(null);
 
@@ -984,24 +984,25 @@ export default function WorkoutLogManager({
                       const totalRows = rows.length;
                       const totalCols = dates.length + (addingDate ? 1 : 0);
 
-                      const isBeforeModified = new Date(date) < new Date(member.modified_dt ?? '9999-12-31');
-                      const isAfterModified = new Date(date) >= new Date(member.modified_dt ?? '0000-01-01');
+                      // const isBeforeModified = new Date(date) < new Date(member.modified_dt ?? '9999-12-31');
+                      // const isAfterModified = new Date(date) >= new Date(member.modified_dt ?? '0000-01-01');
 
-                      const isCommonWorkout = commonWorkouts.includes(rowKey);
-                      const isBeforeLevelWorkout = level === member.before_level;
-                      const isAfterLevelWorkout = level === member.level;
+                      // const isCommonWorkout = commonWorkouts.includes(rowKey);
+                      // const isBeforeLevelWorkout = level === member.before_level;
+                      // const isAfterLevelWorkout = level === member.level;
                       
                       const isPastEditable =
                         isTrainer || isDateWithinLast7Days(date)  
 
                       const isDisabled =
                         !isPastEditable ||
-                        (!isTrainer && ptSessionDates.has(date)) || // ← 수정됨
-                        (
-                          !isCommonWorkout &&
-                          ((isBeforeLevelWorkout && !isBeforeModified) ||
-                           (isAfterLevelWorkout && !isAfterModified))
-                        );
+                        (!isTrainer && ptSessionDates.has(date))
+                        //  || // ← 수정됨
+                        // (
+                        //   !isCommonWorkout &&
+                        //   ((isBeforeLevelWorkout && !isBeforeModified) ||
+                        //    (isAfterLevelWorkout && !isAfterModified))
+                        // );
                       
                       
 
@@ -1044,19 +1045,20 @@ export default function WorkoutLogManager({
                       const totalRows = rows.length;
                       const totalCols = dates.length + (addingDate ? 1 : 0);
                       const colIndex = dates.length; // 기존 날짜 열 개수 = 이게 새로운 열의 index
-                      const isBeforeModified = new Date(addingDate) < new Date(member.modified_dt ?? '9999-12-31');
-                      const isAfterModified = new Date(addingDate) >= new Date(member.modified_dt ?? '0000-01-01');
-                      const isCommonWorkout = commonWorkouts.includes(rowKey);
-                      const isBeforeLevelWorkout = level === member.before_level;
-                      const isAfterLevelWorkout = level === member.level;
+                      // const isBeforeModified = new Date(addingDate) < new Date(member.modified_dt ?? '9999-12-31');
+                      // const isAfterModified = new Date(addingDate) >= new Date(member.modified_dt ?? '0000-01-01');
+                      // const isCommonWorkout = commonWorkouts.includes(rowKey);
+                      // const isBeforeLevelWorkout = level === member.before_level;
+                      // const isAfterLevelWorkout = level === member.level;
 
                       const isPtSessionOccupied = !isTrainer && ptSessionDates.has(addingDate);
-                      const isLevelRestricted = !isCommonWorkout && (
-                        (isBeforeLevelWorkout && !isBeforeModified) ||
-                        (isAfterLevelWorkout && !isAfterModified)
-                      );
+                      // const isLevelRestricted = !isCommonWorkout && (
+                      //   (isBeforeLevelWorkout && !isBeforeModified) ||
+                      //   (isAfterLevelWorkout && !isAfterModified)
+                      // );
 
-                      const isDisabled = isPtSessionOccupied || isLevelRestricted;
+                      // const isDisabled = isPtSessionOccupied || isLevelRestricted;
+                      const isDisabled = isPtSessionOccupied; 
                       const splitColorClass = getSplitColor(addingDate, rowKey);
                       return (
                         // <td className="border px-1 py-1 text-center bg-yellow-50 w-[80px]">

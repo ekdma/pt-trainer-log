@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useMemo, useState } from "react";
 import { DndContext, closestCenter } from "@dnd-kit/core";
 import { WorkoutType } from '@/components/members/types'
 import type { DragEndEvent } from "@dnd-kit/core";
@@ -55,9 +55,14 @@ export default function OrderManagementModal({ allTypes, isOpen, onClose, onRefr
   const [selectedTarget, setSelectedTarget] = useState<string | null>(null);
   const [workoutOrder, setWorkoutOrder] = useState<string[]>([]);
   const [loading, setLoading] = useState(false);
-  const filteredTypes = allTypes.filter(t => t.level !== 'GROUP');
-  const uniqueTargets = Array.from(new Set(filteredTypes.map(t => t.target)));
-
+  const filteredTypes = useMemo(
+    () => allTypes.filter(t => t.level !== 'GROUP'),
+    [allTypes]
+  );
+  const uniqueTargets = useMemo(
+    () => Array.from(new Set(filteredTypes.map(t => t.target))),
+    [filteredTypes]
+  );
   const sensors = useSensors(
     useSensor(MouseSensor),
     useSensor(TouchSensor, {
@@ -93,26 +98,21 @@ export default function OrderManagementModal({ allTypes, isOpen, onClose, onRefr
 
   // Workout 순서 설정 (Target 선택 시)
   useEffect(() => {
-    if (!selectedTarget) return;
-  
-    // 이미 workoutOrder에 값이 있으면 초기화하지 않고 유지
-    if (workoutOrder.length > 0) return;
-  
-    const filtered = filteredTypes.filter((t) => t.target === selectedTarget);
-    const workoutMap = new Map<string, number>();
-    for (const f of filtered) {
-      if (typeof f.order_workout === "number") {
-        workoutMap.set(f.workout, f.order_workout);
-      } else {
-        workoutMap.set(f.workout, 999);
-      }
+    if (!selectedTarget) {
+      setWorkoutOrder([]); // target 선택 해제 시 비우기
+      return;
     }
-    const sorted = filtered
-      .map((f) => f.workout)
-      .filter((w, i, arr) => arr.indexOf(w) === i)
-      .sort((a, b) => (workoutMap.get(a) ?? 999) - (workoutMap.get(b) ?? 999));
+  
+    const list = filteredTypes.filter(t => t.target === selectedTarget);
+    const orderMap = new Map<string, number>();
+    for (const f of list) {
+      orderMap.set(f.workout, typeof f.order_workout === "number" ? f.order_workout : 999);
+    }
+    const sorted = [...new Set(list.map(f => f.workout))].sort(
+      (a, b) => (orderMap.get(a) ?? 999) - (orderMap.get(b) ?? 999)
+    );
     setWorkoutOrder(sorted);
-  }, [selectedTarget, filteredTypes, workoutOrder.length]);
+  }, [selectedTarget, filteredTypes]);
   
   
   // DND 핸들러
