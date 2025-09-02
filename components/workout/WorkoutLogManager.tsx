@@ -143,37 +143,80 @@ export default function WorkoutLogManager({
   const [dateToSplitName, setDateToSplitName] = useState<{ [date: string]: string }>({})
 
   useEffect(() => {
-    if (!splitWorkouts.length || !dates.length) return;
-  
-    const newMap: Record<string, string> = {}
-    const distinctSplits = distinctSplitList
-  
-    // 주별로 날짜를 그룹화
-    const weekGroups: Record<string, string[]> = {}
-    dates.forEach(date => {
-      const weekStart = getWeekStart(date)
-      if (!weekGroups[weekStart]) weekGroups[weekStart] = []
-      weekGroups[weekStart].push(date)
-    })
-  
-    // 각 주별로 split_index 순환 배정
-    Object.values(weekGroups).forEach((weekDates) => {
-      weekDates.sort().forEach((date, idx) => {
-        const split = distinctSplits[idx % distinctSplits.length]
-        if (split) newMap[date] = split.split_name
+    if (!splitWorkouts.length || !dates.length) return
+
+    const fetchSplitNames = async () => {
+      // 1️⃣ DB에서 저장된 split_name 불러오기
+      const { data: logs, error } = await supabase
+        .from('workout_logs')
+        .select('workout_date, split_name')
+        .eq('member_id', member.member_id)
+        .in('workout_date', dates)
+
+      if (error) {
+        console.error('Split name fetch error:', error)
+        return
+      }
+
+      const dbMap: Record<string, string> = {}
+      logs?.forEach(log => {
+        if (log.workout_date && log.split_name) {
+          dbMap[log.workout_date] = log.split_name
+        }
       })
-    })
-  
-    // 추가 중인 날짜도 처리
-    if (addingDate) {
-      const weekStart = getWeekStart(addingDate)
-      const countThisWeek = weekGroups[weekStart]?.length ?? 0
-      const split = distinctSplits[countThisWeek % distinctSplits.length]
-      if (split) newMap[addingDate] = split.split_name
+
+      const newMap: Record<string, string> = { ...dbMap }
+      const distinctSplits = distinctSplitList.map(s => s.split_name)
+
+      // 2️⃣ 주 단위 그룹화
+      const weekGroups: Record<string, string[]> = {}
+      dates.forEach(date => {
+        const weekStart = getWeekStart(date)
+        if (!weekGroups[weekStart]) weekGroups[weekStart] = []
+        weekGroups[weekStart].push(date)
+      })
+
+      // 3️⃣ 주 단위 순환 배정 (DB 값 + 수정값 고려)
+      Object.values(weekGroups).forEach(weekDates => {
+        weekDates.sort()
+        let lastIdx = -1 // 직전 split_name 인덱스 추적
+
+        weekDates.forEach(date => {
+          if (!newMap[date]) {
+            // 직전 split_name 인덱스 기준으로 순환
+            lastIdx = (lastIdx + 1) % distinctSplits.length
+            newMap[date] = distinctSplits[lastIdx]
+          } else {
+            // DB나 수정값이 있으면 그 인덱스 기준으로 다음 날짜 순환
+            const dbSplit = newMap[date]
+            const idx = distinctSplits.indexOf(dbSplit)
+            lastIdx = idx >= 0 ? idx : lastIdx
+          }
+        })
+      })
+
+      // 4️⃣ 추가 날짜 처리 (DB 값 없으면 순환)
+      if (addingDate && !newMap[addingDate]) {
+        const weekStart = getWeekStart(addingDate)
+        const weekDates = weekGroups[weekStart]?.sort() ?? []
+        let lastIdx = -1
+        weekDates.forEach(date => {
+          const split = newMap[date]
+          if (split) {
+            const idx = distinctSplits.indexOf(split)
+            if (idx >= 0) lastIdx = idx
+          }
+        })
+        const nextIdx = (lastIdx + 1) % distinctSplits.length
+        newMap[addingDate] = distinctSplits[nextIdx]
+      }
+
+      setDateToSplitName(newMap)
     }
-  
-    setDateToSplitName(newMap)
-  }, [splitWorkouts, dates, addingDate, distinctSplitList])
+
+    fetchSplitNames()
+  }, [dates, addingDate, splitWorkouts, distinctSplitList, member.member_id])
+
   
   const splitNameToWorkouts = useMemo(() => {
     const mapping: Record<string, Set<string>> = {}
@@ -699,32 +742,55 @@ export default function WorkoutLogManager({
     if (!id) return
     if (!confirm('정말 삭제하시겠습니까?')) return
 
-    const { error } = await supabase
+    // 삭제할 운동 정보 가져오기
+    const deletedWorkout = localAllTypes.find(w => w.workout_type_id === id)
+    if (!deletedWorkout) {
+      toast.error('삭제할 운동 정보를 찾을 수 없습니다.')
+      return
+    }
+
+    const { target, workout } = deletedWorkout
+
+    // workout_types에서 삭제
+    const { error: deleteTypeError } = await supabase
       .from('workout_types')
       .delete()
       .eq('workout_type_id', id)
 
-    // if (error) alert('삭제 실패: ' + error.message)
-    if (error) toast.error('삭제 실패: ' + error.message)
-    else {
-      // alert('운동 삭제를 완료하였습니다 😊')
-      toast.success('운동 삭제를 완료하였습니다 😊')
-      const { data: updatedTypes, error: fetchError } = await supabase
-        .from('workout_types')
-        .select('*')
+    if (deleteTypeError) {
+      toast.error('운동 삭제 실패: ' + deleteTypeError.message)
+      return
+    }
 
-      if (!fetchError && updatedTypes) {
-        setLocalAllTypes(updatedTypes)
+    // 관련 favorites 삭제 (target + workout 기준)
+    if (target && workout) {
+      const { error: deleteFavError } = await supabase
+        .from('favorites')
+        .delete()
+        .eq('target', target)
+        .eq('workout', workout)
+
+      if (deleteFavError) {
+        toast.error('즐겨찾기 삭제 실패: ' + deleteFavError.message)
       }
+    }
 
-      fetchLogs()
-      if (onRefreshAllTypes) {
-        await onRefreshAllTypes()
-      } 
+    // 상태 업데이트 및 로그 새로고침
+    toast.success('운동 삭제를 완료하였습니다 😊')
+
+    const { data: updatedTypes, error: fetchError } = await supabase
+      .from('workout_types')
+      .select('*')
+
+    if (!fetchError && updatedTypes) {
+      setLocalAllTypes(updatedTypes)
+    }
+
+    fetchLogs()
+    if (onRefreshAllTypes) {
+      await onRefreshAllTypes()
     }
   }
-  
-
 
   // 열 추가시 오른쪽 끝으로 자동 스크롤
   useEffect(() => {
@@ -814,8 +880,21 @@ export default function WorkoutLogManager({
                     <div className="text-xs font-semibold truncate">{dayjs(date).format('YY.MM.DD')}</div>
                     <select
                       value={dateToSplitName[date] ?? ''}
-                      onChange={(e) => {
-                        setDateToSplitName(prev => ({ ...prev, [date]: e.target.value }))
+                      onChange={async (e) => {
+                        const newSplit = e.target.value
+                        setDateToSplitName(prev => ({ ...prev, [date]: newSplit }))
+
+                        const { error } = await supabase
+                          .from('workout_logs')
+                          .update({ split_name: newSplit })
+                          .eq('member_id', member.member_id)
+                          .eq('workout_date', date)
+
+                        if (error) {
+                          toast.error('분할 저장 실패 😥')
+                        } else {
+                          toast.success('분할이 저장되었습니다 ✅')
+                        }
                       }}
                       className="text-xs mt-1 text-center rounded border border-gray-300 w-full bg-white"
                     >

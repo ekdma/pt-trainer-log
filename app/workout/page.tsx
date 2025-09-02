@@ -272,23 +272,25 @@ export default function MembersPage() {
 
               {/* 2. level + 즐겨찾기 버튼 */}
               <div className="flex items-center gap-3 whitespace-nowrap">
-                <div
-                  className={`px-3 py-1 rounded-md text-white font-semibold shadow-sm text-xs ${
-                    selectedMember.level === 'Level 1'
-                      ? 'bg-yellow-500'
-                      : selectedMember.level === 'Level 2'
-                      ? 'bg-green-500'
-                      : selectedMember.level === 'Level 3'
-                      ? 'bg-blue-500'
-                      : selectedMember.level === 'Level 4'
-                      ? 'bg-red-500'
-                      : selectedMember.level === 'Level 5'
-                      ? 'bg-black'
-                      : 'bg-gray-400'
-                  }`}
-                >
-                  {selectedMember.level}
-                </div>
+                {userRole === 'trainer' && (
+                  <div
+                    className={`px-3 py-1 rounded-md text-white font-semibold shadow-sm text-xs ${
+                      selectedMember.level === 'Level 1'
+                        ? 'bg-yellow-500'
+                        : selectedMember.level === 'Level 2'
+                        ? 'bg-green-500'
+                        : selectedMember.level === 'Level 3'
+                        ? 'bg-blue-500'
+                        : selectedMember.level === 'Level 4'
+                        ? 'bg-red-500'
+                        : selectedMember.level === 'Level 5'
+                        ? 'bg-black'
+                        : 'bg-gray-400'
+                    }`}
+                  >
+                    {selectedMember.level}
+                  </div>
+                )}
 
                 <button
                   onClick={toggleViewMode}
@@ -414,7 +416,9 @@ export default function MembersPage() {
             {showSplitModal && (
               <SplitWorkout
                 member={selectedMember}
-                allTypes={allTypes}
+                allTypes={allTypes.filter(
+                  (t) => favorites.has(`${t.target}||${t.workout}`)
+                )}
                 onClose={() => {
                   setShowSplitModal(false)
                   fetchSplitWorkouts() // ✅ 닫을 때 최신 데이터 다시 불러오기
