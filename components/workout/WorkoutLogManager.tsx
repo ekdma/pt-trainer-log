@@ -209,12 +209,11 @@ export default function WorkoutLogManager({
         let lastIdx = -1 // 직전 split_name 인덱스 추적
 
         weekDates.forEach(date => {
-          if (!newMap[date]) {
-            // 직전 split_name 인덱스 기준으로 순환
+          // 이미 사용자가 선택한 값은 덮어쓰지 않음
+          if (!newMap[date] || (date === addingDate && !dateToSplitName[addingDate])) {
             lastIdx = (lastIdx + 1) % distinctSplits.length
-            newMap[date] = distinctSplits[lastIdx]
+            if (!newMap[date]) newMap[date] = distinctSplits[lastIdx]
           } else {
-            // DB나 수정값이 있으면 그 인덱스 기준으로 다음 날짜 순환
             const dbSplit = newMap[date]
             const idx = distinctSplits.indexOf(dbSplit)
             lastIdx = idx >= 0 ? idx : lastIdx
@@ -238,7 +237,10 @@ export default function WorkoutLogManager({
         newMap[addingDate] = distinctSplits[nextIdx]
       }
 
-      setDateToSplitName(newMap)
+      setDateToSplitName(prev => ({
+        ...newMap,
+        ...prev, // 기존 사용자 선택값 덮어쓰지 않음
+      }))
     }
 
     fetchSplitNames()
@@ -257,12 +259,17 @@ export default function WorkoutLogManager({
     return mapping
   }, [splitWorkouts])
   
+  // getSplitColor 함수 수정
   const getSplitColor = (date: string, rowKey: string) => {
-    const splitName = dateToSplitName[date]
-    if (!splitName) return ''
-    const isMatch = splitNameToWorkouts[splitName]?.has(rowKey)
-    return isMatch ? 'bg-sky-100' : ''
-  }
+    // 새로 추가된 날짜는 dateToSplitName 상태를 우선 사용
+    const splitName = dateToSplitName[date]; 
+    if (!splitName) return '';
+    const isMatch = splitNameToWorkouts[splitName]?.has(rowKey);
+    return isMatch
+      ? 'bg-sky-100 border text-sky-800 font-semibold border-sky-300 rounded-md shadow-sm'
+      : '';
+  };
+
 
   const handleLongPressStart = (e: React.TouchEvent | React.MouseEvent, date: string) => {
     const target = headerRefs.current[date];
@@ -962,7 +969,7 @@ export default function WorkoutLogManager({
           // 기본값
           const start = '13';
           const end = '15';
-          const sets = '3';
+          const sets = '2';
           setRepValuesMap((prev) => ({
             ...prev,
             [rowKey]: { start, end, sets }
@@ -1003,6 +1010,43 @@ export default function WorkoutLogManager({
     } catch (err) {
       console.error('저장에러:', err instanceof Error ? err.message : err);
     }
+  };
+
+  const handleDateConfirm = () => {
+    const fullDate = `${year}.${month}.${day}`;
+    const normalized = normalizeDateInput(fullDate);
+    if (!normalized) return;
+
+    if (!isTrainer && !isDateWithinLast7Days(normalized)) {
+      toast.warning(t('alert.workout_warning_2'));
+      return;
+    }
+
+    if (dates.includes(normalized)) {
+      toast.warning(`${t('alert.workout_warning_1')} ${normalized} ☹`);
+      return;
+    }
+
+    setAddingDate(normalized);
+
+    // 포커스 이동
+    setTimeout(() => {
+      const colIndex = dates.length;
+      let targetRow = 0;
+
+      while (
+        targetRow < rows.length &&
+        inputRefs.current[`${targetRow}-${colIndex}`]?.disabled
+      ) {
+        targetRow += 1;
+      }
+
+      const nextInput = inputRefs.current[`${targetRow}-${colIndex}`];
+      if (nextInput && !nextInput.disabled) {
+        nextInput.focus();
+        nextInput.select?.();
+      }
+    }, 50);
   };
 
   return (
@@ -1121,45 +1165,10 @@ export default function WorkoutLogManager({
                           onKeyDown={(e) => {
                             if (e.key === 'Enter' || e.key === 'Tab') {
                               e.preventDefault();
-                              const fullDate = `${year}.${month}.${day}`;
-                              const normalized = normalizeDateInput(fullDate);
-                              if (normalized) {
-                                if (!isTrainer && !isDateWithinLast7Days(normalized)) {
-                                  // alert('7일 이내의 날짜만 추가할 수 있습니다 😥');
-                                  toast.warning(t('alert.workout_warning_2'));
-                                  return;
-                                }
-                              
-                                if (dates.includes(normalized)) {
-                                  // alert(`이미 존재하는 날짜입니다: ${normalized} ☹`);
-                                  toast.warning(`${t('alert.workout_warning_1')} ${normalized} ☹`);
-                                  return;
-                                }
-                              
-                                setAddingDate(normalized);
-                          
-                                // focus 다음 weight 입력칸으로 이동
-                                setTimeout(() => {
-                                  const colIndex = dates.length; // 신규 열은 마지막 index
-                                  let targetRow = 0;
-                          
-                                  while (
-                                    targetRow < rows.length &&
-                                    inputRefs.current[`${targetRow}-${colIndex}`]?.disabled
-                                  ) {
-                                    targetRow += 1;
-                                  }
-                          
-                                  const nextInput = inputRefs.current[`${targetRow}-${colIndex}`];
-                                  if (nextInput && !nextInput.disabled) {
-                                    nextInput.focus();
-                                    nextInput.select?.();
-                                  }
-                                }, 50);
-                              }
+                              handleDateConfirm();
                             }
                           }}
-                          
+                          onBlur={handleDateConfirm} 
                           className="w-[20px] text-center border rounded text-[12px]"
                           placeholder="dd"
                           maxLength={2}
@@ -1168,7 +1177,11 @@ export default function WorkoutLogManager({
                       <select
                         value={dateToSplitName[addingDate] ?? ''}
                         onChange={(e) => {
-                          setDateToSplitName(prev => ({ ...prev, [addingDate]: e.target.value }))
+                          const newSplit = e.target.value;
+                          setDateToSplitName(prev => ({
+                            ...prev,
+                            [addingDate]: newSplit, // 상태 업데이트
+                          }));
                         }}
                         className="text-xs w-[70px] text-center border border-gray-300 rounded"
                       >
@@ -1234,9 +1247,18 @@ export default function WorkoutLogManager({
 
                       {/* 모바일에서 REP 입력창 토글 */}
                       {repInputVisibleMap[rowKey] && (
-                        <div className="absolute left-full ml-2 top-1/2 -translate-y-1/2 z-50 bg-white border border-gray-300 rounded-lg px-3 py-2 shadow-md w-max max-w-[220px] sm:max-w-none">
-                          <div className="flex flex-col sm:flex-row sm:items-center gap-2">
-                            <div className="flex items-center gap-1 flex-wrap sm:flex-nowrap">
+                        <div className="absolute left-full ml-1 top-1/2 -translate-y-1/2 z-50 bg-white border border-gray-300 rounded-lg px-2 py-2 shadow-md w-max max-w-[220px] sm:max-w-none">
+                          <div
+                            className={`flex ${
+                              isTrainer ? 'flex-col sm:flex-row' : 'flex-row flex-nowrap'
+                            } items-center gap-2`}
+                          >
+                            {/* 입력 영역 */}
+                            <div
+                              className={`flex items-center gap-1 ${
+                                isTrainer ? 'flex-wrap sm:flex-nowrap' : 'flex-nowrap'
+                              }`}
+                            >
                               <input
                                 type="number"
                                 value={repValuesMap[rowKey]?.sets || ''}
@@ -1248,6 +1270,7 @@ export default function WorkoutLogManager({
                                 }
                                 className="w-7 text-center border border-teal-300 bg-teal-50 rounded-md text-xs py-0.5 focus:ring-2 focus:ring-teal-400 focus:outline-none shadow-sm"
                                 placeholder="#"
+                                disabled={!isTrainer}
                               />
                               
                               <span className="text-sm font-medium text-teal-700">X</span>
@@ -1275,6 +1298,7 @@ export default function WorkoutLogManager({
                                 }}
                                 className="w-7 text-center border border-yellow-300 bg-yellow-50 rounded-md text-xs py-0.5 focus:ring-2 focus:ring-yellow-400 focus:outline-none shadow-sm"
                                 placeholder="##"
+                                disabled={!isTrainer}
                               />
 
                               <span className="text-sm font-medium text-yellow-600">~</span>
@@ -1291,38 +1315,53 @@ export default function WorkoutLogManager({
                                 }
                                 className="w-7 text-center border border-yellow-300 bg-yellow-50 rounded-md text-xs py-0.5 focus:ring-2 focus:ring-yellow-400 focus:outline-none shadow-sm"
                                 placeholder="##"
+                                disabled={!isTrainer}
                               />
+
+                              {!isTrainer && (
+                                <button
+                                  onClick={() => toggleRepInput(rowKey)}
+                                  className="flex items-center justify-center px-1 py-1 bg-gray-50 text-red-500 hover:bg-gray-100 hover:text-red-500 rounded-md shadow-sm active:scale-95 transition-all duration-150 text-sm "
+                                  title="닫기"
+                                >
+                                  <X size={13} />
+                                </button>
+                              )}
                             </div>
 
-                            <div className="flex gap-2 sm:ml-2 sm:flex-shrink-0">
-                              {/* 저장 버튼 ✅ */}
-                              <button
-                                onClick={() => {
-                                  const start = repValuesMap[rowKey]?.start || '';
-                                  const end = repValuesMap[rowKey]?.end || '';
-                                  const sets = repValuesMap[rowKey]?.sets || '';
-                                  if (!start || !end || !sets) {
-                                    toast.error('Sets와 REP 범위를 모두 입력해주세요 😥');
-                                    return;
-                                  }
-                                  const repRange = `${start} ~ ${end}`;
-                                  saveRepToDB(rowKey, sets, repRange);
-                                }}
-                                className="flex items-center justify-center px-3 py-1 bg-gray-50 text-green-600 hover:bg-gray-100 hover:text-green-700 rounded-md shadow-sm active:scale-95 transition-all duration-150 text-sm"
-                                title="저장"
-                              >
-                                <Check size={13} />
-                              </button>
+                            {isTrainer && (
+                              <div className={`${isTrainer ? 'flex gap-1 sm:ml-1 sm:flex-shrink-0' : 'flex gap-1 ml-1 items-center'}`}>
+                                {/* 저장 버튼 ✅ */}
+                                  <button
+                                    onClick={() => {
+                                      const start = repValuesMap[rowKey]?.start || '';
+                                      const end = repValuesMap[rowKey]?.end || '';
+                                      const sets = repValuesMap[rowKey]?.sets || '';
+                                      if (!start || !end || !sets) {
+                                        toast.error('Sets와 REP 범위를 모두 입력해주세요 😥');
+                                        return;
+                                      }
+                                      const repRange = `${start} ~ ${end}`;
+                                      saveRepToDB(rowKey, sets, repRange);
+                                      
+                                      toggleRepInput(rowKey);
+                                    }}
+                                    className="flex items-center justify-center px-2 py-1 bg-gray-50 text-green-600 hover:bg-gray-100 hover:text-green-700 rounded-md shadow-sm active:scale-95 transition-all duration-150 text-sm"
+                                    title="저장"
+                                  >
+                                    <Check size={13} />
+                                  </button>
 
-                              {/* 닫기 버튼 ❌ */}
-                              <button
-                                onClick={() => toggleRepInput(rowKey)}
-                                className="flex items-center justify-center px-3 py-1 bg-gray-50 text-red-500 hover:bg-gray-100 hover:text-red-500 rounded-md shadow-sm active:scale-95 transition-all duration-150 text-sm"
-                                title="닫기"
-                              >
-                                <X size={13} />
-                              </button>
-                            </div>
+                                {/* 닫기 버튼 ❌ */}
+                                <button
+                                  onClick={() => toggleRepInput(rowKey)}
+                                  className="flex items-center justify-center px-2 py-1 bg-gray-50 text-red-500 hover:bg-gray-100 hover:text-red-500 rounded-md shadow-sm active:scale-95 transition-all duration-150 text-sm"
+                                  title="닫기"
+                                  >
+                                  <X size={13} />
+                                </button>
+                              </div>
+                            )}
                           </div>
                         </div>
                       )}
@@ -1480,7 +1519,7 @@ export default function WorkoutLogManager({
                       const splitColorClass = getSplitColor(addingDate, rowKey);
                       return (
                         // <td className="border px-1 py-1 text-center bg-yellow-50 w-[80px]">
-                        <td className={`border px-1 py-1 text-center w-[80px] ${splitColorClass}`}>
+                        <td className={`border px-1 py-1 text-center w-[80px] ${getSplitColor(addingDate, rowKey)}`}>
                           <input
                             type="number"
                             min={0}
