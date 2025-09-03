@@ -59,7 +59,7 @@ type LogMapType = {
     weight?: number;
     rep?: string;
     sets?: string; 
-    [date: string]: any;
+    [date: string]: unknown;
   };
 };
 
@@ -124,7 +124,7 @@ export default function WorkoutLogManager({
   
   const [repInputVisibleMap, setRepInputVisibleMap] = useState<{ [rowKey: string]: boolean }>({});
   const [repValuesMap, setRepValuesMap] = useState<{ [rowKey: string]: RepValuesType }>({});
-  const [_logRepMap, setLogRepMap] = useState<LogMapType>({});
+  const [, setLogRepMap] = useState<LogMapType>({}); // _logRepMap
 
   // 버튼 클릭 토글
   const toggleRepInput = (rowKey: string) => {
@@ -869,7 +869,7 @@ export default function WorkoutLogManager({
   }, [addingDate]);
 
   const saveRepToDB = async (rowKey: string, sets: string, repRange: string, showToast = true) => {
-    const [_target, workout] = rowKey.split('||');
+    const [, workout] = rowKey.split('||'); //_target
     const today = new Date();
     const yyyy = today.getFullYear();
     const mm = String(today.getMonth() + 1).padStart(2, '0');
@@ -925,7 +925,7 @@ export default function WorkoutLogManager({
   useEffect(() => {
     const fetchLatestRepForRow = async (rowKey: string) => {
       try {
-        const [_target, workout] = rowKey.split('||');
+        const [, workout] = rowKey.split('||'); //_target
         const today = new Date().toISOString().split('T')[0];
 
         const { data, error } = await supabase
@@ -972,8 +972,8 @@ export default function WorkoutLogManager({
             [rowKey]: { rep: `${start} ~ ${end}`, sets }
           }));
         }
-      } catch (err: any) {
-        console.error('fetchLatestRepForRow 에러:', err.message);
+      } catch (err) { // 타입 표기 생략 → TS 4.4+에서 기본이 unknown
+        console.error('fetchLatestRepForRow 에러:', err instanceof Error ? err.message : err);
       }
     };
 
@@ -1000,8 +1000,8 @@ export default function WorkoutLogManager({
       }
 
       toast.success('모든 REPS와 SETS가 오늘 이후로 저장되었습니다 ✅');
-    } catch (err: any) {
-      toast.error(`REP 저장 실패 😥: ${err.message}`);
+    } catch (err) {
+      console.error('저장에러:', err instanceof Error ? err.message : err);
     }
   };
 
