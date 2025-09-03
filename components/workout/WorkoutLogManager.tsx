@@ -1516,7 +1516,7 @@ export default function WorkoutLogManager({
 
                       // const isDisabled = isPtSessionOccupied || isLevelRestricted;
                       const isDisabled = isPtSessionOccupied; 
-                      const splitColorClass = getSplitColor(addingDate, rowKey);
+                      // const splitColorClass = getSplitColor(addingDate, rowKey);
                       return (
                         // <td className="border px-1 py-1 text-center bg-yellow-50 w-[80px]">
                         <td className={`border px-1 py-1 text-center w-[80px] ${getSplitColor(addingDate, rowKey)}`}>
