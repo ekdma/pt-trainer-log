@@ -12,6 +12,7 @@ import { Button } from '@/components/ui/button'
 import { Member, WorkoutRecord, WorkoutType } from '@/components/members/types'
 import { toast } from 'sonner'
 import { useLanguage } from '@/context/LanguageContext'
+import {  Check, X  } from 'lucide-react';
 
 interface WorkoutLogManagerProps {
   member: Member
@@ -46,6 +47,21 @@ type UpdateLog = {
   id: string | number;
   weight: number;
 }
+
+type RepValuesType = {
+  start?: string;
+  end?: string;
+  sets?: string;  
+};
+
+type LogMapType = {
+  [rowKey: string]: {
+    weight?: number;
+    rep?: string;
+    sets?: string; 
+    [date: string]: any;
+  };
+};
 
 export default function WorkoutLogManager({
   member,
@@ -105,6 +121,17 @@ export default function WorkoutLogManager({
   const headerRefs = useRef<Record<string, HTMLTableCellElement | null>>({});
   const longPressTimeout = useRef<NodeJS.Timeout | null>(null);
   const [isAddWorkoutOpen, setIsAddWorkoutOpen] = React.useState(false)
+  
+  const [repInputVisibleMap, setRepInputVisibleMap] = useState<{ [rowKey: string]: boolean }>({});
+  const [repValuesMap, setRepValuesMap] = useState<{ [rowKey: string]: RepValuesType }>({});
+  const [_logRepMap, setLogRepMap] = useState<LogMapType>({});
+
+  // 버튼 클릭 토글
+  const toggleRepInput = (rowKey: string) => {
+    setRepInputVisibleMap(prev => ({ ...prev, [rowKey]: !prev[rowKey] }));
+  };
+
+  
   // const [splitWorkouts, setSplitWorkouts] = useState<{ target: String, workout: String, split_name: string, split_index: number }[]>([])
 
   // useEffect(() => {
@@ -841,6 +868,143 @@ export default function WorkoutLogManager({
     }
   }, [addingDate]);
 
+  const saveRepToDB = async (rowKey: string, sets: string, repRange: string, showToast = true) => {
+    const [_target, workout] = rowKey.split('||');
+    const today = new Date();
+    const yyyy = today.getFullYear();
+    const mm = String(today.getMonth() + 1).padStart(2, '0');
+    const dd = String(today.getDate()).padStart(2, '0');
+    const todayStr = `${yyyy}-${mm}-${dd}`;
+
+    const { error } = await supabase
+      .from('workout_logs')
+      .update({ reps: repRange, sets })
+      .eq('member_id', member.member_id)
+      .eq('workout', workout)
+      .gte('workout_date', todayStr);
+
+    if (error) {
+      console.error(`REP 저장 실패 (rowKey=${rowKey}):`, error.message);
+      if (showToast) toast.error(`REP 저장 실패 😥: ${error.message}`);
+      throw error;
+    } else if (showToast) {
+      toast.success('오늘 이후 REP와 Sets가 저장되었습니다 ✅');
+    }
+  };
+
+  // const saveRepChanges = async (rowKey: string, repRange: string) => {
+  //   const [target, workout] = rowKey.split('||');
+
+  //   try {
+  //     const today = new Date().toISOString().split('T')[0]; // 오늘 날짜 (yyyy-mm-dd)
+
+  //     const { error } = await supabase
+  //       .from('workout_logs')
+  //       .update({ reps: repRange })
+  //       .eq('member_id', member.member_id)
+  //       .eq('workout', workout)
+  //       .gte('workout_date', today); // 오늘 이후 데이터만 업데이트
+
+  //     if (error) throw error;
+
+  //     // 로컬 상태 업데이트
+  //     setLogRepMap((prev) => ({
+  //       ...prev,
+  //       [rowKey]: {
+  //         ...prev[rowKey],
+  //         rep: repRange
+  //       }
+  //     }));
+
+  //     toast.success('REP가 저장되었습니다 ✅');
+  //   } catch (err: any) {
+  //     toast.error(`REP 저장 실패 😥: ${err.message}`);
+  //   }
+  // };
+
+  useEffect(() => {
+    const fetchLatestRepForRow = async (rowKey: string) => {
+      try {
+        const [_target, workout] = rowKey.split('||');
+        const today = new Date().toISOString().split('T')[0];
+
+        const { data, error } = await supabase
+          .from('workout_logs')
+          .select('reps, sets, workout_date')
+          .eq('member_id', member.member_id)
+          .eq('workout', workout)
+          .neq('reps', '0')       // reps가 0이 아닌 것만
+          .neq('reps', '0~0')     // reps가 0~0이 아닌 것만
+          .lte('workout_date', today)
+          .order('workout_date', { ascending: false })
+          .limit(1);
+
+        if (error) {
+          console.error('DB 조회 실패:', error.message);
+          return;
+        }
+
+        if (data && data.length > 0 && data[0].reps) {
+          const reps = data[0].reps;
+          const sets = data[0].sets || '3'; // 기본값 3
+          const [start, end] = reps.split('~').map((v: string) => v.trim());
+
+          setRepValuesMap((prev) => ({
+            ...prev,
+            [rowKey]: { start, end, sets }
+          }));
+
+          setLogRepMap((prev) => ({
+            ...prev,
+            [rowKey]: { rep: reps, sets }
+          }));
+        } else {
+          // 기본값
+          const start = '13';
+          const end = '15';
+          const sets = '3';
+          setRepValuesMap((prev) => ({
+            ...prev,
+            [rowKey]: { start, end, sets }
+          }));
+          setLogRepMap((prev) => ({
+            ...prev,
+            [rowKey]: { rep: `${start} ~ ${end}`, sets }
+          }));
+        }
+      } catch (err: any) {
+        console.error('fetchLatestRepForRow 에러:', err.message);
+      }
+    };
+
+    rows.forEach((row) => {
+      const rowKey = `${row.target}||${row.workout}`;
+      fetchLatestRepForRow(rowKey);
+    });
+  }, [member.member_id, rows]);
+
+  const saveAllChangesWithReps = async () => {
+    try {
+      await saveAllChanges();
+
+      for (const rowKey of Object.keys(repValuesMap)) {
+        const start = repValuesMap[rowKey]?.start || '';
+        const end = repValuesMap[rowKey]?.end || '';
+        const sets = repValuesMap[rowKey]?.sets || '';
+
+        if (start && end && sets) {
+          const repRange = `${start} ~ ${end}`;
+          // toast 생략 (버튼 클릭 때만 개별 알림)
+          await saveRepToDB(rowKey, sets, repRange, false);
+        }
+      }
+
+      toast.success('모든 REPS와 SETS가 오늘 이후로 저장되었습니다 ✅');
+    } catch (err: any) {
+      toast.error(`REP 저장 실패 😥: ${err.message}`);
+    }
+  };
+
   return (
     <>
       <div className="max-w-6xl mx-auto text-gray-700">
@@ -860,6 +1024,9 @@ export default function WorkoutLogManager({
                 <th className="border px-2 py-2 text-center text-xs sm:text-sm font-semibold w-[120px] sticky top-0 left-[35px] md:left-[190px] bg-gray-200 z-20">
                   Workout
                 </th>
+                {/* <th className="hidden md:table-cell sticky top-0 md:left-[310px] z-20 bg-gray-200 border px-2 py-2 text-center text-xs sm:text-sm font-semibold w-[80px]">
+                  Rep
+                </th> */}
 
                 {/* 날짜 열 */}
                 {dates.map((date) => (
@@ -1054,9 +1221,181 @@ export default function WorkoutLogManager({
                     <td className="hidden md:table-cell sticky left-[100px] z-10 bg-gray-100 border px-2 py-1 text-xs sm:text-sm font-semibold bg-opacity-100 style={{ willChange: 'transform' }}">
                       {target}
                     </td>
-                    <td className="sticky left-[35px] md:left-[190px] z-5 bg-gray-100 border px-2 py-1 text-xs sm:text-sm font-semibold bg-opacity-100 style={{ willChange: 'transform' }}">
-                      {workout}
+                    <td className="sticky left-[35px] md:left-[190px] z-5 bg-gray-100 border px-2 py-1 text-xs sm:text-sm font-semibold bg-opacity-100 relative">
+                      <span>{workout}</span>
+
+                      {/* 모바일 전용 REP 버튼 */}
+                      <button
+                        className="ml-1 w-5 h-5 inline-flex items-center justify-center rounded-full border border-blue-300 bg-blue-50 text-blue-600 text-[10px] font-semibold shadow-sm hover:bg-blue-100 hover:shadow-md active:scale-95 transition-all duration-150 align-middle"
+                        onClick={() => toggleRepInput(rowKey)}
+                      >
+                        i
+                      </button>
+
+                      {/* 모바일에서 REP 입력창 토글 */}
+                      {repInputVisibleMap[rowKey] && (
+                        <div className="absolute left-full ml-2 top-1/2 -translate-y-1/2 z-50 bg-white border border-gray-300 rounded-lg px-3 py-2 shadow-md w-max max-w-[220px] sm:max-w-none">
+                          <div className="flex flex-col sm:flex-row sm:items-center gap-2">
+                            <div className="flex items-center gap-1 flex-wrap sm:flex-nowrap">
+                              <input
+                                type="number"
+                                value={repValuesMap[rowKey]?.sets || ''}
+                                onChange={(e) =>
+                                  setRepValuesMap((prev) => ({
+                                    ...prev,
+                                    [rowKey]: { ...prev[rowKey], sets: e.target.value }
+                                  }))
+                                }
+                                className="w-7 text-center border border-teal-300 bg-teal-50 rounded-md text-xs py-0.5 focus:ring-2 focus:ring-teal-400 focus:outline-none shadow-sm"
+                                placeholder="#"
+                              />
+                              
+                              <span className="text-sm font-medium text-teal-700">X</span>
+                              
+                              {/* 시작 값 */}
+                              <input
+                                type="number"
+                                value={repValuesMap[rowKey]?.start || ''}
+                                onChange={(e) => {
+                                  const startVal = e.target.value;
+                                  setRepValuesMap((prev) => ({
+                                    ...prev,
+                                    [rowKey]: {
+                                      ...prev[rowKey],
+                                      start: startVal,
+                                      // end 값이 비어있거나 start 변경에 의해 갱신된 경우 자동 세팅
+                                      end:
+                                        prev[rowKey]?.end && prev[rowKey]?.end !== String(Number(prev[rowKey]?.start) + 2)
+                                          ? prev[rowKey].end
+                                          : startVal
+                                          ? String(Number(startVal) + 2)
+                                          : ''
+                                    }
+                                  }));
+                                }}
+                                className="w-7 text-center border border-yellow-300 bg-yellow-50 rounded-md text-xs py-0.5 focus:ring-2 focus:ring-yellow-400 focus:outline-none shadow-sm"
+                                placeholder="##"
+                              />
+
+                              <span className="text-sm font-medium text-yellow-600">~</span>
+
+                              {/* 끝 값 */}
+                              <input
+                                type="number"
+                                value={repValuesMap[rowKey]?.end || ''}
+                                onChange={(e) =>
+                                  setRepValuesMap((prev) => ({
+                                    ...prev,
+                                    [rowKey]: { ...prev[rowKey], end: e.target.value }
+                                  }))
+                                }
+                                className="w-7 text-center border border-yellow-300 bg-yellow-50 rounded-md text-xs py-0.5 focus:ring-2 focus:ring-yellow-400 focus:outline-none shadow-sm"
+                                placeholder="##"
+                              />
+                            </div>
+
+                            <div className="flex gap-2 sm:ml-2 sm:flex-shrink-0">
+                              {/* 저장 버튼 ✅ */}
+                              <button
+                                onClick={() => {
+                                  const start = repValuesMap[rowKey]?.start || '';
+                                  const end = repValuesMap[rowKey]?.end || '';
+                                  const sets = repValuesMap[rowKey]?.sets || '';
+                                  if (!start || !end || !sets) {
+                                    toast.error('Sets와 REP 범위를 모두 입력해주세요 😥');
+                                    return;
+                                  }
+                                  const repRange = `${start} ~ ${end}`;
+                                  saveRepToDB(rowKey, sets, repRange);
+                                }}
+                                className="flex items-center justify-center px-3 py-1 bg-gray-50 text-green-600 hover:bg-gray-100 hover:text-green-700 rounded-md shadow-sm active:scale-95 transition-all duration-150 text-sm"
+                                title="저장"
+                              >
+                                <Check size={13} />
+                              </button>
+
+                              {/* 닫기 버튼 ❌ */}
+                              <button
+                                onClick={() => toggleRepInput(rowKey)}
+                                className="flex items-center justify-center px-3 py-1 bg-gray-50 text-red-500 hover:bg-gray-100 hover:text-red-500 rounded-md shadow-sm active:scale-95 transition-all duration-150 text-sm"
+                                title="닫기"
+                              >
+                                <X size={13} />
+                              </button>
+                            </div>
+                          </div>
+                        </div>
+                      )}
                     </td>
+
+
+                    {/* 데스크톱 REP 열 */}
+                    {/* <td className="hidden md:table-cell sticky left-[310px] z-4 bg-gray-100 border px-2 py-1 text-center relative">
+                      <div className="flex items-center justify-center space-x-1">
+                        <input
+                          type="number"
+                          value={repValuesMap[rowKey]?.start || ''}
+                          onChange={(e) => {
+                            const startVal = e.target.value;
+                            setRepValuesMap((prev) => ({
+                              ...prev,
+                              [rowKey]: {
+                                ...prev[rowKey],
+                                start: startVal,
+                                end:
+                                  prev[rowKey]?.end && prev[rowKey]?.end !== String(Number(prev[rowKey]?.start) + 2)
+                                    ? prev[rowKey].end
+                                    : startVal
+                                    ? String(Number(startVal) + 2)
+                                    : ''
+                              }
+                            }));
+                          }}
+                          className={`w-[30px] text-center border border-gray-300 rounded-md text-xs py-0.5 focus:ring-2 focus:ring-blue-400 ${
+                            !isTrainer ? 'bg-gray-100 text-gray-600 cursor-not-allowed' : 'bg-white'
+                          }`}
+                          placeholder="##"
+                          disabled={!isTrainer}
+                        />
+
+                        <span className="text-sm text-gray-600">~</span>
+
+                        <input
+                          type="number"
+                          value={repValuesMap[rowKey]?.end || ''}
+                          onChange={(e) =>
+                            setRepValuesMap((prev) => ({
+                              ...prev,
+                              [rowKey]: { ...prev[rowKey], end: e.target.value }
+                            }))
+                          }
+                          className={`w-[30px] text-center border border-gray-300 rounded-md text-xs py-0.5 focus:ring-2 focus:ring-blue-400 ${
+                            !isTrainer ? 'bg-gray-100 text-gray-600 cursor-not-allowed' : 'bg-white'
+                          }`}
+                          placeholder="##"
+                          disabled={!isTrainer}
+                        />
+
+                        {isTrainer && (
+                          <button
+                            onClick={() => {
+                              const start = repValuesMap[rowKey]?.start || '';
+                              const end = repValuesMap[rowKey]?.end || '';
+                              if (!start || !end) {
+                                toast.error('REP 범위를 모두 입력해주세요 😥');
+                                return;
+                              }
+                              const repRange = `${start} ~ ${end}`;
+                              saveRepChanges(rowKey, repRange);
+                            }}
+                            className="ml-1 text-green-600 hover:text-green-700 active:scale-95 transition text-sm"
+                            title="저장"
+                          >
+                            <Check size={12} />
+                          </button>
+                        )}
+                      </div>
+                    </td> */}
                     
                     {/* 날짜별 셀 */}
                     {dates.map((date, colIndex) => {
@@ -1214,7 +1553,7 @@ export default function WorkoutLogManager({
           )}
 
           <Button
-            onClick={saveAllChanges}
+            onClick={saveAllChangesWithReps}
             disabled={!canSave}
             variant="darkGray" 
             className="text-sm"
