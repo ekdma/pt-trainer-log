@@ -44,7 +44,8 @@
       "workout": "운동 기록",
       "health": "건강 기록",
       "setGoals": "목표 설정",
-      "logout": "로그아웃"
+      "logout": "로그아웃",
+      "beforeafter": "비포/애프터"
     },
     "app": {
       "title": "Personal Training Log",
@@ -94,7 +95,10 @@
       "waterIntakeGoal_3": "최근 7일 동안 평균 ",
       "waterIntakeGoal_4": "잔을 마셨어요!",
       "sleepGoal_3": "최근 7일 동안 평균 ",
-      "sleepGoal_4": "시간 잤어요!"
+      "sleepGoal_4": "시간 잤어요!",
+      "goalImage": "나의 목표 이미지",
+      "goalImageDescription": "원하는대로 이루어질 것!",
+      "doNotShowAgain": "오늘 하루 열지 않음"
     },
     "my_calendar": {
       "myCalendar": "내 일정",
@@ -141,6 +145,12 @@
       "personalGoalsEG": "예: 각 식사마다 단백질 30g 먹기",
       "pleaseSetGoal": "목표를 설정해주세요",
       "goalSetting": "목표 설정"
+    },
+    "beforeafter": {
+      "hide": "숨기기",
+      "reupload": "재업로드",
+      "upload": "사진 업로드",
+      "addphoto": "추가 After 사진 추가"
     }
   }
   

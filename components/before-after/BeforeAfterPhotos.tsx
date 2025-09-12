@@ -6,14 +6,21 @@ import { getSupabaseClient } from '@/lib/supabase'
 import { Button } from '@/components/ui/button'
 import { Eye, EyeOff } from 'lucide-react';
 import { toast } from 'sonner'
+import { useAuth } from '@/context/AuthContext'
+import { useAuthGuard } from '@/hooks/useAuthGuard'
+import { useLanguage } from '@/context/LanguageContext'
 
 interface BeforeAfterPhotosProps {
   memberId: string
 }
 
 export default function BeforeAfterPhotos({ memberId }: BeforeAfterPhotosProps) {
+  useAuthGuard()
+  const { t } = useLanguage()
   const supabase = getSupabaseClient()
 
+  const { user } = useAuth()
+  const userRole = user?.role
   const [beforeUrl, setBeforeUrl] = useState<string | null>(null)
   const [afterUrl, setAfterUrl] = useState<string | null>(null)
   const [afterExtraUrls, setAfterExtraUrls] = useState<(string | null)[]>([]) // attribute3~10
@@ -265,33 +272,41 @@ export default function BeforeAfterPhotos({ memberId }: BeforeAfterPhotosProps) 
                     onChange={(e) => handleDateChange(e.target.value, 'before')}
                   />
                   <div className="flex gap-2 mt-2">
-                    <Button
-                      size="sm"
-                      variant="ghost"
-                      className="bg-white text-gray-700 hover:bg-gray-300"
-                      onClick={() => beforeInputRef.current?.click()}
-                    >
-                      재업로드
-                    </Button>
+                    {userRole === 'trainer' && (
+                      <>
+                        <Button
+                          size="sm"
+                          variant="ghost"
+                          className="bg-white text-gray-700 hover:bg-gray-300"
+                          onClick={() => beforeInputRef.current?.click()}
+                        >
+                          {t('beforeafter.reupload')}
+                        </Button>
+                      </>
+                    )}
                     <Button
                       size="sm"
                       variant="ghost"
                       className="bg-white text-gray-700 hover:bg-gray-300"
                       onClick={() => setBeforeVisible(false)}
                     >
-                      숨기기
+                      {t('beforeafter.hide')}
                     </Button>
                   </div>
                 </>
               ) : (
-                <Button
-                  size="sm"
-                  variant="ghost"
-                  className="bg-white text-gray-700 hover:bg-gray-300"
-                  onClick={() => beforeInputRef.current?.click()}
-                >
-                  사진 업로드
-                </Button>
+                <>
+                  {userRole === 'trainer' && (
+                    <Button
+                      size="sm"
+                      variant="ghost"
+                      className="bg-white text-gray-700 hover:bg-gray-300"
+                      onClick={() => beforeInputRef.current?.click()}
+                    >
+                      {t('beforeafter.upload')}
+                    </Button>
+                  )}
+                </>
               )}
               <input
                 ref={beforeInputRef}
@@ -330,33 +345,41 @@ export default function BeforeAfterPhotos({ memberId }: BeforeAfterPhotosProps) 
                     onChange={(e) => handleDateChange(e.target.value, 'after')}
                   />
                   <div className="flex gap-2 mt-2">
-                    <Button
-                      size="sm"
-                      variant="ghost"
-                      className="bg-white text-gray-700 hover:bg-gray-300"
-                      onClick={() => afterInputRef.current?.click()}
-                    >
-                      재업로드
-                    </Button>
+                    {userRole === 'trainer' && (
+                      <>
+                        <Button
+                          size="sm"
+                          variant="ghost"
+                          className="bg-white text-gray-700 hover:bg-gray-300"
+                          onClick={() => afterInputRef.current?.click()}
+                        >
+                          {t('beforeafter.reupload')}
+                        </Button>
+                      </>
+                    )}
                     <Button
                       size="sm"
                       variant="ghost"
                       className="bg-white text-gray-700 hover:bg-gray-300"
                       onClick={() => setAfterVisible(false)}
                     >
-                      숨기기
+                      {t('beforeafter.hide')}
                     </Button>
                   </div>
                 </>
               ) : (
-                <Button
-                  size="sm"
-                  variant="ghost"
-                  className="bg-white text-gray-700 hover:bg-gray-300"
-                  onClick={() => afterInputRef.current?.click()}
-                >
-                  사진 업로드
-                </Button>
+                <>
+                  {userRole === 'trainer' && (
+                    <Button
+                      size="sm"
+                      variant="ghost"
+                      className="bg-white text-gray-700 hover:bg-gray-300"
+                      onClick={() => afterInputRef.current?.click()}
+                    >
+                      {t('beforeafter.upload')}
+                    </Button>
+                  )}
+                </>
               )}
               <input
                 ref={afterInputRef}
@@ -405,14 +428,18 @@ export default function BeforeAfterPhotos({ memberId }: BeforeAfterPhotosProps) 
                     />
 
                     <div className="flex gap-2 mt-2">
-                      <Button
-                        variant="ghost"
-                        size="sm"
-                        className="bg-white text-gray-700 hover:bg-gray-300"
-                        onClick={() => afterExtraInputRefs.current[idx]?.click()}
-                      >
-                        재업로드
-                      </Button>
+                      {userRole === 'trainer' && (
+                        <>
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            className="bg-white text-gray-700 hover:bg-gray-300"
+                            onClick={() => afterExtraInputRefs.current[idx]?.click()}
+                          >
+                            {t('beforeafter.reupload')}
+                          </Button>
+                        </>
+                      )}
                       <Button
                         variant="ghost"
                         size="sm"
@@ -425,19 +452,23 @@ export default function BeforeAfterPhotos({ memberId }: BeforeAfterPhotosProps) 
                           })
                         }}
                       >
-                        숨기기
+                        {t('beforeafter.hide')}
                       </Button>
                     </div>
                   </>
                 ) : (
-                  <Button
-                    variant="ghost"
-                    size="sm"
-                    className="bg-white text-gray-700 hover:bg-gray-300"
-                    onClick={() => afterExtraInputRefs.current[idx]?.click()}
-                  >
-                    사진 업로드
-                  </Button>
+                  <>
+                    {userRole === 'trainer' && (
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        className="bg-white text-gray-700 hover:bg-gray-300"
+                        onClick={() => afterExtraInputRefs.current[idx]?.click()}
+                      >
+                        {t('beforeafter.upload')}
+                      </Button>
+                    )}
+                  </>
                 )}
                 <input
                   ref={(el) => {
@@ -477,19 +508,23 @@ export default function BeforeAfterPhotos({ memberId }: BeforeAfterPhotosProps) 
       </div>
 
       {/* + 추가 버튼 */}
-      {afterExtraUrls.length < MAX_EXTRA && (
-        <div className="mt-4">
-          <Button
-            variant="ghost"
-            className="font-semibold bg-white border border-transparent text-gray-700 hover:bg-gray-300 px-3 py-2 rounded-full shadow-md flex items-center gap-1 text-sm"
-            onClick={() => {
-              setAfterExtraUrls((prev) => [...prev, null])
-              setAfterExtraVisibility((prev) => [...prev, true])
-            }}
-          >
-            + 추가 After 사진 추가
-          </Button>
-        </div>
+      {userRole === 'trainer' && (
+        <>
+        {afterExtraUrls.length < MAX_EXTRA && (
+          <div className="mt-4">
+            <Button
+              variant="ghost"
+              className="font-semibold bg-white border border-transparent text-gray-700 hover:bg-gray-300 px-3 py-2 rounded-full shadow-md flex items-center gap-1 text-sm"
+              onClick={() => {
+                setAfterExtraUrls((prev) => [...prev, null])
+                setAfterExtraVisibility((prev) => [...prev, true])
+              }}
+            >
+              + {t('beforeafter.addphoto')}
+            </Button>
+          </div>
+        )}
+        </>
       )}
     </div>
 

@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect, useState } from 'react'
+import { useRef, useState, useEffect } from 'react'
 import { useAuthGuard } from '@/hooks/useAuthGuard'
 import Header from '@/components/layout/Header'
 import TrainerHeader from '@/components/layout/TrainerHeader'
@@ -91,7 +91,16 @@ export default function GoalsPage() {
   const [latestMuscleMass, setLatestMuscleMass] = useState<number | null>(null)
   const [latestBodyFatMass, setLatestBodyFatMass] = useState<number | null>(null)
 
+  const [goalImageUrl, setGoalImageUrl] = useState<string | null>(null)
+  const fileInputRef = useRef<HTMLInputElement | null>(null)
+  const [isEditingGoal, setIsEditingGoal] = useState(false)  
+
   console.log(goals)
+
+  const handleStartGoalSetting = () => {
+    setDefaultGoals()
+    setIsEditingGoal(true)
+  }
   
   // useEffect(() => {
   //   const raw = localStorage.getItem('litpt_member')
@@ -215,12 +224,11 @@ export default function GoalsPage() {
 			.order('created_at', { ascending: false })
 	
     if (!error && data) {
-      if (data.length === 0) {
-        setHasAnyGoals(false)
-        return
-      }
-  
-      setHasAnyGoals(true)
+      const hasGoals = data.some(goal =>
+        goal.goal_type !== 'image' || goal.goal_image_url
+      )
+
+      setHasAnyGoals(hasGoals)
 
       const latestGoals = new Map<string, GoalContent>()
       for (const goal of data) {
@@ -320,6 +328,7 @@ export default function GoalsPage() {
     } else {
       toast.error(t('alert.goal_save'))
     }
+    setIsEditingGoal(false)
   }
 
   const setDefaultGoals = () => {
@@ -336,6 +345,80 @@ export default function GoalsPage() {
     setFatLoss(0)
 
     setHasAnyGoals(true)
+  }
+
+  useEffect(() => {
+    if (!selectedMember) return
+    // 로그인할 때 목표 사진 불러오기
+    fetchGoalImage()
+  }, [selectedMember])
+
+  const fetchGoalImage = async () => {
+    if (!selectedMember) return
+    const { data, error } = await supabase
+      .from('member_goals')
+      .select('goal_image_url')
+      .eq('member_id', selectedMember.member_id)
+      .order('created_at', { ascending: false })
+      .limit(1)
+      .single()
+
+    if (!error && data?.goal_image_url) {
+      setGoalImageUrl(data.goal_image_url)
+    }
+  }
+
+  const handleUploadImage = async (event: React.ChangeEvent<HTMLInputElement>) => {
+    if (!event.target.files || event.target.files.length === 0 || !selectedMember) return
+    const file = event.target.files[0]
+
+    const timestamp = Date.now()
+    const ext = file.name.split('.').pop() || 'jpg'
+    // const filePath = `goal_images/${selectedMember.member_id}_${timestamp}.${ext}`
+    const filePath = `public/goal_images/${selectedMember.member_id}_${timestamp}.${ext}`
+
+    // 업로드
+    const { error: uploadError } = await supabase.storage
+      .from('photos')
+      .upload(filePath, file, { upsert: true })
+
+    if (uploadError) {
+      console.error(uploadError)
+      toast.error('이미지 업로드 실패 😥')
+      return
+    }
+
+    // public URL 가져오기
+    const { data } = supabase.storage.from('photos').getPublicUrl(filePath)
+    const publicUrl = data.publicUrl
+
+
+    console.log('Supabase Public URL:', publicUrl)
+
+    if (!publicUrl) {
+      toast.error('사진 URL을 가져오지 못했습니다.')
+      return
+    }
+
+    setGoalImageUrl(publicUrl)
+
+    const { error: insertError } = await supabase
+      .from('member_goals')
+      .insert([{
+        member_id: selectedMember.member_id,
+        goal_type: 'image',
+        content: '',  // NOT NULL 컬럼 대응
+        goal_image_url: publicUrl,
+        created_at: new Date().toISOString()
+      }])
+
+    if (insertError) {
+      console.error('Insert error:', insertError)
+      toast.error('목표 저장 실패 😥')
+      return
+    }
+
+    toast.success('목표 사진이 저장되었습니다 🎯')
   }
 
   return (
@@ -403,7 +486,7 @@ export default function GoalsPage() {
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ duration: 0.3 }}
               > 
-              {hasAnyGoals ? (
+              {isEditingGoal || hasAnyGoals || goalImageUrl ? (
                 <>
                   {/* 목표 카드를 grid로 배치 */}
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
@@ -423,6 +506,44 @@ export default function GoalsPage() {
                       )}
                     </section> */}
 
+                    
+                    <section className="bg-white rounded-2xl shadow-md p-6 border border-gray-200 flex flex-col items-center">
+                      <h3 className="text-lg font-semibold text-gray-700 mb-4">목표 사진</h3>
+
+                      {/* 목표 사진 미리보기 */}
+                      {goalImageUrl ? (
+                        <div className="mb-4">
+                          <img
+                            src={goalImageUrl}
+                            alt="Goal Image"
+                            width={200}
+                            height={200}
+                            className="rounded-xl object-cover shadow"
+                          />
+                        </div>
+                      ) : (
+                        <p className="text-gray-400 mb-4">아직 업로드한 사진이 없습니다.</p>
+                      )}
+
+                      {/* 업로드 버튼 */}
+                      <Button
+                        variant="outline"
+                        onClick={() => fileInputRef.current?.click()}
+                        className="text-sm rounded-full px-4 py-2 border-gray-400"
+                      >
+                        사진 업로드
+                      </Button>
+                      <input
+                        type="file"
+                        ref={fileInputRef}
+                        className="hidden"
+                        accept="image/*"
+                        onChange={handleUploadImage}
+                      />
+                    </section>
+                    
+                    
+                    
                     {/* 식단 목표 카드 */}
                     <section className="bg-white rounded-2xl shadow-md p-6 border border-gray-200 hover:shadow-lg transition flex flex-col">
                       <h3 className="text-lg font-semibold text-gray-600 mb-4 flex items-center gap-2">
@@ -666,7 +787,7 @@ export default function GoalsPage() {
                 <div className="text-gray-500 text-center text-sm space-y-4">
                   <p>🎯 {t('goals.pleaseSetGoal')}</p>
                   <Button 
-                    onClick={setDefaultGoals} 
+                    onClick={handleStartGoalSetting} 
                     variant="outline" 
                     className="text-sm rounded-full px-5 py-2 border-gray-400"
                   >

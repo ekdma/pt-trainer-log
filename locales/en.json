@@ -43,7 +43,8 @@
       "workout": "Workout",
       "health": "Health",
       "setGoals": "Set Goals",
-      "logout": "Log Out"
+      "logout": "Log Out",
+      "beforeafter": "Before/After"
     },
     "app": {
       "title": "Personal Training Log",
@@ -93,7 +94,10 @@
       "waterIntakeGoal_3": "Over the past 7 days, you drank an average of ",
       "waterIntakeGoal_4": "cup(s)!",
       "sleepGoal_3": "Over the past 7 days, you slept an average of ",
-      "sleepGoal_4": "hour(s)!"
+      "sleepGoal_4": "hour(s)!",
+      "goalImage": "My Goal Image",
+      "goalImageDescription": "Everything is going your way!",
+      "doNotShowAgain": "Do not show for today"
     },
     "my_calendar": {
       "myCalendar": "My Schedule",
@@ -140,5 +144,11 @@
       "personalGoalsEG": "e.g. Eat 30g protein per meal",
       "pleaseSetGoal": "Please set your goal",
       "goalSetting": "Goal Setting"
+    },
+    "beforeafter": {
+      "hide": "hide",
+      "reupload": "reupload",
+      "upload": "upload",
+      "addphoto": "Add additional AFTER photos"
     }
   }

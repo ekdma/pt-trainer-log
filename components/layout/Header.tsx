@@ -27,6 +27,7 @@ export default function Header() {
     { href: '/workout', label: t('header.workout') },
     { href: '/health-metric', label: t('header.health') },
     { href: '/goals', label: t('header.setGoals') },
+    { href: '/before-after', label: t('header.beforeafter') },
   ]
 
   return (
