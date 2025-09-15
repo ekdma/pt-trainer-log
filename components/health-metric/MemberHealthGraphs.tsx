@@ -20,26 +20,26 @@ interface Props {
 
 // metric 별로 날짜별 값만 뽑아서 배열로 리턴
 function createChartDataForMetric(logs: HealthMetric[], metricType: string) {
-  const dataMap: Record<string, number | null> = {};
+  // metric에 해당하는 로그만 필터
+  const filtered = logs.filter(log => log.metric_type === metricType);
 
-  logs.forEach(log => {
-    if (log.metric_type === metricType) {
-      const date = log.measure_date.slice(0, 10);
-      dataMap[date] = log.metric_value;
-    }
+  // metric별로 date -> value 맵 작성
+  const dataMap: Record<string, number | null> = {};
+  filtered.forEach(log => {
+    const date = log.measure_date.slice(0, 10); // YYYY-MM-DD
+    dataMap[date] = log.metric_value;
   });
 
-  // 날짜별로 정렬된 배열 만들기
-  // 로그의 날짜들을 모두 모아 정렬 후, 없는 날짜는 null로 채움
-  const allDates = Array.from(
-    new Set(logs.map(log => log.measure_date.slice(0, 10)))
-  ).sort();
+  // metric에 실제로 존재하는 날짜들만 모아서 정렬
+  const allDates = Array.from(new Set(filtered.map(log => log.measure_date.slice(0, 10)))).sort();
 
+  // 날짜별로 value 또는 null(혹은 제외)을 리턴
   return allDates.map(date => ({
     date,
     value: dataMap[date] ?? null,
   }));
 };
+
 
 const colorMap: { [key: string]: string } = {
   // Body Composition 
@@ -80,7 +80,7 @@ const MemberHealthGraphsClient: React.FC<Props> = ({ healthLogs, member, allType
     return () => window.removeEventListener('resize', checkMobile)
   }, [])
 
-  const xAxisFontSize = isMobile ? 10 : 12
+  const xAxisFontSize = isMobile ? 10 : 11
   
   // const useIsMobile = () => {
   //   useEffect(() => {
@@ -138,15 +138,22 @@ const MemberHealthGraphsClient: React.FC<Props> = ({ healthLogs, member, allType
 
   // ✅ 월 단위 첫 데이터만 추출하는 함수
   const getMonthlyFirstData = <T extends { date: string }>(data: T[]): T[] => {
+    if (!data || data.length === 0) return [];
+
+    // 날짜 오름차순으로 정렬(안정적 처리)
+    const sorted = [...data].sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime());
+
     const monthMap = new Map<string, T>();
-    data.forEach((item) => {
+    sorted.forEach((item) => {
       const monthKey = item.date.slice(0, 7); // "YYYY-MM"
-      if (!monthMap.has(monthKey) || new Date(item.date) < new Date(monthMap.get(monthKey)!.date)) {
+      // 이미 해당 월이 없는 경우(=최초 등장)만 set -> 그러면 '그 월의 가장 빠른 날짜'가 남음
+      if (!monthMap.has(monthKey)) {
         monthMap.set(monthKey, item);
       }
     });
+
     return Array.from(monthMap.values());
-  };  
+  };
 
 
   return (
@@ -245,7 +252,7 @@ const MemberHealthGraphsClient: React.FC<Props> = ({ healthLogs, member, allType
                         data = getMonthlyFirstData(data);
                       }
                       const maxVal = Math.max(...data.map(d => d.value ?? 0));
-                      const isLast = index === sortedWorkouts.length - 1;
+                      // const isLast = index === sortedWorkouts.length - 1;
 
                       return (
                         <div
@@ -262,16 +269,56 @@ const MemberHealthGraphsClient: React.FC<Props> = ({ healthLogs, member, allType
 
                           {/* 그래프 */}
                           <div className="w-full overflow-x-auto">
-                            <div className="min-w-[600px]">
+                            <div
+                              style={{
+                                minWidth: `${Math.max(data.length * 40, 600)}px`, 
+                                // 데이터 1개당 60px, 최소 600px 보장
+                              }}
+                            >
                               <ResponsiveContainer width="100%" height={100}>
                                 <LineChart data={data} margin={{ top: 20, right: 20, left: 0, bottom: 0 }}>
                                   <CartesianGrid strokeDasharray="3 3" vertical={false} />
                                   <XAxis
                                     dataKey="date"
-                                    tick={(isMobile || isLast) ? { fontSize: xAxisFontSize, fontWeight: 'bold' } : false}
+                                    // tick={{ fontSize: xAxisFontSize, fontWeight: 'bold' }}
+                                    // tick={(isMobile || isLast) ? { fontSize: xAxisFontSize, fontWeight: 'bold' } : false}
                                     axisLine={true}
                                     tickLine={true}
-                                    tickFormatter={(date: string) => dayjs(date).format('YY.MM.DD')}
+                                    tick={({ x, y, payload, index }) => {
+                                      const date = payload.value;
+                                      if (viewMode === 'monthly') {
+                                        // Monthly 모드: 한 줄
+                                        return (
+                                          <text x={x} y={y + 10} textAnchor="middle" fontSize={xAxisFontSize}>
+                                            {dayjs(date).format('YY.MM.DD')}
+                                          </text>
+                                        );
+                                      } else {
+                                        // Daily 모드
+                                        const currentMonth = dayjs(date).format('MM');
+                                        const currentYear = dayjs(date).format('YY');
+                                        const prevDate = index > 0 ? data[index - 1]?.date : null;
+                                        const prevMonth = prevDate ? dayjs(prevDate).format('MM') : null;
+
+                                        if (currentMonth !== prevMonth) {
+                                          // 월 바뀌는 순간 → 2줄
+                                          return (
+                                            <text x={x} y={y + 10} textAnchor="middle" fontSize={xAxisFontSize}>
+                                              <tspan x={x} dy="0">{currentYear}</tspan>
+                                              <tspan x={x} dy="12">{dayjs(date).format('MM.DD')}</tspan>
+                                            </text>
+                                          );
+                                        } else {
+                                          // 같은 월 → 한 줄
+                                          return (
+                                            <text x={x} y={y + 10} textAnchor="middle" fontSize={xAxisFontSize}>
+                                              {dayjs(date).format('MM.DD')}
+                                            </text>
+                                          );
+                                        }
+                                      }
+                                    }}
+                                    interval="preserveStartEnd"
                                   />
                                   <YAxis
                                     tick={false}
