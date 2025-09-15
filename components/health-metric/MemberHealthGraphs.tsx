@@ -252,6 +252,7 @@ const MemberHealthGraphsClient: React.FC<Props> = ({ healthLogs, member, allType
                         data = getMonthlyFirstData(data);
                       }
                       const maxVal = Math.max(...data.map(d => d.value ?? 0));
+                      const monthlyFirstDates = new Set(getMonthlyFirstData(data).map(d => d.date));
                       // const isLast = index === sortedWorkouts.length - 1;
 
                       return (
@@ -284,8 +285,9 @@ const MemberHealthGraphsClient: React.FC<Props> = ({ healthLogs, member, allType
                                     // tick={(isMobile || isLast) ? { fontSize: xAxisFontSize, fontWeight: 'bold' } : false}
                                     axisLine={true}
                                     tickLine={true}
-                                    tick={({ x, y, payload, index }) => {
+                                    tick={({ x, y, payload }) => {
                                       const date = payload.value;
+
                                       if (viewMode === 'monthly') {
                                         // Monthly 모드: 한 줄
                                         return (
@@ -295,21 +297,16 @@ const MemberHealthGraphsClient: React.FC<Props> = ({ healthLogs, member, allType
                                         );
                                       } else {
                                         // Daily 모드
-                                        const currentMonth = dayjs(date).format('MM');
-                                        const currentYear = dayjs(date).format('YY');
-                                        const prevDate = index > 0 ? data[index - 1]?.date : null;
-                                        const prevMonth = prevDate ? dayjs(prevDate).format('MM') : null;
-
-                                        if (currentMonth !== prevMonth) {
-                                          // 월 바뀌는 순간 → 2줄
+                                        if (monthlyFirstDates.has(date)) {
+                                          // 월의 첫 데이터 → 2줄
                                           return (
                                             <text x={x} y={y + 10} textAnchor="middle" fontSize={xAxisFontSize}>
-                                              <tspan x={x} dy="0">{currentYear}</tspan>
+                                              <tspan x={x} dy="0">{dayjs(date).format('YY')}</tspan>
                                               <tspan x={x} dy="12">{dayjs(date).format('MM.DD')}</tspan>
                                             </text>
                                           );
                                         } else {
-                                          // 같은 월 → 한 줄
+                                          // 나머지 날짜 → 한 줄
                                           return (
                                             <text x={x} y={y + 10} textAnchor="middle" fontSize={xAxisFontSize}>
                                               {dayjs(date).format('MM.DD')}
@@ -318,7 +315,7 @@ const MemberHealthGraphsClient: React.FC<Props> = ({ healthLogs, member, allType
                                         }
                                       }
                                     }}
-                                    interval="preserveStartEnd"
+                                    interval={0}
                                   />
                                   <YAxis
                                     tick={false}
