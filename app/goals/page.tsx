@@ -16,7 +16,7 @@ import { motion } from 'framer-motion'
 import MemberSelectListbox from '@/components/ui/MemberSelectListbox'  
 import { useLanguage } from '@/context/LanguageContext'
 import { useAuth } from '@/context/AuthContext'
-import MyCalendarPage from '../my-calendar/page'
+// import MyCalendarPage from '../my-calendar/page'
 
 interface Sessions {
   pt_session_cnt: number
@@ -517,9 +517,7 @@ export default function GoalsPage() {
                           <img
                             src={goalImageUrl}
                             alt="Goal Image"
-                            width={200}
-                            height={200}
-                            className="rounded-xl object-cover shadow"
+                            className="rounded-xl mx-auto mb-4 max-w-full max-h-[400px] object-contain"
                           />
                         </div>
                       ) : (
