@@ -1,5 +1,5 @@
 'use client'
-import { createContext, useContext, useState, ReactNode } from 'react'
+import { createContext, useContext, useState, useEffect, ReactNode } from 'react'
 import en from '@/locales/en.json'
 import ko from '@/locales/ko.json'
 
@@ -17,7 +17,20 @@ const LanguageContext = createContext<{
 })
 
 export function LanguageProvider({ children }: { children: ReactNode }) {
-  const [lang, setLang] = useState<Lang>('ko')
+  const [lang, setLangState] = useState<Lang>('ko')
+
+  // ✅ 초기값을 localStorage에서 가져오기 + 로그인 페이지 포함 모든 페이지에서 동기화
+  useEffect(() => {
+    const storedLang = localStorage.getItem('litpt_lang') as Lang
+    if (storedLang) {
+      setLangState(storedLang)
+    }
+  }, [])
+
+  const setLang = (newLang: Lang) => {
+    setLangState(newLang)
+    localStorage.setItem('litpt_lang', newLang)
+  }
 
   const t = (key: string) => {
     const keys = key.split('.')

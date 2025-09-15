@@ -143,7 +143,9 @@
       "personalGoals": "My Diet Goal",
       "personalGoalsEG": "e.g. Eat 30g protein per meal",
       "pleaseSetGoal": "Please set your goal",
-      "goalSetting": "Goal Setting"
+      "goalSetting": "Goal Setting",
+      "imageUpload": "Image Upload",
+      "noImage": "No photos have been uploaded yet"
     },
     "beforeafter": {
       "hide": "hide",

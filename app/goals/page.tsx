@@ -16,6 +16,7 @@ import { motion } from 'framer-motion'
 import MemberSelectListbox from '@/components/ui/MemberSelectListbox'  
 import { useLanguage } from '@/context/LanguageContext'
 import { useAuth } from '@/context/AuthContext'
+import MyCalendarPage from '../my-calendar/page'
 
 interface Sessions {
   pt_session_cnt: number
@@ -508,7 +509,7 @@ export default function GoalsPage() {
 
                     
                     <section className="bg-white rounded-2xl shadow-md p-6 border border-gray-200 flex flex-col items-center">
-                      <h3 className="text-lg font-semibold text-gray-700 mb-4">목표 사진</h3>
+                      <h3 className="text-lg font-semibold text-gray-700 mb-4">{t('my.goalImage')}</h3>
 
                       {/* 목표 사진 미리보기 */}
                       {goalImageUrl ? (
@@ -522,7 +523,9 @@ export default function GoalsPage() {
                           />
                         </div>
                       ) : (
-                        <p className="text-gray-400 mb-4">아직 업로드한 사진이 없습니다.</p>
+                        <p className="text-gray-400 mb-4">
+                          {t('goals.noImage')}
+                        </p>
                       )}
 
                       {/* 업로드 버튼 */}
@@ -531,7 +534,7 @@ export default function GoalsPage() {
                         onClick={() => fileInputRef.current?.click()}
                         className="text-sm rounded-full px-4 py-2 border-gray-400"
                       >
-                        사진 업로드
+                        {t('goals.imageUpload')}
                       </Button>
                       <input
                         type="file"

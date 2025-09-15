@@ -130,9 +130,7 @@ export default function HomePage() {
             <img
               src={goalImageUrl}
               alt="Goal Image"
-              width={400}
-              height={400}
-              className="rounded-xl object-cover mx-auto mb-4"
+              className="rounded-xl mx-auto mb-4 max-w-full max-h-[400px] object-contain"
             />
 
             {/* 🔹 체크박스: 더 이상 보지 않기 */}

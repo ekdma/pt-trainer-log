@@ -144,7 +144,9 @@
       "personalGoals": "나만의 식단 목표",
       "personalGoalsEG": "예: 각 식사마다 단백질 30g 먹기",
       "pleaseSetGoal": "목표를 설정해주세요",
-      "goalSetting": "목표 설정"
+      "goalSetting": "목표 설정",
+      "imageUpload": "사진 업로드",
+      "noImage": "아직 업로드한 사진이 없습니다"
     },
     "beforeafter": {
       "hide": "숨기기",

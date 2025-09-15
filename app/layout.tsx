@@ -46,20 +46,16 @@ export default function RootLayout({
         className={`${geistSans.variable} ${geistMono.variable} ${nanumGothic.variable} ${montserrat.variable} font-nanum antialiased`}
       >
         <AuthProvider>
-          {/* 로그인 페이지 제외하고 AuthGuard 적용 */}
-          {typeof window !== 'undefined' && !window.location.pathname.startsWith('/login') ? (
-            <AuthGuard>
-              <LanguageProvider>
+          <LanguageProvider>
+            {typeof window !== 'undefined' && !window.location.pathname.startsWith('/login') ? (
+              <AuthGuard>
                 {children}
-                <Toaster position="top-right" richColors expand />
-              </LanguageProvider>
-            </AuthGuard>
-          ) : (
-            <LanguageProvider>
-              {children}
-              <Toaster position="top-right" richColors expand />
-            </LanguageProvider>
-          )}
+              </AuthGuard>
+            ) : (
+              children
+            )}
+            <Toaster position="top-right" richColors expand />
+          </LanguageProvider>
         </AuthProvider>
       </body>
     </html>
