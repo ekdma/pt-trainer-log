@@ -246,7 +246,7 @@ const MemberHealthGraphsClient: React.FC<Props> = ({ healthLogs, member, allType
                   <h3 className="text-l font-semibold text-indigo-500 mb-4">{target} Graph</h3>
 
                   <div className="flex flex-col gap-y-1">
-                    {sortedWorkouts.map((metric, index) => {
+                    {sortedWorkouts.map((metric) => {
                       let data = createChartDataForMetric(groupLogs, metric);
                       if (viewMode === 'monthly') {
                         data = getMonthlyFirstData(data);
