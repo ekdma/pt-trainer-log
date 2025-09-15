@@ -130,8 +130,10 @@ export default function HomePage() {
             <img
               src={goalImageUrl}
               alt="Goal Image"
-              className="rounded-xl mx-auto mb-4 max-w-full max-h-[400px] object-contain"
+              className="rounded-xl mx-auto mb-4 max-w-full max-h-[400px] object-contain cursor-pointer"
+              onClick={handleCloseModal} // ✅ 이미지 클릭 시 모달 닫기
             />
+
 
             {/* 🔹 체크박스: 더 이상 보지 않기 */}
             <div className="flex items-center self-start mb-2">
