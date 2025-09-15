@@ -254,7 +254,7 @@ export default function BeforeAfterPhotos({ memberId }: BeforeAfterPhotosProps) 
 
   return (
     <div className="bg-white p-6 rounded-xl shadow-lg space-y-8">
-      <h2 className="text-2xl font-bold">Before / After 비교</h2>
+      <h2 className="text-2xl font-bold">Before / After</h2>
 
       <div className="overflow-x-auto">
         <div className="flex gap-4 min-w-fit">
