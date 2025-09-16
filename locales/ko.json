@@ -124,7 +124,10 @@
     "food_diary": {
       "sleepHours": "수면 시간",
       "waterIntake": "수분 섭취 (텀블러)",
-      "writeFood": " — 음식 기록하기"
+      "writeFood": " — 음식 기록하기",
+      "writeReply": "댓글 작성...",
+      "deleteReply": "댓글이 삭제되었습니다",
+      "saveReply": "댓글이 저장되었습니다"
     },
     "workout": {
       "workoutTitle": "운동 기록",

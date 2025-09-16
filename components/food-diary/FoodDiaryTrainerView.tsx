@@ -28,6 +28,14 @@ interface FoodDiaryTrainerViewProps {
   initialSelectedMember?: Member | null
 }
 
+interface Reply {
+  id: number
+  member_id: number
+  meal_type: string
+  reply_text: string
+  created_at: string
+}
+
 const mealTypes = [
   { key: 'Breakfast', label: 'Breakfast' },
   { key: 'Snack1', label: 'Snack' },
@@ -55,6 +63,8 @@ export default function FoodDiaryTrainerView({ initialSelectedMember = null }: F
   const [selectedTags, setSelectedTags] = useState<Record<string, string[]>>({}) // { mealType: ['#고지방', '#과자류'] }
   const [showHashtagToggle, setShowHashtagToggle] = useState<Record<string, boolean>>({})
   const [memberTab, setMemberTab] = useState<'all' | 'active'>('active')
+
+  const [commentReplies, setCommentReplies] = useState<Record<string, Reply[]>>({})
 
   const getWeekDates = (base: Dayjs) => {
     return Array(7).fill(0).map((_, i) =>
@@ -96,20 +106,52 @@ export default function FoodDiaryTrainerView({ initialSelectedMember = null }: F
   const fetchComments = async () => {
     if (!selectedMember || !baseDate) return
   
-    const { data } = await supabase
+    const { data, error } = await supabase
       .from('food_comments')
-      .select('*')
+      .select('id, target_date, comments')
       .eq('member_id', selectedMember.member_id)
       .lte('target_date', baseDate.format('YYYY-MM-DD'))
-      .eq('end_date', '9999-12-31') // 현재 유효한 코멘트
-      .order('target_date', { ascending: false }) // 가장 가까운 과거부터
+      .order('target_date', { ascending: false }) // 가장 최근 row
       .limit(1)
-  
+
+    if (error) {
+      console.error('코멘트 불러오기 실패:', error)
+      setComments({})
+      return
+    }
+
     if (data && data.length > 0) {
-      setComments(data[0].comments || {})
+      try {
+        setComments(JSON.parse(data[0].comments || '{}'))
+        await fetchCommentReplies(data[0].id)
+      } catch (err) {
+        console.error('코멘트 JSON 파싱 실패:', err)
+        setComments({})
+      }
     } else {
       setComments({})
     }
+  }
+
+  const fetchCommentReplies = async (commentId: number) => {
+    const { data, error } = await supabase
+      .from('food_comment_replies')
+      .select('*')
+      .eq('food_comment_id', commentId)
+      .order('created_at', { ascending: true })
+
+    if (error) {
+      console.error('댓글 불러오기 실패:', error)
+      return
+    }
+
+    const grouped: Record<string, Reply[]> = {}
+    data?.forEach(reply => {
+      if (!grouped[reply.meal_type]) grouped[reply.meal_type] = []
+      grouped[reply.meal_type].push(reply)
+    })
+
+    setCommentReplies(grouped)
   }
   
   const fetchHealthMetrics = async () => {
@@ -577,6 +619,7 @@ export default function FoodDiaryTrainerView({ initialSelectedMember = null }: F
                         💬 {meal.label}
                       </td>
                       <td colSpan={7} className="border px-2 py-1">
+                        {/* 트레이너 코멘트 textarea */}
                         <textarea
                           rows={2}
                           className="
@@ -593,6 +636,17 @@ export default function FoodDiaryTrainerView({ initialSelectedMember = null }: F
                           onFocus={() => setSelectedMealForTemplates(meal.key)}
                         />
 
+                        {/* 트레이너 코멘트 표시 */}
+                        {(comments[meal.key] || '').split('\n').map((line, i) => (
+                          <div
+                            key={i}
+                            className="text-rose-600 bg-rose-50 p-1 rounded mb-1 text-xs whitespace-pre-line"
+                          >
+                            💬 {line.trim()}
+                          </div>
+                        ))}
+
+                        {/* 템플릿 버튼 */}
                         {selectedMealForTemplates === meal.key && (
                           <div className="flex flex-wrap gap-2 mt-2">
                             {[...commentTemplates]
@@ -605,16 +659,12 @@ export default function FoodDiaryTrainerView({ initialSelectedMember = null }: F
                                     onClick={() => {
                                       const current = comments[meal.key] || ''
                                       const lines = current.split('\n').map(s => s.trim()).filter(Boolean)
-
                                       let updated: string
                                       if (lines.includes(template)) {
-                                        // 이미 있는 경우 → 제거
                                         updated = lines.filter(t => t !== template).join('\n')
                                       } else {
-                                        // 없는 경우 → 추가 (줄바꿈으로 추가)
                                         updated = [...lines, template].join('\n')
                                       }
-
                                       setComments({ ...comments, [meal.key]: updated })
                                     }}
                                     className={clsx(
@@ -627,12 +677,31 @@ export default function FoodDiaryTrainerView({ initialSelectedMember = null }: F
                                     {template}
                                   </button>
                                 )
-                            })}
+                              })}
                           </div>
                         )}
+
+                        {/* 회원 댓글 표시 */}
+                        {commentReplies[meal.key] && commentReplies[meal.key].length > 0 && (
+                          <div className="mt-2 space-y-1">
+                            {commentReplies[meal.key].map((r) => (
+                              <div
+                                key={r.id}
+                                className="pl-4 border-l-2 border-gray-300 p-1 rounded bg-sky-50 text-sky-700 text-xs flex items-center gap-2"
+                              >
+                                {/* 댓글 내용 + 날짜 */}
+                                <span>
+                                  🗨️ {r.reply_text} <span className="text-gray-400 text-[10px]">({dayjs(r.created_at).format('MM-DD HH:mm')})</span>
+                                </span>
+                              </div>
+                            ))}
+                          </div>
+                        )}
+
                       </td>
                     </tr>
                   ))}
+
 
                 </tbody>
               </table>

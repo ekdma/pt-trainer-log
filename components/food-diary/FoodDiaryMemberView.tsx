@@ -6,10 +6,19 @@ import { getSupabaseClient } from '@/lib/supabase'
 import { Button } from '@/components/ui/button'
 import { toast } from 'sonner'
 import { useLanguage } from '@/context/LanguageContext'
+import { X, Plus } from 'lucide-react';
 
 interface Props {
   memberId: string
   memberName: string
+}
+
+interface Reply {
+  id: number
+  member_id: number
+  meal_type: string
+  reply_text: string
+  created_at: string
 }
 
 const mealTypes = [
@@ -23,12 +32,21 @@ const mealTypes = [
 
 export default function FoodDiaryMemberView({ memberId, memberName }: Props) {
   const supabase = getSupabaseClient()
+  const { t } = useLanguage()  // 번역 함수 가져오기
+  
   const [selectedDate, setSelectedDate] = useState(dayjs())
   const [diary, setDiary] = useState<Record<string, string>>({})
   const [comments, setComments] = useState<Record<string, string>>({})
+  
+  const [replies, setReplies] = useState<Record<string, Reply[]>>({})
+  const [replyInputs, setReplyInputs] = useState<Record<string, string>>({})
+  const [currentCommentId, setCurrentCommentId] = useState<number | null>(null)
+  const [showReplyInput, setShowReplyInput] = useState<Record<string, boolean>>({})
+  
   const today = dayjs()
   const maxPast = today.subtract(7, 'day')
   const maxFuture = today.add(7, 'day')
+
   const [weight, setWeight] = useState<string>('')
   const [sleepHours, setSleepHours] = useState<string>('')
   const [hydrationLevel, setHydrationLevel] = useState<number>(0) // 0~4 컵
@@ -36,7 +54,6 @@ export default function FoodDiaryMemberView({ memberId, memberName }: Props) {
   const [selectedTags, setSelectedTags] = useState<Record<string, string[]>>({})
   const [showHashtags, setShowHashtags] = useState<Record<string, boolean>>({})
 
-  const { t } = useLanguage()  // 번역 함수 가져오기
 
   const fetchHealthMetrics = async () => {
     const { data, error } = await supabase
@@ -100,22 +117,22 @@ export default function FoodDiaryMemberView({ memberId, memberName }: Props) {
   const fetchComments = async () => {
     const { data, error } = await supabase
       .from('food_comments')
-      .select('target_date, end_date, comments')
+      .select('id, target_date, comments')
       .eq('member_id', memberId)
       .lte('target_date', selectedDate.format('YYYY-MM-DD'))
-      .gte('end_date', selectedDate.format('YYYY-MM-DD'))
-  
+      .order('target_date', { ascending: false })
+      .limit(1)
+
     if (error) {
       console.error(error)
       setComments({})
       return
     }
-  
+
     if (data && data.length > 0) {
-      // target_date가 가장 최신인 하나만 골라서 그 comments만 사용
-      const sorted = data.sort((a, b) => dayjs(b.target_date).diff(dayjs(a.target_date)))
-      const latest = sorted[0]
-      setComments(latest.comments || {})
+      setCurrentCommentId(data[0].id)
+      setComments(JSON.parse(data[0].comments || '{}'))
+      fetchReplies(data[0].id)
     } else {
       setComments({})
     }
@@ -261,6 +278,56 @@ export default function FoodDiaryMemberView({ memberId, memberName }: Props) {
     fetchSelectedHashtags()
   }, [selectedDate])
 
+  // 댓글 불러오기
+  const fetchReplies = async (commentId: number) => {
+    if (!commentId) return
+    const { data, error } = await supabase
+      .from('food_comment_replies')
+      .select('*')
+      .eq('food_comment_id', commentId)
+      .order('created_at', { ascending: true })
+
+    if (error) {
+      console.error(error)
+      return
+    }
+
+    // meal_type 별로 그룹화
+    const grouped: Record<string, Reply[]> = {}
+    data?.forEach((r) => {
+      if (!grouped[r.meal_type]) grouped[r.meal_type] = []
+      grouped[r.meal_type].push(r)
+    })
+    setReplies(grouped)
+  }
+
+  // 댓글 저장
+  const handleSaveReply = async (mealType: string) => {
+    if (!currentCommentId || !replyInputs[mealType]) return
+    const { data, error } = await supabase
+      .from('food_comment_replies')
+      .insert([
+        {
+          food_comment_id: currentCommentId,
+          member_id: Number(memberId),
+          meal_type: mealType,
+          reply_text: replyInputs[mealType],
+        },
+      ])
+      .select()
+
+    if (error) {
+      console.error(error)
+      // toast.error('댓글 저장 실패')
+      return
+    }
+
+    setReplyInputs((prev) => ({ ...prev, [mealType]: '' }))
+    fetchReplies(currentCommentId)
+    toast.success(t('food_diary.saveReply'))
+  }
+
+  
   return (
     <div className="space-y-4">
       <h1 className="text-center text-lg font-semibold text-gray-600">{`${memberName}'s Food Diary`}</h1>
@@ -396,12 +463,87 @@ export default function FoodDiaryMemberView({ memberId, memberName }: Props) {
             )}
             
             {comments[meal.key] && (
-              <div className="text-xs mt-2 text-rose-600 whitespace-pre-line bg-rose-50 p-2 rounded">
+              <div className="text-xs mt-2 whitespace-pre-line p-2 rounded">
+                {/* 트레이너 코멘트 */}
                 {(comments[meal.key] || '').split('\n').map((line, i) => (
-                  <div key={i}>💬 {line.trim()}</div>
+                  <div
+                    key={i}
+                    className="💬 bg-rose-50 text-rose-600 p-1 rounded mb-1"
+                  >
+                    💬 {line.trim()}
+                  </div>
                 ))}
+
+                {/* 기존 회원 댓글 */}
+                {replies[meal.key]?.map((r) => (
+                  <div
+                    key={r.id}
+                    className="flex items-center text-xs mt-1 ml-4 p-1 rounded bg-sky-50 text-sky-700"
+                  >
+                    <div className="flex items-center gap-1">
+                      🗨️ {r.reply_text}
+                      <span className="text-gray-400 text-[10px] flex items-center gap-1">
+                        ({dayjs(r.created_at).format('MM-DD HH:mm')})
+                        {r.member_id === Number(memberId) && (
+                          <button
+                            className="text-red-500 hover:text-red-700 text-xs transition-colors"
+                            onClick={async () => {
+                              const { error } = await supabase
+                                .from('food_comment_replies')
+                                .delete()
+                                .eq('id', r.id)
+                              if (error) {
+                                console.error(error)
+                              } else {
+                                toast.success(t('food_diary.deleteReply'))
+                                fetchReplies(currentCommentId!)
+                              }
+                            }}
+                          >
+                            <X size={12} />
+                          </button>
+                        )}
+                      </span>
+                    </div>
+                  </div>
+                ))}
+
+                {/* reply 버튼 & 입력은 기존 코드 그대로 */}
+                <button
+                  className="flex items-center gap-1 text-xs mt-2 ml-2 px-2 py-1 rounded text-blue-600 font-semibold transition-colors"
+                  onClick={() =>
+                    setShowReplyInput((prev) => ({
+                      ...prev,
+                      [meal.key]: !prev[meal.key],
+                    }))
+                  }
+                >
+                  {showReplyInput[meal.key] ? <X size={12} /> : <Plus size={12} />}
+                  <span>Reply</span>
+                </button>
+
+                {showReplyInput[meal.key] && (
+                  <div className="flex mt-1 gap-2 items-center ml-4">
+                    <input
+                      type="text"
+                      className="flex-1 text-xs p-2 rounded border text-blue-600 border-gray-300 focus:outline-none focus:ring-1 focus:ring-blue-400"
+                      placeholder={t('food_diary.writeReply')}
+                      value={replyInputs[meal.key] || ''}
+                      onChange={(e) =>
+                        setReplyInputs((prev) => ({ ...prev, [meal.key]: e.target.value }))
+                      }
+                    />
+                    <button
+                      onClick={() => handleSaveReply(meal.key)}
+                      className="text-xs text-blue-600 hover:text-blue-800 px-3 py-1 rounded transition-colors"
+                    >
+                      {t('master.save')}
+                    </button>
+                  </div>
+                )}
               </div>
             )}
+
           </div>
         ))}
       </div>

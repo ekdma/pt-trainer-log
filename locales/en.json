@@ -123,7 +123,10 @@
     "food_diary": {
       "sleepHours": "Hours Slept",
       "waterIntake": "Water Intake (tumblers)",
-      "writeFood": " — Log food"
+      "writeFood": " — Log food",
+      "writeReply": "Reply...",
+      "deleteReply": "Your comment has been deleted",
+      "saveReply": "Your comment has been saved"
     },
     "workout": {
       "workoutTitle": "Workout Log",
