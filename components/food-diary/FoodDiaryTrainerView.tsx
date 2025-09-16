@@ -16,6 +16,7 @@ import {
 import { motion } from 'framer-motion'
 import MemberSelectListbox from '@/components/ui/MemberSelectListbox'  
 import type { Member } from '@/components/members/types'
+import { ChatBubbleLeftIcon, ChatBubbleLeftRightIcon } from '@heroicons/react/24/solid'
 
 dayjs.extend(isoWeek)
 
@@ -640,9 +641,10 @@ export default function FoodDiaryTrainerView({ initialSelectedMember = null }: F
                         {(comments[meal.key] || '').split('\n').map((line, i) => (
                           <div
                             key={i}
-                            className="text-rose-600 bg-rose-50 p-1 rounded mb-1 text-xs whitespace-pre-line"
+                            className="flex items-start gap-1 text-rose-600 bg-rose-50 p-1 rounded mb-1 text-xs whitespace-pre-line"
                           >
-                            💬 {line.trim()}
+                            <ChatBubbleLeftIcon className="w-4 h-4 mt-0.5 text-rose-600 flex-shrink-0" />
+                            <span>{line.trim()}</span>
                           </div>
                         ))}
 
@@ -687,16 +689,18 @@ export default function FoodDiaryTrainerView({ initialSelectedMember = null }: F
                             {commentReplies[meal.key].map((r) => (
                               <div
                                 key={r.id}
-                                className="pl-4 border-l-2 border-gray-300 p-1 rounded bg-sky-50 text-sky-700 text-xs flex items-center gap-2"
+                                className="pl-4 border-l-2 border-gray-300 p-1 rounded bg-sky-50 text-sky-700 text-xs flex items-start gap-1"
                               >
-                                {/* 댓글 내용 + 날짜 */}
+                                <ChatBubbleLeftRightIcon className="w-4 h-4 mt-0.5 text-sky-700 flex-shrink-0" />
                                 <span>
-                                  🗨️ {r.reply_text} <span className="text-gray-400 text-[10px]">({dayjs(r.created_at).format('MM-DD HH:mm')})</span>
+                                  {r.reply_text}{' '}
+                                  <span className="text-gray-400 text-[10px]">({dayjs(r.created_at).format('MM-DD HH:mm')})</span>
                                 </span>
                               </div>
                             ))}
                           </div>
                         )}
+
 
                       </td>
                     </tr>

@@ -7,6 +7,7 @@ import { Button } from '@/components/ui/button'
 import { toast } from 'sonner'
 import { useLanguage } from '@/context/LanguageContext'
 import { X, Plus } from 'lucide-react';
+import { ChatBubbleLeftIcon, ChatBubbleLeftRightIcon } from '@heroicons/react/24/solid'
 
 interface Props {
   memberId: string
@@ -466,9 +467,10 @@ export default function FoodDiaryMemberView({ memberId, memberName }: Props) {
                 {(comments[meal.key] || '').split('\n').map((line, i) => (
                   <div
                     key={i}
-                    className="💬 bg-rose-50 text-rose-600 p-1 rounded mb-1"
+                    className="💬 bg-rose-50 text-rose-600 p-1 rounded mb-1 flex items-start gap-1"
                   >
-                    💬 {line.trim()}
+                    <ChatBubbleLeftIcon className="w-4 h-4 mt-0.5 text-rose-600 flex-shrink-0" />
+                    <span>{line.trim()}</span>
                   </div>
                 ))}
 
@@ -479,7 +481,8 @@ export default function FoodDiaryMemberView({ memberId, memberName }: Props) {
                     className="flex items-center text-xs mt-1 ml-4 p-1 rounded bg-sky-50 text-sky-700"
                   >
                     <div className="flex items-center gap-1">
-                      🗨️ {r.reply_text}
+                      <ChatBubbleLeftRightIcon className="w-4 h-4 mt-0.5 text-sky-700 flex-shrink-0" />
+                      {r.reply_text}
                       <span className="text-gray-400 text-[10px] flex items-center gap-1">
                         ({dayjs(r.created_at).format('MM-DD HH:mm')})
                         {r.member_id === Number(memberId) && (
