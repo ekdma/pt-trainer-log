@@ -304,7 +304,7 @@ export default function FoodDiaryMemberView({ memberId, memberName }: Props) {
   // 댓글 저장
   const handleSaveReply = async (mealType: string) => {
     if (!currentCommentId || !replyInputs[mealType]) return
-    const { data, error } = await supabase
+    const { error } = await supabase
       .from('food_comment_replies')
       .insert([
         {
@@ -314,11 +314,10 @@ export default function FoodDiaryMemberView({ memberId, memberName }: Props) {
           reply_text: replyInputs[mealType],
         },
       ])
-      .select()
+      .select() // select() 사용해도 error만 필요하면 data 무시 가능
 
     if (error) {
       console.error(error)
-      // toast.error('댓글 저장 실패')
       return
     }
 
@@ -326,7 +325,6 @@ export default function FoodDiaryMemberView({ memberId, memberName }: Props) {
     fetchReplies(currentCommentId)
     toast.success(t('food_diary.saveReply'))
   }
-
   
   return (
     <div className="space-y-4">
