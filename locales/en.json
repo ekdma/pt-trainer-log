@@ -44,7 +44,7 @@
       "health": "Health",
       "setGoals": "Set Goals",
       "logout": "Log Out",
-      "beforeafter": "Before/After"
+      "beforeafter": "Body Transformation"
     },
     "app": {
       "title": "Personal Training Log",
@@ -154,6 +154,7 @@
       "hide": "hide",
       "reupload": "reupload",
       "upload": "upload",
-      "addphoto": "Add additional AFTER photos"
+      "addphoto": "Add additional AFTER photos",
+      "title": "Body Transformation"
     }
   }
