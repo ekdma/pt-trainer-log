@@ -491,6 +491,44 @@ export default function HealthMetricManager({
     }
   }, [addingDate]);
 
+  const handleDateConfirm = () => {
+    const fullDate = `${year}.${month}.${day}`;
+    const normalized = normalizeDateInput(fullDate);
+
+    if (normalized) {
+      if (!isTrainer && !isDateWithinLast7Days(normalized)) {
+        toast.warning(t('alert.workout_warning_2'));
+        return;
+      }
+
+      if (dates.some(date => dayjs(date).format('YYYY-MM-DD') === normalized)) {
+        toast.warning(`${t('alert.workout_warning_1')} ${normalized} ☹`);
+        return;
+      }
+
+      setAddingDate(normalized);
+
+      // focus 다음 weight 입력칸으로 이동
+      setTimeout(() => {
+        const colIndex = dates.length; // 신규 열은 마지막 index
+        let targetRow = 0;
+
+        while (
+          targetRow < rows.length &&
+          inputRefs.current[`${targetRow}-${colIndex}`]?.disabled
+        ) {
+          targetRow += 1;
+        }
+
+        const nextInput = inputRefs.current[`${targetRow}-${colIndex}`];
+        if (nextInput && !nextInput.disabled) {
+          nextInput.focus();
+          nextInput.select?.();
+        }
+      }, 50);
+    }
+  };
+
   return (
     <>
       <div className="max-w-6xl mx-auto text-gray-700">
@@ -562,45 +600,12 @@ export default function HealthMetricManager({
                           onKeyDown={(e) => {
                             if (e.key === 'Enter' || e.key === 'Tab') {
                               e.preventDefault();
-                              const fullDate = `${year}.${month}.${day}`;
-                              const normalized = normalizeDateInput(fullDate);
-                              if (normalized) {
-                                if (!isTrainer && !isDateWithinLast7Days(normalized)) {
-                                  // alert('7일 이내의 날짜만 추가할 수 있습니다 😥');
-                                  toast.warning(t('alert.workout_warning_2'));
-                                  return;
-                                }
-                                // if (dates.includes(normalized)) {
-                                //   alert(`이미 존재하는 날짜입니다: ${normalized} ☹`);
-                                //   return;
-                                // }
-                                if (dates.some(date => dayjs(date).format('YYYY-MM-DD') === normalized)) {
-                                  // alert(`이미 존재하는 날짜입니다: ${normalized} ☹`);
-                                  toast.warning(`${t('alert.workout_warning_1')} ${normalized} ☹`);
-                                  return;
-                                }
-                                setAddingDate(normalized);
-                          
-                                // focus 다음 weight 입력칸으로 이동
-                                setTimeout(() => {
-                                  const colIndex = dates.length; // 신규 열은 마지막 index
-                                  let targetRow = 0;
-                          
-                                  while (
-                                    targetRow < rows.length &&
-                                    inputRefs.current[`${targetRow}-${colIndex}`]?.disabled
-                                  ) {
-                                    targetRow += 1;
-                                  }
-                          
-                                  const nextInput = inputRefs.current[`${targetRow}-${colIndex}`];
-                                  if (nextInput && !nextInput.disabled) {
-                                    nextInput.focus();
-                                    nextInput.select?.();
-                                  }
-                                }, 50);
-                              }
+                              handleDateConfirm();
                             }
+                          }}
+                          onBlur={() => {
+                            // ✅ 포커스가 다른 셀로 이동할 때도 날짜 확정
+                            handleDateConfirm();
                           }}
                           
                           className="w-[20px] text-center border rounded text-[12px]"

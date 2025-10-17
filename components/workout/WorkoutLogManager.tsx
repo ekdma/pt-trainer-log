@@ -1197,7 +1197,7 @@ export default function WorkoutLogManager({
               </tr>
             </thead>
 
-            <tbody className="bg-white z-0">
+            <tbody className="bg-white">
               {/* {rows.map(({ target, workout, level }, rowIndex) => { */}
               {displayedRows.map(({ target, workout, level }, rowIndex) => {
                 const rowKey = `${target}||${workout}`;
@@ -1472,13 +1472,14 @@ export default function WorkoutLogManager({
                             type="number"
                             className={`
                               w-full text-center border rounded text-sm
-                              ${isDisabled
-                                ? 'bg-gray-100 text-gray-600 border-gray-300 cursor-not-allowed z-0'
-                                : logMap[rowKey]?.[date]?.weight == null
-                                  ? 'bg-sky-50 border-sky-100 z-0'
-                                  : 'border-gray-200 z-0'
-                              }
+                               ${isDisabled
+                                 ? 'bg-gray-100 text-gray-600 border-gray-300 cursor-not-allowed pointer-events-none'
+                                 : logMap[rowKey]?.[date]?.weight == null
+                                   ? 'bg-sky-50 border-sky-100'
+                                   : 'border-gray-200'
+                               }
                             `}
+
                             value={
                               logMap[rowKey]?.[date]?.weight != null
                                 ? logMap[rowKey][date].weight
