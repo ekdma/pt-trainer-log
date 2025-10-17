@@ -1476,25 +1476,26 @@ export default function WorkoutLogManager({
                           className={`border px-1 py-1 text-center w-[80px] z-[1] ${getSplitColor(date, rowKey)}`}
                         >
                           <input
-                            type="number"
+                            type="text" // ★ number → text로 변경
+                            inputMode="numeric" // 모바일에서 숫자 키보드 나오도록
+                            pattern="[0-9]*"   // 숫자 입력 제한
                             className={`
                               w-full text-center border rounded text-sm
-                               ${isDisabled
-                                 ? 'bg-gray-100 text-gray-600 border-gray-300 cursor-not-allowed pointer-events-none'
-                                 : logMap[rowKey]?.[date]?.weight == null
-                                   ? 'bg-sky-50 border-sky-100'
-                                   : 'border-gray-200'
-                               }
+                              ${isDisabled
+                                ? 'bg-gray-100 text-gray-600 border-gray-300 cursor-not-allowed pointer-events-none'
+                                : logMap[rowKey]?.[date]?.weight == null
+                                  ? 'bg-sky-50 border-sky-100'
+                                  : 'border-gray-200'
+                              }
                             `}
-
-                            value={
-                              logMap[rowKey]?.[date]?.weight != null
-                                ? logMap[rowKey][date].weight
-                                : ''
-                            }
-                            onChange={(e) =>
-                              handleCellChange(rowKey, date, Number(e.target.value))
-                            }
+                            value={logMap[rowKey]?.[date]?.weight ?? ''}
+                            onChange={(e) => {
+                              const val = e.target.value;
+                              // 숫자 형식만 허용
+                              if (/^\d*$/.test(val)) {
+                                handleCellChange(rowKey, date, val); // 문자열 그대로
+                              }
+                            }}
                             disabled={isDisabled}
                             onKeyDown={(e) => handleKeyNavigation(e, rowIndex, colIndex, totalRows, totalCols, inputRefs)}
                             ref={(el) => {
@@ -1532,9 +1533,10 @@ export default function WorkoutLogManager({
                             type="number"
                             min={0}
                             value={newLogInputs[rowKey]?.weight || ''}
-                            onChange={(e) =>
-                              handleNewLogInputChange(rowKey, e.target.value)
-                            }
+                            onChange={(e) => {
+                              const val = e.target.value; // 항상 string
+                              handleNewLogInputChange(rowKey, val); // 문자열 그대로 전달
+                            }}
                             className={`
                               w-full text-center rounded border text-sm
                               ${isDisabled
