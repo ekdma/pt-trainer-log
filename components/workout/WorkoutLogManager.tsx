@@ -1006,7 +1006,11 @@ export default function WorkoutLogManager({
         }
       }
 
-      toast.success('모든 REPS와 SETS가 오늘 이후로 저장되었습니다 ✅');
+       if (isTrainer) {
+          toast.success('모든 REPS와 SETS가 오늘 이후로 저장되었습니다 ✅');
+        }
+
+      // toast.success('모든 REPS와 SETS가 오늘 이후로 저장되었습니다 ✅');
     } catch (err) {
       console.error('저장에러:', err instanceof Error ? err.message : err);
     }
