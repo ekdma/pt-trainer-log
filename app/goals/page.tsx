@@ -295,6 +295,7 @@ export default function GoalsPage() {
 			.from('member_goals')
 			.delete()
 			.eq('member_id', selectedMember.member_id)
+      .in('goal_type', ['diet', 'hydration', 'sleep', 'body'])
 
     const { error } = await supabase.from('member_goals').insert([
       {
@@ -327,7 +328,7 @@ export default function GoalsPage() {
       console.error('저장 실패:', error.message)
       toast.error(t('alert.goal_error'))
     } else {
-      toast.error(t('alert.goal_save'))
+      toast.success(t('alert.goal_save'))
     }
     setIsEditingGoal(false)
   }
