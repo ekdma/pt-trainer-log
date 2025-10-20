@@ -289,7 +289,7 @@ export default function GoalsPage() {
     const bodyGoal = {
       muscle_gain_kg: muscleGain,
       fat_loss_kg: fatLoss,
-    }
+    } 
 
 		await supabase
 			.from('member_goals')
