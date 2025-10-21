@@ -333,30 +333,42 @@ export default function GoalsPage() {
     }
   }
 
-  const isGoalChanged = (existing: any, current: any): boolean => {
-    if (!existing) return true;
+  type AnyRecord = Record<string, unknown>
+  const isPlainObject = (v: unknown): v is AnyRecord =>
+    typeof v === 'object' && v !== null && !Array.isArray(v)
+
+  const isNumberLike = (v: unknown) =>
+    typeof v === 'number' || (typeof v === 'string' && v.trim() !== '' && !Number.isNaN(Number(v)))
+
+  const arraysEqual = (a: unknown[], b: unknown[]) =>
+    a.length === b.length && a.every((v, i) => v === b[i])
+
+  const isGoalChanged = (existing: AnyRecord | null, current: AnyRecord): boolean => {
+    if (!existing) return true
 
     for (const key of Object.keys(current)) {
-      const currVal = current[key];
-      const existVal = existing[key];
+      const currVal = current[key]
+      const existVal = (existing as AnyRecord)[key]
 
       if (Array.isArray(currVal) && Array.isArray(existVal)) {
-        // 배열 비교
-        if (currVal.length !== existVal.length) return true;
-        for (let i = 0; i < currVal.length; i++) {
-          if (currVal[i] !== existVal[i]) return true;
-        }
-      } else if (typeof currVal === 'object' && currVal !== null && existVal !== null) {
-        // 객체 비교 (재귀)
-        if (isGoalChanged(existVal, currVal)) return true;
-      } else if (typeof currVal === 'number' || typeof existVal === 'number') {
-        if (Number(currVal) !== Number(existVal)) return true;
-      } else if (currVal !== existVal) {
-        return true;
+        if (!arraysEqual(currVal, existVal)) return true
+        continue
       }
+
+      if (isPlainObject(currVal) && isPlainObject(existVal)) {
+        if (isGoalChanged(existVal, currVal)) return true
+        continue
+      }
+
+      if (isNumberLike(currVal) || isNumberLike(existVal)) {
+        if (Number(currVal) !== Number(existVal)) return true
+        continue
+      }
+
+      if (currVal !== existVal) return true
     }
-    return false;
-  };
+    return false
+  }
 
 	
   const handleSaveGoals = async () => {
@@ -364,10 +376,13 @@ export default function GoalsPage() {
 
     const today = new Date().toISOString()
 
-    const normalize = (obj: any) =>
-      Object.fromEntries(
-        Object.entries(obj).map(([k, v]) => [k, v === '' || v === undefined ? null : v])
-      );
+    const normalize = <T extends Record<string, unknown>>(obj: T): { [K in keyof T]: T[K] | null } => {
+      const mapped = Object.entries(obj).map(([k, v]) => [
+        k,
+        v === '' || v === undefined ? null : v,
+      ])
+      return Object.fromEntries(mapped) as { [K in keyof T]: T[K] | null }
+    }
 
     const goals = {
       diet: normalize({
@@ -397,16 +412,22 @@ export default function GoalsPage() {
 
       if (fetchError) throw fetchError;
 
-      const existingGoalsMap = new Map(
-        existingGoals?.map((g) => [g.goal_type, g.content]) || []
-      );
+      const existingGoalsMap = new Map<string, GoalContent>(
+        (existingGoals || []).map((g: { goal_type: string; content: GoalContent }) => [
+          g.goal_type,
+          g.content,
+        ])
+      )
 
       // ✅ 변경된 goalType만 업데이트
       const changedGoals: string[] = [];
 
       for (const [goalType, content] of Object.entries(goals)) {
-        const existingContentRaw = existingGoalsMap.get(goalType);
-        const existingContent = existingContentRaw ? normalize(existingContentRaw) : null;
+        const existingContentRaw = existingGoalsMap.get(goalType)
+        // normalize에 맞게 레코드 보장
+        const existingContent = existingContentRaw
+          ? normalize(existingContentRaw as Record<string, unknown>)
+          : null
 
         if (existingContent && isGoalChanged(existingContent, content)) {
           // 변경된 항목만 update
