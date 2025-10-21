@@ -35,7 +35,10 @@
       "workout_warning_2": "You can only add dates within the last 7 days 😥",
       "workout_warning_3": "Please fill in all fields 😎",
       "workout_error_1": "Partial save failure: ",
-      "workout_success_1": "Record updated successfully 😊"
+      "workout_success_1": "Record updated successfully 😊",
+      "goal_resetgoal": "Your goal has been reset based on the most recent measurement 🎯",
+      "goal_resetgoal_fail": "An error occurred while resetting the goal 😢",
+      "goal_saveimage": "Goal image has been saved 🎯"
     },
     "header": {
       "schedule": "Schedule",
@@ -82,9 +85,9 @@
       "waterIntakeGoal_2": " tumbler(s) per day (500ml each)",
       "sleepGoal_1": "Sleep for ",
       "sleepGoal_2": " hours per day",
-      "bodycompositionGoal_1": "Muscle mass: +",
+      "bodycompositionGoal_1": "Muscle mass :",
       "bodycompositionGoal_2": " ",
-      "bodycompositionGoal_3": "Body fat: -",
+      "bodycompositionGoal_3": "Body fat :",
       "bodycompositionGoal_4": " ",
       "hashtagGoals": "Hashtag Goals",
       "hashtagGoals_1": " ",
@@ -97,7 +100,12 @@
       "sleepGoal_4": "hour(s)!",
       "goalImage": "My Goal Image",
       "goalImageDescription": "Everything is going your way!",
-      "doNotShowAgain": "Do not show for today"
+      "doNotShowAgain": "Do not show for today",
+      "latest": "Latest",
+      "saved": "Saved",
+      "baseline": "Baseline",
+      "progress": "Progress",
+      "resetGoal": "Reset Goal"
     },
     "my_calendar": {
       "myCalendar": "My Schedule",

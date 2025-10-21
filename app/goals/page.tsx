@@ -55,9 +55,13 @@ interface SleepGoal {
 }
 
 interface BodyGoal {
+  base_muscle_mass?: number
+  base_body_fat_mass?: number
+  base_measure_date?: string
   muscle_gain_kg?: number
   fat_loss_kg?: number
 }
+
 
 type GoalContent = DietGoal | HydrationGoal | SleepGoal | BodyGoal
 
@@ -96,12 +100,60 @@ export default function GoalsPage() {
   const fileInputRef = useRef<HTMLInputElement | null>(null)
   const [isEditingGoal, setIsEditingGoal] = useState(false)  
 
+  const [latestMeasureDate, setLatestMeasureDate] = useState<string | null>(null)
+  const [lastSavedDate, setLastSavedDate] = useState<string | null>(null)
+  const [recentMuscleMass, setRecentMuscleMass] = useState<number | null>(null)
+  const [recentBodyFatMass, setRecentBodyFatMass] = useState<number | null>(null)
+  const [recentMeasureDate, setRecentMeasureDate] = useState<string | null>(null)
+
   console.log(goals)
 
-  const handleStartGoalSetting = () => {
-    setDefaultGoals()
+  const handleStartGoalSetting = async () => {
+    if (!selectedMember) return
+
+    // 1️⃣ health_metrics 테이블에서 체지방량/골격근량 최신값 조회
+    const { data, error } = await supabase
+      .from('health_metrics')
+      .select('metric_type, metric_value, measure_date')
+      .eq('member_id', selectedMember.member_id)
+      .in('metric_type', ['Skeletal Muscle Mass', 'Body Fat Mass'])
+      .order('measure_date', { ascending: false })
+
+    if (error) {
+      console.error('health_metrics 조회 실패:', error)
+    }
+
+    if (data && data.length > 0) {
+      // 최신값만 추출
+      const latestByType = data.reduce((acc, cur) => {
+        if (!acc[cur.metric_type]) acc[cur.metric_type] = cur
+        return acc
+      }, {} as Record<string, typeof data[0]>)
+
+      // 최신 측정값 세팅
+      const recentMuscle = latestByType['Skeletal Muscle Mass']?.metric_value ?? null
+      const recentFat = latestByType['Body Fat Mass']?.metric_value ?? null
+      const measureDate = data[0]?.measure_date ?? null
+
+      // 기준값으로 저장
+      setLatestMuscleMass(recentMuscle)
+      setLatestBodyFatMass(recentFat)
+      setLatestMeasureDate(measureDate)
+
+      // 최근 측정값도 함께 저장
+      setRecentMuscleMass(recentMuscle)
+      setRecentBodyFatMass(recentFat)
+      setRecentMeasureDate(measureDate)
+
+      toast.success('📊 최신 측정 데이터를 기준으로 목표를 설정합니다.')
+    } else {
+      // health_metrics 값이 없으면 기본값 세팅
+      setDefaultGoals()
+    }
+
     setIsEditingGoal(true)
   }
+
   
   // useEffect(() => {
   //   const raw = localStorage.getItem('litpt_member')
@@ -148,8 +200,13 @@ export default function GoalsPage() {
     if (selectedMember) {
       fetchActivePackage()
       fetchFoodTemplates()
-      fetchSavedGoals()
-      fetchLatestBodyMetrics()
+      ;(async () => {
+        await fetchSavedGoals()
+        // ✅ 저장된 기준값이 없을 때만 최신값 갱신
+        if (latestMuscleMass === null && latestBodyFatMass === null) {
+          fetchLatestBodyMetrics()
+        }
+      })()
     }
   }, [selectedMember])
   
@@ -190,32 +247,27 @@ export default function GoalsPage() {
 
   const fetchLatestBodyMetrics = async () => {
     if (!selectedMember) return
-  
+
     const { data, error } = await supabase
       .from('health_metrics')
       .select('metric_type, metric_value, measure_date')
       .eq('member_id', selectedMember.member_id)
       .in('metric_type', ['Skeletal Muscle Mass', 'Body Fat Mass'])
       .order('measure_date', { ascending: false })
-  
-    if (error) {
-      console.error('체성분 데이터 조회 실패:', error)
-      return
-    }
-  
-    if (data && data.length > 0) {
-      // 가장 최근 측정일 기준으로 필터
-      const latestByType = data.reduce((acc, cur) => {
-        if (!acc[cur.metric_type]) {
-          acc[cur.metric_type] = cur
-        }
-        return acc
-      }, {} as Record<string, typeof data[0]>)
-  
-      setLatestMuscleMass(latestByType['Skeletal Muscle Mass']?.metric_value ?? null)
-      setLatestBodyFatMass(latestByType['Body Fat Mass']?.metric_value ?? null)
-    }
+
+    if (error || !data) return console.error('체성분 데이터 조회 실패:', error)
+
+    // 최신값
+    const latestByType = data.reduce((acc, cur) => {
+      if (!acc[cur.metric_type]) acc[cur.metric_type] = cur
+      return acc
+    }, {} as Record<string, typeof data[0]>)
+
+    setRecentMuscleMass(latestByType['Skeletal Muscle Mass']?.metric_value ?? null)
+    setRecentBodyFatMass(latestByType['Body Fat Mass']?.metric_value ?? null)
+    setRecentMeasureDate(data[0]?.measure_date ?? null)
   }
+
   
 	const fetchSavedGoals = async () => {
 		const { data, error } = await supabase
@@ -225,6 +277,9 @@ export default function GoalsPage() {
 			.order('created_at', { ascending: false })
 	
     if (!error && data) {
+      const lastGoal = data[0]
+      setLastSavedDate(lastGoal.created_at)
+
       const hasGoals = data.some(goal =>
         goal.goal_type !== 'image' || goal.goal_image_url
       )
@@ -261,77 +316,191 @@ export default function GoalsPage() {
       if (body) {
         setMuscleGain(body.muscle_gain_kg ?? 0)
         setFatLoss(body.fat_loss_kg ?? 0)
+
+        // ✅ 저장된 기준값이 있으면 그대로 유지
+        if (body.base_muscle_mass !== undefined) {
+          setLatestMuscleMass(body.base_muscle_mass)
+        }
+        if (body.base_body_fat_mass !== undefined) {
+          setLatestBodyFatMass(body.base_body_fat_mass)
+        }
+
+        // ✅ 기준 측정일 세팅
+        if (body.base_measure_date) {
+          setLatestMeasureDate(body.base_measure_date)
+        }
       }
     }
   }
+
+  const isGoalChanged = (existing: any, current: any): boolean => {
+    if (!existing) return true;
+
+    for (const key of Object.keys(current)) {
+      const currVal = current[key];
+      const existVal = existing[key];
+
+      if (Array.isArray(currVal) && Array.isArray(existVal)) {
+        // 배열 비교
+        if (currVal.length !== existVal.length) return true;
+        for (let i = 0; i < currVal.length; i++) {
+          if (currVal[i] !== existVal[i]) return true;
+        }
+      } else if (typeof currVal === 'object' && currVal !== null && existVal !== null) {
+        // 객체 비교 (재귀)
+        if (isGoalChanged(existVal, currVal)) return true;
+      } else if (typeof currVal === 'number' || typeof existVal === 'number') {
+        if (Number(currVal) !== Number(existVal)) return true;
+      } else if (currVal !== existVal) {
+        return true;
+      }
+    }
+    return false;
+  };
+
 	
   const handleSaveGoals = async () => {
     if (!selectedMember) return
 
     const today = new Date().toISOString()
 
-    const dietGoal = {
-      meals_per_day: mealsPerDay,
-      important_meal: importantMeal,
-      finish_by_hour: finishByHour,
-      custom: customGoal,
-      hashtags: selectedTags,
+    const normalize = (obj: any) =>
+      Object.fromEntries(
+        Object.entries(obj).map(([k, v]) => [k, v === '' || v === undefined ? null : v])
+      );
+
+    const goals = {
+      diet: normalize({
+        meals_per_day: Number(mealsPerDay),
+        important_meal: importantMeal || null,
+        finish_by_hour: Number(finishByHour),
+        custom: customGoal?.trim() || null,
+        hashtags: selectedTags || [],
+      }),
+      hydration: normalize({ cups_per_day: Number(cupsPerDay) }),
+      sleep: normalize({ hours_per_day: Number(sleepHours) }),
+      body: normalize({
+        base_muscle_mass: latestMuscleMass ?? null,
+        base_body_fat_mass: latestBodyFatMass ?? null,
+        base_measure_date: latestMeasureDate ?? today,
+        muscle_gain_kg: Number(muscleGain),
+        fat_loss_kg: Number(fatLoss),
+      }),
+    };
+    
+		try {
+      // ✅ 기존 goal 데이터 전체 조회
+      const { data: existingGoals, error: fetchError } = await supabase
+        .from("member_goals")
+        .select("goal_type, content")
+        .eq("member_id", selectedMember.member_id);
+
+      if (fetchError) throw fetchError;
+
+      const existingGoalsMap = new Map(
+        existingGoals?.map((g) => [g.goal_type, g.content]) || []
+      );
+
+      // ✅ 변경된 goalType만 업데이트
+      const changedGoals: string[] = [];
+
+      for (const [goalType, content] of Object.entries(goals)) {
+        const existingContentRaw = existingGoalsMap.get(goalType);
+        const existingContent = existingContentRaw ? normalize(existingContentRaw) : null;
+
+        if (existingContent && isGoalChanged(existingContent, content)) {
+          // 변경된 항목만 update
+          const { error: updateError } = await supabase
+            .from("member_goals")
+            .update({
+              content,
+              updated_at: new Date().toISOString(),
+            })
+            .eq("member_id", selectedMember.member_id)
+            .eq("goal_type", goalType);
+
+          if (updateError) throw updateError;
+          changedGoals.push(goalType);
+        } else if (!existingContent) {
+          // 신규 항목 insert
+          const { error: insertError } = await supabase
+            .from("member_goals")
+            .insert([
+              {
+                member_id: selectedMember.member_id,
+                goal_type: goalType,
+                content,
+                created_at: new Date().toISOString(),
+              },
+            ]);
+
+          if (insertError) throw insertError;
+          changedGoals.push(goalType);
+        }
+      }
+
+
+      if (changedGoals.length > 0) {
+        toast.success(`${changedGoals.join(", ")} ${t("alert.goal_save")}`);
+      } else {
+        toast.message(t("alert.goal_nochange"));
+      }
+    } catch (error) {
+      if (error instanceof Error) {
+        console.error('저장 실패:', error.message)
+      } else {
+        console.error('저장 실패 (알 수 없는 오류):', error)
+      }
+      toast.error(t('alert.goal_error'))
+    } finally {
+      setIsEditingGoal(false)
+    }
+  }
+
+  const handleResetGoals = async () => {
+    if (!selectedMember) return
+
+    if (!recentMeasureDate || recentMuscleMass == null || recentBodyFatMass == null) {
+      toast.warning('최근 측정 데이터가 없습니다 😥')
+      return
     }
 
-    const hydrationGoal = {
-      cups_per_day: cupsPerDay,
-    }
+    // 최근 측정값으로 기준 재설정
+    setLatestMeasureDate(recentMeasureDate)
+    setLatestMuscleMass(recentMuscleMass)
+    setLatestBodyFatMass(recentBodyFatMass)
 
-    const sleepGoal = {
-      hours_per_day: sleepHours,
-    }
+    // 오늘 날짜를 기준으로 목표를 다시 저장
+    const today = new Date().toISOString()
 
-    const bodyGoal = {
+    const newBodyGoal = {
+      base_muscle_mass: recentMuscleMass,
+      base_body_fat_mass: recentBodyFatMass,
+      base_measure_date: recentMeasureDate,
       muscle_gain_kg: muscleGain,
       fat_loss_kg: fatLoss,
-    } 
-
-		await supabase
-			.from('member_goals')
-			.delete()
-			.eq('member_id', selectedMember.member_id)
-      .in('goal_type', ['diet', 'hydration', 'sleep', 'body'])
-
-    const { error } = await supabase.from('member_goals').insert([
-      {
-        member_id: selectedMember.member_id,
-        goal_type: 'diet',
-        content: dietGoal,
-        created_at: today,
-      },
-      {
-        member_id: selectedMember.member_id,
-        goal_type: 'hydration',
-        content: hydrationGoal,
-        created_at: today,
-      },
-      {
-        member_id: selectedMember.member_id,
-        goal_type: 'sleep',
-        content: sleepGoal,
-        created_at: today,
-      },
-      {
-        member_id: selectedMember.member_id,
-        goal_type: 'body',
-        content: bodyGoal,
-        created_at: today,
-      },
-    ])
-
-    if (error) {
-      console.error('저장 실패:', error.message)
-      toast.error(t('alert.goal_error'))
-    } else {
-      toast.success(t('alert.goal_save'))
     }
-    setIsEditingGoal(false)
+
+    try {
+      const { error } = await supabase
+        .from('member_goals')
+        .update({
+          content: newBodyGoal,
+          updated_at: today,
+        })
+        .eq('member_id', selectedMember.member_id)
+        .eq('goal_type', 'body')
+
+      if (error) throw error
+
+      setLastSavedDate(today)
+      toast.success(t("alert.goal_resetgoal"))
+    } catch (err) {
+      console.error('목표 재설정 실패:', err)
+      toast.error(t("alert.goal_resetgoal_fail"))
+    }
   }
+
 
   const setDefaultGoals = () => {
     setMealsPerDay(3)
@@ -420,8 +589,39 @@ export default function GoalsPage() {
       return
     }
 
-    toast.success('목표 사진이 저장되었습니다 🎯')
+    toast.success(t("alert.goal_saveimage"))
   }
+
+  const calculateAchievementRate = (
+    base: number | null,    // 목표 기준값
+    current: number | null, // 최신 측정값
+    gain: number,           // 근육 증가 목표 or 체지방 감소 목표
+    type: 'muscle' | 'fat'
+  ) => {
+    // 1️⃣ 유효성 검사
+    if (base === null || current === null || !gain || gain <= 0 || isNaN(gain)) {
+      return 0
+    }
+
+    let achieved = 0
+
+    // 2️⃣ 계산
+    if (type === 'muscle') {
+      achieved = ((current - base) / gain) * 100
+    } else {
+      // fat 감소 목표
+      achieved = ((base - current) / gain) * 100
+    }
+
+    // 3️⃣ NaN / Infinity 방지
+    if (!isFinite(achieved) || isNaN(achieved)) {
+      return 0
+    }
+
+    // 4️⃣ 0~100 범위 제한 후 소수점 1자리로 반환
+    return Math.min(Math.max(achieved, 0), 100).toFixed(1)
+  }
+
 
   return (
     <div className="min-h-screen bg-gray-50">
@@ -702,15 +902,42 @@ export default function GoalsPage() {
 
                     {/* 체성분 목표 카드 */}
                     <section className="bg-white rounded-2xl shadow-md p-6 border border-gray-200 hover:shadow-lg transition space-y-2">
-                      <h3 className="text-lg font-semibold text-gray-600 flex items-center gap-2">
-                        <span>📈</span> {t('my.bodycompositionGoal')}
-                      </h3>
+                      <div className="flex flex-col lg:flex-row lg:justify-between lg:items-center gap-2 lg:gap-3">
+                        {/* 🔹 제목 + 저장일 */}
+                        <div className="flex justify-between items-center w-full lg:w-auto">
+                          <h3 className="text-lg font-semibold text-gray-600 flex items-center gap-2">
+                            <span>📈</span> {t('my.bodycompositionGoal')}
+                          </h3>
+
+                          {/* 모바일/패드에서는 제목 옆, 노트북 이상에서는 오른쪽 정렬 */}
+                          {lastSavedDate && (
+                            <span className="text-xs text-gray-400 text-right lg:ml-3">
+                              💾 {t('my.saved')}: {new Date(lastSavedDate).toLocaleDateString()}
+                            </span>
+                          )}
+                        </div>
+
+                        {/* 🔹 버튼 — 모바일/패드에서는 아래줄 오른쪽, 노트북 이상에서는 같은 줄 오른쪽 */}
+                        <div className="flex justify-end lg:justify-start w-full lg:w-auto">
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            className="text-xs px-3 py-1 border-gray-400 text-gray-600 hover:bg-gray-100"
+                            onClick={handleResetGoals}
+                          >
+                            {t('my.resetGoal')}
+                          </Button>
+                        </div>
+                      </div>
+
+
 
                       {/* 골격근량 */}
                       <div className="p-3 rounded-xl border border-gray-100 bg-gray-50 space-y-2">
                         <div className="flex items-center gap-4">
                           <span className="text-gray-400 text-lg">•</span>
                           <span className="text-sm">{t('my.bodycompositionGoal_1')}</span>
+                          <span className="text-sm text-emerald-600">+</span>
                           <input
                             type="number"
                             value={muscleGain}
@@ -722,17 +949,49 @@ export default function GoalsPage() {
                           />
                           <span className="text-sm">kg {t('my.bodycompositionGoal_2')}</span>
                         </div>
-                        <div className="ml-6 text-sm text-gray-500 flex items-center gap-2">
-                          📊
-                          <span className="font-medium text-gray-700">
-                            {latestMuscleMass !== null ? `${latestMuscleMass}kg` : `${t('master.noData')})`}
-                          </span>
-                          {hasAnyGoals && latestMuscleMass !== null && (
-                            <span className="font-semibold text-emerald-600">
-                              → {(latestMuscleMass + muscleGain)}kg
+                        {/* 1️⃣ 목표 기준값 */}
+                        {latestMeasureDate && latestMuscleMass != null && (
+                          <div className="text-sm text-gray-700 flex justify-center items-center gap-2">
+                            <span className="text-xs text-gray-400">
+                              📅 {t('my.baseline')} {new Date(latestMeasureDate).toLocaleDateString('ko-KR')}
                             </span>
-                          )}
-                        </div>
+                            <span>{latestMuscleMass}kg</span>
+                            <span className="font-semibold text-emerald-600">
+                              → {latestMuscleMass + muscleGain}kg
+                            </span>
+                          </div>
+                        )}
+
+
+                        {/* 2️⃣ 최근 측정값 */}
+                        {recentMeasureDate && recentMuscleMass != null && (
+                          <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-1 sm:gap-2 text-center sm:text-left">
+                            <div className="flex flex-wrap justify-center sm:justify-start items-center gap-1">
+                              <span className="text-sm text-gray-700 leading-relaxed">
+                                {t('my.latest')}: {' '}
+                                <span className="font-semibold text-emerald-600">{recentMuscleMass}kg</span>{' '}
+                                <span className="text-xs text-gray-400">
+                                  ({new Date(recentMeasureDate).toLocaleDateString('ko-KR')})
+                                </span>
+                              </span>
+                            </div>
+
+                            {/* ✅ 달성률 — 모바일에서는 아래줄로 떨어짐 */}
+                            <div className="text-sm text-gray-700 leading-relaxed mt-1 sm:mt-0">
+                              {t('my.progress')}: {' '}
+                              <span className="font-semibold text-emerald-600">
+                                {calculateAchievementRate(
+                                  latestMuscleMass ?? null,
+                                  recentMuscleMass,
+                                  muscleGain,
+                                  'muscle'
+                                ) || '0'}%
+                              </span>
+                            </div>
+                          </div>
+                        )}
+
+
                       </div>
 
                       {/* 체지방량 */}
@@ -740,6 +999,7 @@ export default function GoalsPage() {
                         <div className="flex items-center gap-2">
                           <span className="text-gray-400 text-lg">•</span>
                           <span className="text-sm">{t('my.bodycompositionGoal_3')}</span>
+                          <span className="text-sm text-rose-600">-</span>
                           <input
                             type="number"
                             value={fatLoss}
@@ -751,17 +1011,48 @@ export default function GoalsPage() {
                           />
                           <span className="text-sm">kg {t('my.bodycompositionGoal_4')}</span>
                         </div>
-                        <div className="ml-6 text-sm text-gray-500 flex items-center gap-2">
-                          📊
-                          <span className="font-medium text-gray-700">
-                            {latestBodyFatMass !== null ? `${latestBodyFatMass}kg` : `${t('master.noData')})`}
-                          </span>
-                          {hasAnyGoals && latestBodyFatMass !== null && (
-                            <span className="font-semibold text-rose-600">
-                              → {(latestBodyFatMass - fatLoss)}kg
+                        {/* 목표 기준값 */}
+                        {latestMeasureDate && latestBodyFatMass != null && (
+                          <div className="text-sm text-gray-700 flex justify-center items-center gap-2">
+                            <span className="text-xs text-gray-400">
+                              📅 {t('my.baseline')} {new Date(latestMeasureDate).toLocaleDateString('ko-KR')}
                             </span>
-                          )}
-                        </div>
+                            <span>{latestBodyFatMass}kg</span>
+                            <span className="font-semibold text-rose-600">
+                              → {latestBodyFatMass - fatLoss}kg
+                            </span>
+                          </div>
+                        )}
+
+                        {/* 최근 측정값 */}
+                        {recentMeasureDate && recentBodyFatMass != null && (
+                          <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-1 sm:gap-2 text-center sm:text-left">
+                            <div className="flex flex-wrap justify-center sm:justify-start items-center gap-1">
+                              <span className="text-sm text-gray-700 leading-relaxed">
+                                {t('my.latest')}: {' '}
+                                <span className="font-semibold text-rose-600">{recentBodyFatMass}kg</span>{' '}
+                                <span className="text-xs text-gray-400">
+                                  ({new Date(recentMeasureDate).toLocaleDateString('ko-KR')})
+                                </span>
+                              </span>
+                            </div>
+
+                            {/* ✅ 달성률 — 모바일에서는 아래줄로 떨어짐 */}
+                            <div className="text-sm text-gray-700 leading-relaxed mt-1 sm:mt-0">
+                              {t('my.progress')}: {' '}
+                              <span className="font-semibold text-rose-600">
+                                {calculateAchievementRate(
+                                  latestBodyFatMass ?? null,
+                                  recentBodyFatMass,
+                                  fatLoss,
+                                  'fat'
+                                ) || '0'}%
+                              </span>
+                            </div>
+                          </div>
+                        )}
+
+
                       </div>
                     </section>
 

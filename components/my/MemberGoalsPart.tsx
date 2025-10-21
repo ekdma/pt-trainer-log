@@ -52,6 +52,9 @@ export default function MemberGoalsPart() {
   const [avgSleepHours, setAvgSleepHours] = useState<number | null>(null)
   const [avgWaterIntake, setAvgWaterIntake] = useState<number | null>(null)
 
+  const [latestMeasureDate, setLatestMeasureDate] = useState<string | null>(null)
+  const [recentMeasureDate, setRecentMeasureDate] = useState<string | null>(null)
+
   const { t } = useLanguage()  // 번역 함수 가져오기
 
   const fetchGoals = async () => {
@@ -129,19 +132,41 @@ export default function MemberGoalsPart() {
       .select('metric_type, metric_value, measure_date')
       .eq('member_id', memberId)
       .in('metric_type', ['Skeletal Muscle Mass', 'Body Fat Mass'])
-      .order('measure_date', { ascending: false })
+      .order('measure_date', { ascending: true }) // 오래된 순으로 정렬
 
     if (error || !data) return
 
-    const latestByType = data.reduce((acc, cur) => {
-      if (!acc[cur.metric_type]) {
-        acc[cur.metric_type] = cur
-      }
+    const byType = data.reduce((acc, cur) => {
+      if (!acc[cur.metric_type]) acc[cur.metric_type] = []
+      acc[cur.metric_type].push(cur)
       return acc
-    }, {} as Record<string, typeof data[0]>)
+    }, {} as Record<string, typeof data>)
 
-    setLatestMuscleMass(latestByType['Skeletal Muscle Mass']?.metric_value ?? null)
-    setLatestBodyFatMass(latestByType['Body Fat Mass']?.metric_value ?? null)
+    const latestByType = (type: string) => byType[type]?.[byType[type].length - 1]
+    const oldestByType = (type: string) => byType[type]?.[0]
+
+    // 최신 측정값
+    setLatestMuscleMass(latestByType('Skeletal Muscle Mass')?.metric_value ?? null)
+    setLatestBodyFatMass(latestByType('Body Fat Mass')?.metric_value ?? null)
+    setRecentMeasureDate(latestByType('Skeletal Muscle Mass')?.measure_date ?? null)
+
+    // 기준일 (가장 오래된 측정일)
+    setLatestMeasureDate(oldestByType('Skeletal Muscle Mass')?.measure_date ?? null)
+  }
+
+  const calculateAchievementRate = (
+    base: number | null,
+    current: number | null,
+    gain: number,
+    type: 'muscle' | 'fat'
+  ) => {
+    if (base === null || current === null || !gain || gain <= 0 || isNaN(gain)) return 0
+
+    let achieved = 0
+    if (type === 'muscle') achieved = ((current - base) / gain) * 100
+    else achieved = ((base - current) / gain) * 100
+
+    return Math.min(Math.max(achieved, 0), 100).toFixed(1)
   }
 
   const fetchAvgHealthMetrics = async (memberId: number) => {
@@ -307,50 +332,137 @@ export default function MemberGoalsPart() {
               📈 {t('my.bodycompositionGoal')}
             </div>
 
+            {/* 기준일 / 최신일 */}
+            {(latestMeasureDate || recentMeasureDate) && (
+              <div className="flex flex-wrap justify-between text-xs text-gray-500 mb-3 border-b border-gray-100 pb-2">
+                {latestMeasureDate && (
+                  <span>
+                    🗓️ {t('my.baseline')}:{" "}
+                    <span className="font-medium text-gray-600">
+                      {new Date(latestMeasureDate).toLocaleDateString('ko-KR')}
+                    </span>
+                  </span>
+                )}
+                {recentMeasureDate && (
+                  <span>
+                    ⏱️ {t('my.latest')}:{" "}
+                    <span className="font-medium text-gray-600">
+                      {new Date(recentMeasureDate).toLocaleDateString('ko-KR')}
+                    </span>
+                  </span>
+                )}
+              </div>
+            )}
+            
             {/* 골격근량 */}
-            <div className="p-3 rounded-xl border border-gray-100 bg-gray-50 space-y-2">
-              <div className="flex items-center gap-2">
-                <span className="text-gray-400 text-lg">•</span>
-                <span className="text-sm font-medium">
+            <div className="p-4 rounded-xl border border-emerald-100 bg-emerald-50/40 space-y-2 transition hover:bg-emerald-50">
+              <div className="flex items-center gap-2 mb-1">
+                <span className="text-emerald-500 text-lg">💪</span>
+                <span className="text-sm font-medium text-gray-700">
                   {t('my.bodycompositionGoal_1')}
-                  <span className="text-emerald-600 font-semibold"> {goals.body.muscle_gain_kg}kg </span>
+                  <span className="text-emerald-600 font-semibold">
+                    {" "}
+                    +{goals.body.muscle_gain_kg}kg{" "}
+                  </span>
                   {t('my.bodycompositionGoal_2')}
                 </span>
               </div>
-              <div className="ml-6 text-sm text-gray-500 flex items-center gap-2">
-                📊
-                <span className="font-medium text-gray-700">
-                  {latestMuscleMass !== null ? `${latestMuscleMass}kg` : t('master.noData')}
-                </span>
-                {goals.body.muscle_gain_kg > 0 && latestMuscleMass !== null && (
-                  <span className="font-semibold text-emerald-600">
-                    → {(latestMuscleMass + goals.body.muscle_gain_kg)}kg
+
+              {/* 기준값 → 목표값 */}
+              <div className="flex flex-col sm:flex-row justify-between items-center bg-white/60 rounded-lg px-3 py-2 border border-emerald-100 text-sm text-gray-700">
+                <span>
+                  📊{" "}
+                  <span className="font-medium text-gray-800">
+                    {latestMuscleMass !== null ? `${latestMuscleMass}kg` : t('master.noData')}
                   </span>
-                )}
+                  {goals.body.muscle_gain_kg > 0 && latestMuscleMass !== null && (
+                    <span className="text-emerald-600 font-semibold">
+                      {" "}
+                      → {(latestMuscleMass + goals.body.muscle_gain_kg)}kg
+                    </span>
+                  )}
+                </span>
               </div>
+
+              {/* 최근 측정값 + 달성률 */}
+              {recentMeasureDate && (
+                <div className="flex flex-col justify-between items-start bg-emerald-50 rounded-lg px-3 py-2 text-sm text-gray-700 border border-emerald-100 mt-1 space-y-1">
+                  <span>
+                    {t('my.latest')}:{" "}
+                    <span className="font-semibold text-emerald-600">
+                      {latestMuscleMass ?? '-'}kg
+                    </span>
+                  </span>
+                  <span className="text-xs text-gray-500">
+                    🎯 {t('my.progress')}:{" "}
+                    <span className="font-semibold text-emerald-600">
+                      {calculateAchievementRate(
+                        latestMuscleMass,
+                        latestMuscleMass, // 나중에 recentMuscleMass로 교체 가능
+                        goals.body.muscle_gain_kg,
+                        'muscle'
+                      )}
+                      %
+                    </span>
+                  </span>
+                </div>
+              )}
             </div>
 
             {/* 체지방량 */}
-            <div className="p-3 rounded-xl border border-gray-100 bg-gray-50 space-y-2">
-              <div className="flex items-center gap-2">
-                <span className="text-gray-400 text-lg">•</span>
-                <span className="text-sm font-medium">
+            <div className="p-4 rounded-xl border border-rose-100 bg-rose-50/40 space-y-2 transition hover:bg-rose-50 mt-3">
+              <div className="flex items-center gap-2 mb-1">
+                <span className="text-rose-500 text-lg">🔥</span>
+                <span className="text-sm font-medium text-gray-700">
                   {t('my.bodycompositionGoal_3')}
-                  <span className="text-rose-600 font-semibold"> {goals.body.fat_loss_kg}kg </span>
+                  <span className="text-rose-600 font-semibold">
+                    {" "}
+                    -{goals.body.fat_loss_kg}kg{" "}
+                  </span>
                   {t('my.bodycompositionGoal_4')}
                 </span>
               </div>
-              <div className="ml-6 text-sm text-gray-500 flex items-center gap-2">
-                📊
-                <span className="font-medium text-gray-700">
-                  {latestBodyFatMass !== null ? `${latestBodyFatMass}kg` : t('master.noData')}
-                </span>
-                {goals.body.fat_loss_kg > 0 && latestBodyFatMass !== null && (
-                  <span className="font-semibold text-rose-600">
-                    → {(latestBodyFatMass - goals.body.fat_loss_kg)}kg
+
+              {/* 기준값 → 목표값 */}
+              <div className="flex flex-col sm:flex-row justify-between items-center bg-white/60 rounded-lg px-3 py-2 border border-rose-100 text-sm text-gray-700">
+                <span>
+                  📊{" "}
+                  <span className="font-medium text-gray-800">
+                    {latestBodyFatMass !== null ? `${latestBodyFatMass}kg` : t('master.noData')}
                   </span>
-                )}
+                  {goals.body.fat_loss_kg > 0 && latestBodyFatMass !== null && (
+                    <span className="text-rose-600 font-semibold">
+                      {" "}
+                      → {(latestBodyFatMass - goals.body.fat_loss_kg)}kg
+                    </span>
+                  )}
+                </span>
               </div>
+
+              {/* 최근 측정값 + 달성률 */}
+              {recentMeasureDate && (
+                <div className="flex flex-col justify-between items-start bg-rose-50 rounded-lg px-3 py-2 text-sm text-gray-700 border border-rose-100 mt-1 space-y-1">
+                  <span>
+                    {t('my.latest')}:{" "}
+                    <span className="font-semibold text-rose-600">
+                      {latestBodyFatMass ?? '-'}kg
+                    </span>
+                  </span>
+                  <span className="text-xs text-gray-500">
+                    🎯 {t('my.progress')}:{" "}
+                    <span className="font-semibold text-rose-600">
+                      {calculateAchievementRate(
+                        latestBodyFatMass,
+                        latestBodyFatMass, // 나중에 recentBodyFatMass로 교체 가능
+                        goals.body.fat_loss_kg,
+                        'fat'
+                      )}
+                      %
+                    </span>
+                  </span>
+                </div>
+              )}
+
             </div>
           </div>
         )}
