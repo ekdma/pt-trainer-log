@@ -38,12 +38,14 @@ export default function MemberSearch({
   // onSetHealthLogs,
   setEditingMember,
   members,
+  onRefresh,
 }: {
   onSelectMember: (member: Member) => void
   // onSetLogs: (logs: WorkoutRecord[]) => void
   // onSetHealthLogs: (logs: HealthMetric[]) => void
   setEditingMember: (member: Member) => void
   members: Member[] 
+  onRefresh: () => void
 }) {
   // const router = useRouter()  
   const [supabase, setSupabase] = useState<SupabaseClient | null>(null)
@@ -525,7 +527,7 @@ export default function MemberSearch({
                       toast.error('상태 변경 실패')
                     } else {
                       toast.success(`회원 상태가 ${value === 'active' ? 'Active' : 'Inactive'}로 변경되었습니다`)
-                      fetchMembers()
+                      onRefresh?.() // ✅ 부모에서 필터된 회원 목록만 다시 불러옴
                     }
                   }}
                 >

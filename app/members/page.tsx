@@ -51,20 +51,21 @@ export default function MembersPage() {
   // }, [activeTab, selectedMember])
   }, [selectedMember])
 
-  const fetchMembers = async () => {
+  const fetchMembers = async (tabOverride?: 'all' | 'active') => {
     const query = supabase.from('members').select('*')
-  
-    if (memberTab === 'active') {
+    const tab = tabOverride || memberTab || 'active' // ✅ 확실히 탭 고정
+
+    if (tab === 'active') {
       query.eq('status', 'active')
-    } else if (memberTab === 'all') {
-      query.neq('status', 'delete') // 'delete' 제외
+    } else if (tab === 'all') {
+      query.neq('status', 'delete')
     }
-  
+
     const { data, error } = await query
-  
     if (!error) setFilteredMembers(data ?? [])
     else console.error('회원 불러오기 실패:', error.message)
   }
+
 
   const handleSearch = async () => {
     // if (!supabase) return;
@@ -172,6 +173,7 @@ export default function MembersPage() {
           // onSetLogs={setWorkoutLogs}
           // onSetHealthLogs={setHealthLogs}
           setEditingMember={setEditingMember}
+          onRefresh={() => fetchMembers()}
         />
       </main>
 
@@ -179,7 +181,10 @@ export default function MembersPage() {
         <EditMemberModal
           member={editingMember}
           onClose={() => setEditingMember(null)}
-          onUpdate={fetchMembers}
+          onUpdate={() => {
+            // ✅ 수정된 상태가 반영된 후에도 현재 탭 필터 유지
+            fetchMembers()
+          }}
           supabase={supabase}
         />
       )}
