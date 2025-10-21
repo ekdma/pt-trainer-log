@@ -93,6 +93,15 @@ export default function MembersPage() {
     fetchMembers()
   }, [memberTab])
 
+  useEffect(() => {
+    // ✅ 첫 렌더링 시에도 active 회원 목록 자동 로드
+    if (filteredMembers.length === 0) {
+      setMemberTab('active')
+      fetchMembers()
+    }
+  }, [])
+
+
   return (
     <div className="min-h-screen bg-gray-50">
       <TrainerHeader />
