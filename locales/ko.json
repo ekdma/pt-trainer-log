@@ -135,7 +135,8 @@
       "writeFood": " — 음식 기록하기",
       "writeReply": "댓글 작성...",
       "deleteReply": "댓글이 삭제되었습니다",
-      "saveReply": "댓글이 저장되었습니다"
+      "saveReply": "댓글이 저장되었습니다",
+      "reply": "댓글"
     },
     "workout": {
       "workoutTitle": "운동 기록",

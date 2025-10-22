@@ -6,7 +6,7 @@ import { getSupabaseClient } from '@/lib/supabase'
 import { Button } from '@/components/ui/button'
 import { toast } from 'sonner'
 import { useLanguage } from '@/context/LanguageContext'
-import { X, Plus } from 'lucide-react';
+import { X, Plus, Send, MessageCircleMore } from 'lucide-react';
 import { ChatBubbleLeftIcon, ChatBubbleLeftRightIcon } from '@heroicons/react/24/solid'
 
 interface Props {
@@ -328,33 +328,61 @@ export default function FoodDiaryMemberView({ memberId, memberName }: Props) {
   }
   
   return (
-    <div className="space-y-4">
-      <h1 className="text-center text-lg font-semibold text-gray-600">{`${memberName}'s Food Diary`}</h1>
+    <div className="space-y-6 p-3 sm:p-4">
+      <div className="text-center space-y-1">
+        <h1 className="text-2xl font-bold bg-gradient-to-r from-gray-800 to-gray-600 bg-clip-text text-transparent">
+          {`${memberName}'s Food Diary`}
+        </h1>
+      </div>
+      <div className="h-[2px] w-20 bg-gradient-to-r from-rose-400 to-pink-300 mx-auto mt-1 mb-4 rounded-full" />
               
-      <div className="bg-white shadow rounded-xl p-4 space-y-3 border border-gray-100">
-        <div className="flex justify-between items-center">
-          <button onClick={() => handleDateChange('prev')} className="text-sm text-rose-600">{'<'} {t('master.previous')}</button>
-          <div className="text-center font-semibold">
-            {selectedDate.format('YYYY.MM.DD')} ({selectedDate.format('ddd')})
+      {/* 📅 날짜 + 기본정보 */}
+      <div className="relative bg-white rounded-2xl p-5 border border-gray-100 shadow-[0_2px_8px_rgba(0,0,0,0.04)] transition-all duration-300 hover:shadow-[0_4px_16px_rgba(0,0,0,0.08)] hover:border-rose-100">
+        <div className="absolute inset-0 rounded-2xl bg-gradient-to-br from-rose-50/50 via-transparent to-blue-50/50 pointer-events-none z-0" />
+        {/* 날짜 이동 */}
+        <div className="flex justify-between items-center text-sm font-medium text-gray-600 relative z-5">
+          <button
+            onClick={() => handleDateChange('prev')}
+            className="px-3 py-1 rounded-full bg-white text-rose-500 hover:bg-rose-100 hover:text-rose-700 transition"
+          >
+            ‹ {t('master.previous')}
+          </button>
+
+          <div className="text-center">
+            <div className="text-xl font-bold text-gray-800">{selectedDate.format('YYYY.MM.DD')}</div>
+            <div className="text-sm font-semibold text-gray-500">{selectedDate.format('ddd')}</div>
           </div>
-          <button onClick={() => handleDateChange('next')} className="text-sm text-rose-600">{t('master.next')} {'>'}</button>
+
+          <button
+            onClick={() => handleDateChange('next')}
+            className="px-3 py-1 rounded-full bg-white text-rose-500 hover:bg-rose-100 hover:text-rose-700 transition"
+          >
+            {t('master.next')} ›
+          </button>
         </div>
-        <div className="flex flex-wrap gap-4">
-          <div className="flex-1 min-w-[140px] max-w-xs">
-            <label className="block text-sm font-semibold text-gray-700 mb-1">{t('my.fastingWeightData')} (kg)</label>
+
+        {/* 건강 지표 카드들 */}
+        <div className="grid grid-cols-2 gap-3 mt-3 relative z-5">
+          {/* 체중 */}
+          <div className="p-3 rounded-xl bg-white border border-gray-100 shadow-inner hover:shadow-md transition-all duration-300 z-5">
+            <label className="block text-xs font-semibold text-gray-600 mb-1">
+              ⚖️ {t('my.fastingWeightData')}
+            </label>
             <input
               type="number"
               inputMode="decimal"
               step="0.1"
               value={weight}
               onChange={(e) => setWeight(e.target.value)}
-              className="w-full text-sm border border-gray-300 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-rose-400"
-              placeholder="e.g. 67.5"
+              className="w-full text-sm border border-gray-200 rounded-xl px-3 py-2 focus:ring-2 focus:ring-blue-300 transition text-gray-800"
+              placeholder="67.5"
             />
           </div>
-          <div className="flex-1 min-w-[140px] max-w-xs">
-            <label className="block text-sm font-semibold text-gray-700 mb-1">
-              {t('food_diary.sleepHours')}
+
+          {/* 수면 */}
+          <div className="p-3 rounded-xl bg-white border border-gray-100 shadow-inner hover:shadow-md transition-all duration-300 z-5">
+            <label className="block text-xs font-semibold text-gray-600 mb-1">
+              😴 {t('food_diary.sleepHours')}
             </label>
             <input
               type="number"
@@ -362,192 +390,253 @@ export default function FoodDiaryMemberView({ memberId, memberName }: Props) {
               step="0.1"
               value={sleepHours}
               onChange={(e) => setSleepHours(e.target.value)}
-              className="w-full text-sm border border-gray-300 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-rose-400"
-              placeholder="e.g. 7.5"
+              className="w-full text-sm border border-gray-200 rounded-xl px-3 py-2 focus:ring-2 focus:ring-blue-200 transition text-gray-800"
+              placeholder="7.5"
             />
           </div>
         </div>
-        <div className="mt-6">
-          <label className="block text-sm font-semibold text-gray-700 mb-2">
-            {t('food_diary.waterIntake')}
+
+        {/* 수분 섹션 */}
+        <div className="mt-4 relative z-5">
+          <label className="block text-xs font-semibold text-gray-600 mb-2">
+            💧 {t('food_diary.waterIntake')}
           </label>
-          <div className="flex gap-4">
+          <div className="flex gap-2 justify-center">
             {[1, 2, 3, 4].map((index) => (
               <div
                 key={index}
                 onClick={() =>
                   setHydrationLevel((prev) => (prev === index ? index - 1 : index))
                 }
-                className="relative w-14 h-16 cursor-pointer"
+                // ✅ 클릭할 때도 살짝 커지는 애니메이션 유지
+                className={`relative w-12 h-16 cursor-pointer transform transition-transform duration-200 
+                  ${index <= hydrationLevel ? 'scale-105' : 'hover:scale-110 active:scale-95'}`}
               >
-                {/* 물 채우기 */}
                 <div
-                  className={`absolute bottom-0 left-0 w-full transition-all duration-300 ${
-                    index <= hydrationLevel ? 'bg-blue-400 h-3/4' : 'h-0'
+                  className={`absolute bottom-0 left-0 w-full transition-all duration-500 ${
+                    index <= hydrationLevel
+                      ? 'bg-gradient-to-t from-blue-500 to-blue-200 h-3/4'
+                      : 'h-0'
                   }`}
                   style={{
-                    opacity: 0.6,
+                    opacity: 0.8,
                     borderBottomLeftRadius: '9999px',
                     borderBottomRightRadius: '9999px',
                   }}
                 />
-
-                {/* 텀블러 투명 PNG */}
                 <img
                   src="/tumbler.png"
-                  alt="물컵"
-                  className="absolute top-0 left-0 w-full h-full pointer-events-none"
+                  alt="water"
+                  className="absolute top-0 left-0 w-full h-full pointer-events-none opacity-95 transition-transform duration-300"
                 />
               </div>
             ))}
           </div>
+          <p className="text-center text-xs text-gray-400 mt-2">
+            {hydrationLevel} / 4
+          </p>
         </div>
+
 
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-        {mealTypes.map((meal) => (
-          <div key={meal.key} className="bg-white p-4 rounded-xl shadow border border-gray-100">
-            <label className="text-sm  block font-semibold text-gray-800 mb-1">{meal.label}</label>
-            <textarea
-              className="text-sm w-full border rounded-md p-2 focus:outline-none focus:ring-2 focus:ring-rose-400"
-              rows={meal.key.includes('Snack') ? 1 : 3}
-              value={diary[meal.key] || ''}
-              onChange={(e) => setDiary({ ...diary, [meal.key]: e.target.value })}
-              placeholder={`${meal.label}${t('food_diary.writeFood')}`}
-            />
-            
-            {/* # 버튼 */}
-            <div className="mt-2 mb-2">
-              <button
-                type="button"
-                onClick={() =>
-                  setShowHashtags((prev) => ({
-                    ...prev,
-                    [meal.key]: !prev[meal.key],
-                  }))
-                }
-                className="text-xs text-gray-600 border px-2 py-1 rounded hover:bg-gray-100"
-              >
-                #
-              </button>
+      {/* 🥗 식사 섹션 */}
+      <div className="mt-6 space-y-6">
+        {[
+          { title: '🌅 Morning', meals: ['Breakfast', 'Snack1'], bg: 'from-amber-50 to-white' },
+          { title: '☀️ Afternoon', meals: ['Lunch', 'Snack2'], bg: 'from-green-50 to-white' },
+          { title: '🌙 Evening', meals: ['Dinner', 'Snack3'], bg: 'from-blue-50 to-white' },
+        ].map((group) => (
+          <div
+            key={group.title}
+            className={`p-4 rounded-2xl bg-gradient-to-b ${group.bg} shadow-sm border border-gray-100 space-y-4`}
+          >
+            {/* 그룹 헤더 */}
+            <div className="flex items-center gap-2">
+              <div className="w-1.5 h-5 bg-rose-300 rounded-full"></div>
+              <h3 className="text-base font-bold text-gray-700">{group.title}</h3>
             </div>
-            
-            {showHashtags[meal.key] && (
-              <div className="flex flex-wrap gap-2 mb-2">
-                {availableHashtags[meal.key]?.map((tag) => {
-                  const isSelected = selectedTags[meal.key]?.includes(tag)
-                  return (
-                    <button
-                      key={tag}
-                      type="button"
-                      onClick={() => {
-                        const current = selectedTags[meal.key] || []
-                        const updated = isSelected
-                          ? current.filter((t) => t !== tag)
-                          : [...current, tag]
-                        setSelectedTags((prev) => ({ ...prev, [meal.key]: updated }))
-                      }}
-                      className={`text-xs px-2 py-1 rounded-full border transition-all duration-200 whitespace-nowrap ${
-                        isSelected
-                          ? 'bg-rose-200 border-rose-400 text-rose-800'
-                          : 'bg-gray-100 border-gray-300 text-gray-500'
-                      }`}
-                    >
-                      {tag}
-                    </button>
-                  )
-                })}
-              </div>
-            )}
-            
-            {comments[meal.key] && (
-              <div className="text-xs mt-2 whitespace-pre-line p-2 rounded">
-                {/* 트레이너 코멘트 */}
-                {(comments[meal.key] || '').split('\n').map((line, i) => (
-                  <div
-                    key={i}
-                    className="💬 bg-rose-50 text-rose-600 p-1 rounded mb-1 flex items-start gap-1"
-                  >
-                    <ChatBubbleLeftIcon className="w-4 h-4 mt-0.5 text-rose-600 flex-shrink-0" />
-                    <span>{line.trim()}</span>
-                  </div>
-                ))}
 
-                {/* 기존 회원 댓글 */}
-                {replies[meal.key]?.map((r) => (
-                  <div
-                    key={r.id}
-                    className="flex items-center text-xs mt-1 ml-4 p-1 rounded bg-sky-50 text-sky-700"
-                  >
-                    <div className="flex items-center gap-1">
-                      <ChatBubbleLeftRightIcon className="w-4 h-4 mt-0.5 text-sky-700 flex-shrink-0" />
-                      {r.reply_text}
-                      <span className="text-gray-400 text-[10px] flex items-center gap-1">
-                        ({dayjs(r.created_at).format('MM-DD HH:mm')})
-                        {r.member_id === Number(memberId) && (
-                          <button
-                            className="text-red-500 hover:text-red-700 text-xs transition-colors"
-                            onClick={async () => {
-                              const { error } = await supabase
-                                .from('food_comment_replies')
-                                .delete()
-                                .eq('id', r.id)
-                              if (error) {
-                                console.error(error)
-                              } else {
-                                toast.success(t('food_diary.deleteReply'))
-                                fetchReplies(currentCommentId!)
-                              }
-                            }}
-                          >
-                            <X size={12} />
-                          </button>
-                        )}
-                      </span>
-                    </div>
-                  </div>
-                ))}
+            {/* 그룹 내 식사 카드들 */}
+            {group.meals.map((mealKey) => {
+              const meal = mealTypes.find((m) => m.key === mealKey)
+              if (!meal) return null
 
-                {/* reply 버튼 & 입력은 기존 코드 그대로 */}
-                <button
-                  className="flex items-center gap-1 text-xs mt-2 ml-2 px-2 py-1 rounded text-blue-600 font-semibold transition-colors"
-                  onClick={() =>
-                    setShowReplyInput((prev) => ({
-                      ...prev,
-                      [meal.key]: !prev[meal.key],
-                    }))
-                  }
+              return (
+                <div
+                  key={meal.key}
+                  className="bg-white border border-gray-100 rounded-xl shadow-sm hover:shadow-md transition-all duration-300 p-4"
                 >
-                  {showReplyInput[meal.key] ? <X size={12} /> : <Plus size={12} />}
-                  <span>Reply</span>
-                </button>
-
-                {showReplyInput[meal.key] && (
-                  <div className="flex mt-1 gap-2 items-center ml-4">
-                    <input
-                      type="text"
-                      className="flex-1 text-xs p-2 rounded border text-blue-600 border-gray-300 focus:outline-none focus:ring-1 focus:ring-blue-400"
-                      placeholder={t('food_diary.writeReply')}
-                      value={replyInputs[meal.key] || ''}
-                      onChange={(e) =>
-                        setReplyInputs((prev) => ({ ...prev, [meal.key]: e.target.value }))
-                      }
-                    />
+                  {/* 제목 */}
+                  <div className="flex justify-between items-center mb-2">
+                    <div className="flex items-center gap-2 text-gray-800 font-semibold text-sm">
+                      <div className="w-9 h-9 flex items-center justify-center rounded-full bg-gradient-to-br from-rose-100 to-pink-50 text-lg shadow-inner ring-1 ring-rose-100">
+                        {meal.key.includes('Breakfast') && '🍳'}
+                        {meal.key.includes('Lunch') && '🍚'}
+                        {meal.key.includes('Dinner') && '🥗'}
+                        {meal.key.includes('Snack') && '☕'}
+                      </div>
+                      <span>{meal.label}</span>
+                    </div>
                     <button
-                      onClick={() => handleSaveReply(meal.key)}
-                      className="text-xs text-blue-600 hover:text-blue-800 px-3 py-1 rounded transition-colors"
+                      type="button"
+                      onClick={() =>
+                        setShowHashtags((prev) => ({
+                          ...prev,
+                          [meal.key]: !prev[meal.key],
+                        }))
+                      }
+                      className="text-xs text-gray-500 border border-gray-300 rounded-full px-2 py-0.5 hover:bg-gray-100"
                     >
-                      {t('master.save')}
+                      #
                     </button>
                   </div>
-                )}
-              </div>
-            )}
 
+                  {/* 입력창 */}
+                  <textarea
+                    className="w-full text-sm border border-gray-200 rounded-xl p-3 bg-white focus:ring-2 focus:ring-rose-300 transition placeholder-gray-400"
+                    rows={meal.key.includes('Snack') ? 2 : 3}
+                    value={diary[meal.key] || ''}
+                    onChange={(e) => setDiary({ ...diary, [meal.key]: e.target.value })}
+                    placeholder={`${meal.label}${t('food_diary.writeFood')}`}
+                  />
+
+                  {/* 해시태그 */}
+                  {showHashtags[meal.key] && (
+                    <div className="flex flex-wrap gap-2 mt-3">
+                      {availableHashtags[meal.key]?.map((tag) => {
+                        const isSelected = selectedTags[meal.key]?.includes(tag)
+                        return (
+                          <button
+                            key={tag}
+                            type="button"
+                            onClick={() => {
+                              const current = selectedTags[meal.key] || []
+                              const updated = isSelected
+                                ? current.filter((t) => t !== tag)
+                                : [...current, tag]
+                              setSelectedTags((prev) => ({
+                                ...prev,
+                                [meal.key]: updated,
+                              }))
+                            }}
+                            className={`text-xs px-3 py-1 rounded-full border transition-all duration-200 font-medium ${
+                              isSelected
+                                ? 'bg-rose-50 border-rose-300 text-rose-700 shadow-sm'
+                                : 'bg-gray-50 border-gray-200 text-gray-600 hover:bg-gray-100'
+                            }`}
+                          >
+                            {tag}
+                          </button>
+                        )
+                      })}
+                    </div>
+                  )}
+
+                  {/* 코멘트 및 리플 */}
+                  {comments[meal.key] && (
+                    <div className="mt-3 space-y-2">
+                      {(comments[meal.key] || '').split('\n').map((line, i) => (
+                        <div
+                          key={i}
+                          className="flex items-start gap-2 bg-gradient-to-r from-rose-50 to-white border border-rose-100 rounded-2xl p-3 text-[13px] text-gray-700 shadow-sm"
+                        >
+                          <div className="w-6 h-6 flex items-center justify-center bg-rose-100 text-rose-600 rounded-full flex-shrink-0">
+                            <MessageCircleMore className="w-3.5 h-3.5" />
+                          </div>
+                          <span className="leading-snug">{line.trim()}</span>
+                        </div>
+                      ))}
+
+                      {/* 리플 (회원 답글) */}
+                      {replies[meal.key]?.map((r) => (
+                        <div
+                          key={r.id}
+                          className="ml-6 flex items-start gap-2 bg-gradient-to-r from-blue-50 to-white border border-blue-100 rounded-2xl p-2.5 text-[12px] text-gray-700 shadow-sm relative"
+                        >
+                          <div className="w-6 h-6 flex items-center justify-center bg-blue-50 text-blue-500 rounded-full flex-shrink-0">
+                            <Send className="w-3 h-3 rotate-45" />
+                          </div>
+                          <div className="flex-1">
+                            <span>{r.reply_text}</span>
+                            <div className="text-gray-400 text-[10px] mt-0.5">
+                              {dayjs(r.created_at).format('MM-DD HH:mm')}
+                            </div>
+                          </div>
+                          {r.member_id === Number(memberId) && (
+                            <button
+                              className="absolute top-1 right-2 text-bold text-blue-800 hover:text-red-500 transition"
+                              onClick={async () => {
+                                const { error } = await supabase
+                                  .from('food_comment_replies')
+                                  .delete()
+                                  .eq('id', r.id)
+                                if (!error) {
+                                  toast.success(t('food_diary.deleteReply'))
+                                  fetchReplies(currentCommentId!)
+                                }
+                              }}
+                            >
+                              <X size={12} />
+                            </button>
+                          )}
+                        </div>
+                      ))}
+
+                      {/* Reply 입력 */}
+                      <div className="mt-2 ml-3">
+                        <button
+                          className="flex items-center gap-1 text-[11px] text-blue-600 font-medium hover:text-blue-800 transition"
+                          onClick={() =>
+                            setShowReplyInput((prev) => ({
+                              ...prev,
+                              [meal.key]: !prev[meal.key],
+                            }))
+                          }
+                        >
+                          {showReplyInput[meal.key] ? (
+                            <>
+                              <X size={11} className="text-bold text-blue-800" /> {t('master.close')}
+                            </>
+                          ) : (
+                            <>
+                              <MessageCircleMore size={12} className="text-blue-500" /> {t("food_diary.reply")}
+                            </>
+                          )}
+                        </button>
+
+                        {showReplyInput[meal.key] && (
+                          <div className="flex mt-2 gap-2 items-center ml-2 animate-fadeIn">
+                            <input
+                              type="text"
+                              className="flex-1 text-[12px] px-3 py-2 rounded-full border border-gray-200 bg-gray-50 text-gray-700 focus:ring-1 focus:ring-blue-200 focus:border-blue-300 transition-all"
+                              placeholder={t('food_diary.writeReply')}
+                              value={replyInputs[meal.key] || ''}
+                              onChange={(e) =>
+                                setReplyInputs((prev) => ({
+                                  ...prev,
+                                  [meal.key]: e.target.value,
+                                }))
+                              }
+                            />
+                            <button
+                              onClick={() => handleSaveReply(meal.key)}
+                              className="flex items-center justify-center w-8 h-8 rounded-full bg-blue-500 hover:bg-blue-600 text-white shadow-sm transition"
+                            >
+                              <Send size={13} className="rotate-45 -translate-x-[1px] translate-y-[0.5px]" />
+                            </button>
+                          </div>
+                        )}
+                      </div>
+                    </div>
+                  )}
+                </div>
+              )
+            })}
           </div>
         ))}
       </div>
+
 
       <div className="text-center">
         {/* <button
@@ -558,10 +647,9 @@ export default function FoodDiaryMemberView({ memberId, memberName }: Props) {
         </button> */}
         <Button
           onClick={handleSave}
-          variant="darkGray" 
-          className="text-sm"
+          className="text-sm bg-rose-500 text-white font-semibold shadow-lg hover:shadow-xl active:scale-95 transition-all rounded-full px-6 py-3 fixed bottom-6 left-1/2 -translate-x-1/2 ring-2 ring-rose-100 backdrop-blur-sm"
         >
-          {t('master.save')}
+          💾 {t('master.save')}
         </Button>
       </div>
 

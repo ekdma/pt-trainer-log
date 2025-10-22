@@ -186,3 +186,39 @@ input[type="number"]::-webkit-outer-spin-button {
 input[type="number"] {
   -moz-appearance: textfield;
 }
+
+/* 🧡 모바일 input 클릭 시 오렌지 하이라이트 제거 및 통일된 focus 스타일 적용 */
+input,
+textarea,
+button,
+select {
+  -webkit-tap-highlight-color: transparent !important; /* 터치 시 오렌지 highlight 제거 */
+  outline: none !important; /* 포커스 외곽선 제거 */
+}
+
+/* ✅ focus 시 Tailwind ring 색상만 적용되도록 통일 */
+input:focus,
+textarea:focus,
+select:focus {
+  box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.4); /* Tailwind blue-500의 투명한 버전 */
+  border-color: rgba(59, 130, 246, 0.5); /* 약한 파란 포커스 테두리 */
+  transition: box-shadow 0.2s ease, border-color 0.2s ease;
+}
+
+/* ✅ iOS Safari에서 input 클릭 시 노란/주황 배경이 생기는 기본 효과 제거 */
+input:-webkit-autofill,
+textarea:-webkit-autofill,
+select:-webkit-autofill {
+  -webkit-box-shadow: 0 0 0px 1000px white inset !important;
+  box-shadow: 0 0 0px 1000px white inset !important;
+  -webkit-text-fill-color: #1f2937 !important; /* text-gray-800 */
+}
+
+/* ✅ 모바일 Safari에서 focus 시 확대(zoom) 방지 */
+@media screen and (max-width: 768px) {
+  input,
+  textarea,
+  select {
+    /* font-size: 16px !important; 16px 이상이면 iOS에서 자동 확대 방지 */
+  }
+}

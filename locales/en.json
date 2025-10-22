@@ -134,7 +134,8 @@
       "writeFood": " — Log food",
       "writeReply": "Reply...",
       "deleteReply": "Your comment has been deleted",
-      "saveReply": "Your comment has been saved"
+      "saveReply": "Your comment has been saved",
+      "reply": "reply"
     },
     "workout": {
       "workoutTitle": "Workout Log",
