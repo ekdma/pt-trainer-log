@@ -6,8 +6,8 @@ import { getSupabaseClient } from '@/lib/supabase'
 import { Button } from '@/components/ui/button'
 import { toast } from 'sonner'
 import { useLanguage } from '@/context/LanguageContext'
-import { X, Plus, Send, MessageCircleMore } from 'lucide-react';
-import { ChatBubbleLeftIcon, ChatBubbleLeftRightIcon } from '@heroicons/react/24/solid'
+import { X, Send, MessageCircleMore } from 'lucide-react';
+// import { ChatBubbleLeftIcon, ChatBubbleLeftRightIcon } from '@heroicons/react/24/solid'
 
 interface Props {
   memberId: string
