@@ -552,34 +552,41 @@ export default function FoodDiaryMemberView({ memberId, memberName }: Props) {
                       {replies[meal.key]?.map((r) => (
                         <div
                           key={r.id}
-                          className="ml-6 flex items-start gap-2 bg-gradient-to-r from-blue-50 to-white border border-blue-100 rounded-2xl p-2.5 text-[12px] text-gray-700 shadow-sm relative"
+                          className="ml-6 flex items-start gap-2 bg-gradient-to-r from-blue-50 to-white border border-blue-100 rounded-2xl p-2.5 text-[12px] text-gray-700 shadow-sm"
                         >
+                          {/* 아이콘 */}
                           <div className="w-6 h-6 flex items-center justify-center bg-blue-50 text-blue-500 rounded-full flex-shrink-0">
                             <Send className="w-3 h-3 rotate-45" />
                           </div>
-                          <div className="flex-1">
-                            <span>{r.reply_text}</span>
-                            <div className="text-gray-400 text-[10px] mt-0.5">
-                              {dayjs(r.created_at).format('MM-DD HH:mm')}
+
+                          {/* 내용 + 버튼 정렬 영역 */}
+                          <div className="flex-1 flex justify-between items-start">
+                            <div className="pr-2">
+                              <span>{r.reply_text}</span>
+                              <div className="text-gray-400 text-[10px] mt-0.5">
+                                {dayjs(r.created_at).format('MM-DD HH:mm')}
+                              </div>
                             </div>
+
+                            {/* X 버튼 (오른쪽 정렬, 텍스트 침범 안 함) */}
+                            {r.member_id === Number(memberId) && (
+                              <button
+                                className="ml-2 text-blue-700 hover:text-red-500 transition flex-shrink-0 mt-[2px]"
+                                onClick={async () => {
+                                  const { error } = await supabase
+                                    .from('food_comment_replies')
+                                    .delete()
+                                    .eq('id', r.id);
+                                  if (!error) {
+                                    toast.success(t('food_diary.deleteReply'));
+                                    fetchReplies(currentCommentId!);
+                                  }
+                                }}
+                              >
+                                <X size={12} />
+                              </button>
+                            )}
                           </div>
-                          {r.member_id === Number(memberId) && (
-                            <button
-                              className="absolute top-1 right-2 text-bold text-blue-800 hover:text-red-500 transition"
-                              onClick={async () => {
-                                const { error } = await supabase
-                                  .from('food_comment_replies')
-                                  .delete()
-                                  .eq('id', r.id)
-                                if (!error) {
-                                  toast.success(t('food_diary.deleteReply'))
-                                  fetchReplies(currentCommentId!)
-                                }
-                              }}
-                            >
-                              <X size={12} />
-                            </button>
-                          )}
                         </div>
                       ))}
 
@@ -606,10 +613,15 @@ export default function FoodDiaryMemberView({ memberId, memberName }: Props) {
                         </button>
 
                         {showReplyInput[meal.key] && (
-                          <div className="flex mt-2 gap-2 items-center ml-2 animate-fadeIn">
+                          <div className="relative mt-2 ml-3">
                             <input
                               type="text"
-                              className="flex-1 text-[12px] px-3 py-2 rounded-full border border-gray-200 bg-gray-50 text-gray-700 focus:ring-1 focus:ring-blue-200 focus:border-blue-300 transition-all"
+                              className="
+                                w-full text-[12px] px-3 pr-10 py-2 
+                                rounded-full border border-gray-200 bg-gray-50 text-gray-700 
+                                focus:ring-1 focus:ring-blue-200 focus:border-blue-300 
+                                transition-all placeholder:text-gray-400
+                              "
                               placeholder={t('food_diary.writeReply')}
                               value={replyInputs[meal.key] || ''}
                               onChange={(e) =>
@@ -621,9 +633,14 @@ export default function FoodDiaryMemberView({ memberId, memberName }: Props) {
                             />
                             <button
                               onClick={() => handleSaveReply(meal.key)}
-                              className="flex items-center justify-center w-8 h-8 rounded-full bg-blue-500 hover:bg-blue-600 text-white shadow-sm transition"
+                              className="
+                                absolute right-2 top-1/2 -translate-y-1/2 
+                                bg-blue-500 text-white rounded-full p-1.5 
+                                hover:bg-blue-600 active:scale-95 
+                                shadow-sm transition
+                              "
                             >
-                              <Send size={13} className="rotate-45 -translate-x-[1px] translate-y-[0.5px]" />
+                              <Send size={13} className="rotate-45 translate-x-[0.5px]" />
                             </button>
                           </div>
                         )}
