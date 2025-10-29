@@ -244,7 +244,7 @@ const WorkoutInsight = ({ member }: WorkoutInsightProps) => {
                     >
                       <div>
                         <div className="p-5 border-b border-gray-100 flex justify-between items-center bg-gradient-to-r from-blue-50 to-white">
-                          <h4 className="text-xl font-bold text-gray-800">{workout}</h4>
+                          <h4 className="text-lg font-bold text-gray-800">{workout}</h4>
                           <button
                             onClick={() => setShowGraph(showGraph === workout ? null : workout)}
                             className={`flex items-center gap-1 px-3 py-1 text-sm rounded-md font-medium transition 
@@ -252,7 +252,7 @@ const WorkoutInsight = ({ member }: WorkoutInsightProps) => {
                                 ? 'bg-blue-100 text-blue-700 border border-blue-300' 
                                 : 'bg-gray-50 text-gray-600 hover:bg-gray-100 border border-gray-200'}`}
                           >
-                            <BarChart3 className="w-4 h-4 text-sm" />
+                            <BarChart3 className="w-4 h-4 text-xs" />
                             {showGraph === workout ? t("workout_insight.hide") : t("workout_insight.graph")}
                           </button>
                         </div>
@@ -314,7 +314,7 @@ const WorkoutInsight = ({ member }: WorkoutInsightProps) => {
 
                       {/* 그래프 */}
                       {showGraph === workout && (
-                        <div className="p-4 bg-white border-t border-gray-100">
+                        <div className="p-4 bg-white border-t border-gray-100" style={{ marginLeft: '-40px' }}>
                           <ResponsiveContainer width="100%" height={200}>
                             {/* ✅ 미리 정렬된 데이터 한 번만 계산 */}
                             {(() => {
@@ -364,8 +364,22 @@ const WorkoutInsight = ({ member }: WorkoutInsightProps) => {
                                     dataKey="weight"
                                     stroke="#3b82f6"
                                     strokeWidth={2}
-                                    dot={{ r: 4 }}
+                                    dot={({ cx, cy, payload }) => {
+                                      const isMax = payload.weight === Math.max(...sortedData.map(d => d.weight));
+                                      return (
+                                        <circle
+                                          cx={cx}
+                                          cy={cy}
+                                          r={isMax ? 6 : 4}  // 최고 기록일 경우 dot 크기를 6으로 설정, 아니면 4
+                                          fill={isMax ? '#9333ea' : '#3b82f6'} // 최고 기록일 경우 보라색
+                                          stroke="#fff"
+                                          strokeWidth={2}
+                                        />
+                                      );
+                                    }}
                                   />
+
+
                                 </LineChart>
                               );
                             })()}
@@ -420,66 +434,102 @@ const WorkoutInsight = ({ member }: WorkoutInsightProps) => {
                   return (
                     <div className="grid md:grid-cols-3 gap-4">
                       {recentWorkoutLogs.map(({ workout, logs }) => {
-                        const bestRecord = logs.reduce(
-                          (best, log) => (log.weight > best.weight ? log : best),
-                          logs[0]
-                        );
-                        const latestRecord = logs.reduce((latest, log) =>
-                          dayjs(log.workout_date).isAfter(latest.workout_date) ? log : latest
+                        // const lastMonthStart = dayjs().subtract(1, 'month').startOf('month');
+                        const thisMonthStart = dayjs().startOf('month');
+
+                        // 지난달 이전의 기록
+                        const prevLogs = logs.filter((l) =>
+                          dayjs(l.workout_date).isBefore(thisMonthStart, 'day')
                         );
 
-                        const isNew = dayjs(bestRecord.workout_date).isSame(
-                          latestRecord.workout_date,
-                          'day'
+                        // 이번 달의 기록
+                        const thisMonthLogs = logs.filter((l) =>
+                          dayjs(l.workout_date).isSameOrAfter(thisMonthStart, 'day')
                         );
+
+                        // 지난달까지는 없고 이번 달부터 생긴 운동이면 NEW 운동
+                        const isNewWorkoutThisMonth = prevLogs.length === 0 && thisMonthLogs.length > 0;
+
+                        // 최고 기록 계산
+                        const prevBest = prevLogs.length
+                          ? prevLogs.reduce((best, log) => (log.weight > best.weight ? log : best))
+                          : null;
+                        const monthBest = thisMonthLogs.length
+                          ? thisMonthLogs.reduce((best, log) => (log.weight > best.weight ? log : best))
+                          : null;
+
+                        // 이번달과 지난달 최고기록 비교
+                        const hasPrevPR = !!prevBest;
+                        const hasMonthPR = !!monthBest;
+
+                        // “꾸준함 유지 / 최고 기록 갱신 / 새로 배운 운동!” 문구
+                        let statusMessage = '';
+                        let statusClass = '';
+                        if (isNewWorkoutThisMonth) {
+                          statusMessage = t('workout_insight.newWorkoutLearned'); // 🔥 새로 배운 운동!
+                          statusClass = 'text-green-500';
+                        } else if (hasPrevPR && hasMonthPR) {
+                          statusMessage =
+                            monthBest.weight > prevBest.weight
+                              ? t('workout_insight.newBest')
+                              : t('workout_insight.keepitup');
+                          statusClass = monthBest.weight > prevBest.weight ? 'text-purple-600' : 'text-gray-500';
+                        } else {
+                          statusMessage = t('workout_insight.keepitup');
+                          statusClass = 'text-gray-500';
+                        }
 
                         return (
                           <div
                             key={workout}
                             className="bg-white rounded-xl p-5 shadow-md border hover:shadow-lg transition-all duration-300 relative overflow-hidden"
                           >
-                            {/* 상단 타이틀 */}
+                            {/* 타이틀 + NEW 배지 */}
                             <h4 className="font-semibold text-gray-800 mb-3 text-lg flex justify-between items-center">
                               {workout}
-                              {/* ✅ 로그 개수가 3개 미만일 때 NEW 표시 */}
-                              {logs.length < 3 && (
+                              {isNewWorkoutThisMonth && (
                                 <span className="text-xs bg-green-100 text-green-700 px-2 py-0.5 rounded-full font-semibold">
                                   NEW
                                 </span>
                               )}
                             </h4>
 
-
                             {/* 한 줄 요약형 */}
                             <div className="space-y-3">
+                              {/* 🏆 지난달까지의 최고 기록 */}
                               <div className="flex justify-between items-baseline">
-                                <span className="text-sm text-gray-600">🏆 {t("workout_insight.previousPR")}</span>
-                                <span className="text-xl font-bold text-purple-600 tracking-tight">
-                                  {bestRecord.weight}
-                                  <span className="text-sm text-gray-500 ml-1 font-normal">
-                                    kg ({dayjs(bestRecord.workout_date).format('YY.MM.DD')})
+                                <span className="text-sm text-gray-600">🏆 {t('workout_insight.previousPR')}</span>
+                                {prevBest ? (
+                                  <span className="text-xl font-bold text-blue-600 tracking-tight">
+                                    {prevBest.weight}
+                                    <span className="text-sm text-gray-500 ml-1 font-normal">
+                                      kg ({dayjs(prevBest.workout_date).format('YY.MM.DD')})
+                                    </span>
                                   </span>
-                                </span>
+                                ) : (
+                                  <span className="text-sm text-gray-400">{t('workout_insight.noData')}</span>
+                                )}
                               </div>
 
+                              {/* 🕒 이번달 최고 기록 */}
                               <div className="flex justify-between items-baseline">
-                                <span className="text-sm text-gray-600">🕒 {t("workout_insight.thisMonthPR")}</span>
-                                <span className="text-xl font-bold text-blue-600 tracking-tight">
-                                  {latestRecord.weight}
-                                  <span className="text-sm text-gray-500 ml-1 font-normal">
-                                    kg ({dayjs(latestRecord.workout_date).format('YY.MM.DD')})
+                                <span className="text-sm text-gray-600">🕒 {t('workout_insight.thisMonthPR')}</span>
+                                {monthBest ? (
+                                  <span className="text-xl font-bold text-purple-600 tracking-tight">
+                                    {monthBest.weight}
+                                    <span className="text-sm text-gray-500 ml-1 font-normal">
+                                      kg ({dayjs(monthBest.workout_date).format('YY.MM.DD')})
+                                    </span>
                                   </span>
-                                </span>
+                                ) : (
+                                  <span className="text-sm text-gray-400">{t('workout_insight.noData')}</span>
+                                )}
                               </div>
                             </div>
 
                             {/* 상태 메시지 */}
-                            <p
-                              className={`mt-4 text-sm font-semibold text-center ${
-                                isNew ? 'text-green-600' : 'text-gray-500'
-                              }`}
-                            >
-                              {isNew ? t("workout_insight.newBest") : t("workout_insight.keepitup")}
+                            <p className={`mt-4 text-sm font-semibold text-center ${statusClass}`}>
+                              {statusMessage}
                             </p>
                           </div>
                         );

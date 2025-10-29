@@ -169,7 +169,7 @@
     },
     "workout_insight": {
       "workoutInsight": "Workout Insight",
-      "noData": "You don’t have any workout records yet.",
+      "noData": "No records yet",
       "thisWeek": "This Week's",
       "lastWeek": "Last Week's",
       "workoutCnt": "Workout Count",
@@ -179,9 +179,10 @@
       "thisMonthPR": "This Month's PRs",
       "newBest": "🔥 Your New Personal Record!",
       "keepitup": "💪 Keep it up!",
+      "newWorkoutLearned": "🎉 Your New Workout!",
       "noDataAvailable": "No Data Available",
       "hide": "Hide",
       "graph": "Graph",
-      "recent7records": "Recent 7-Day Records"
+      "recent7records": "Recent 7-Sessions Records"
     }
   }

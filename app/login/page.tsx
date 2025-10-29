@@ -48,7 +48,6 @@ export default function LoginPage() {
 
     const vv = window.visualViewport!
     const applyInset = () => {
-      // 키보드가 올라오면 레이아웃 뷰포트와 비주얼 뷰포트 차이만큼 하단 패딩 부여
       const bottomInset = Math.max(0, window.innerHeight - (vv.height + vv.offsetTop))
       el.style.paddingBottom = bottomInset > 0 ? `${bottomInset + 16}px` : '16px'
     }
@@ -136,12 +135,7 @@ export default function LoginPage() {
   return (
     <main
       ref={scrollWrapRef}
-      className="
-        min-h-[100svh]                    
-        bg-gradient-to-br from-indigo-100 to-white
-        flex flex-col md:grid md:grid-cols-2
-        overflow-y-auto overscroll-contain 
-      "
+      className="min-h-[100svh] bg-gradient-to-br from-indigo-100 to-white flex flex-col md:grid md:grid-cols-2 overflow-y-auto overscroll-contain"
     >
       {/* 소개 섹션 */}
       <section className="flex flex-col justify-center items-center p-8 md:p-16 text-center md:text-left bg-white/30 backdrop-blur-md">

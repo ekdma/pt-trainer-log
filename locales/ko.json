@@ -176,14 +176,15 @@
       "workoutCnt": "운동 횟수",
       "workoutUnit": "회",
       "recent3Workouts": "최근 3개 운동 요약",
-      "previousPR": "지난 달까지 최고기록",
-      "thisMonthPR": "이번 달 최고기록",
+      "previousPR": "지난 최고기록",
+      "thisMonthPR": "이번 최고기록",
       "newBest": "🔥 최고 기록 갱신!",
       "keepitup": "💪 꾸준함 유지!",
+      "newWorkoutLearned": "🎉 새로 배운 운동!",
       "noDataAvailable": "데이터 없음",
       "hide": "숨기기",
       "graph": "그래프", 
-      "recent7records": "최근 7일간 기록"
+      "recent7records": "최근 7회 세션 기록"
 
     }
   }
