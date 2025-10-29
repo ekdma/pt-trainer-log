@@ -7,7 +7,7 @@ import LanguageToggle from '@/components/LanguageToggle'
 import { useAuth } from '@/context/AuthContext'
 
 export default function LoginPage() {
-  const { t } = useLanguage()
+  const { t, setLang } = useLanguage()
   const [name, setName] = useState('')
   const [password, setPassword] = useState('')
   const [role, setRole] = useState<'member' | 'trainer'>('member')
@@ -97,6 +97,10 @@ export default function LoginPage() {
 
     const expiresAt = Date.now() + SESSION_DURATION
     const memberWithSession = { ...member, loginBy, expiresAt }
+    
+    const userLang = member.language || 'ko';  // 예시로 회원의 언어가 있다면 적용
+    setLang(userLang); // 로그인 후 언어 설정
+    
     // localStorage.setItem('litpt_member', JSON.stringify(memberWithSession))
     setUser(memberWithSession)
     router.push(member.role === 'trainer' ? '/trainer' : '/my')

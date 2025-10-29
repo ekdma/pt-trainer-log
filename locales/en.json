@@ -143,6 +143,7 @@
       "favorites": "Favorites",
       "log": "Log",
       "graph": "Graph",
+      "insight": "Insight",
       "emptydata": "You haven't logged any workouts yet. Add your first record! 😎"
     },
     "health": {
@@ -165,5 +166,22 @@
       "upload": "upload",
       "addphoto": "Add additional AFTER photos",
       "title": "Body Transformation"
+    },
+    "workout_insight": {
+      "workoutInsight": "Workout Insight",
+      "noData": "You don’t have any workout records yet.",
+      "thisWeek": "This Week's",
+      "nextWeek": "Next Week's",
+      "workoutCnt": "Workout Count",
+      "workoutUnit": "",
+      "recent3Workouts": "Summary of Recent 3 Workouts",
+      "personalBest": "Personal Best",
+      "latestRecord": "Latest Record",
+      "newBest": "🔥 New Personal Best!",
+      "keepitup": "💪 Keep it up!",
+      "noDataAvailable": "No Data Available",
+      "hide": "Hide",
+      "graph": "Graph",
+      "recent7records": "Recent 7-Day Records"
     }
   }

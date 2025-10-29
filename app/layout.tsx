@@ -1,63 +1,34 @@
-import type { Metadata } from "next";
-import { Geist, Geist_Mono } from "next/font/google";
-import "./globals.css";
-import { Nanum_Gothic } from "next/font/google";
-import { Montserrat } from 'next/font/google'
+'use client'
+
+import './globals.css'
 import { Toaster } from 'sonner'
-import { LanguageProvider } from '@/context/LanguageContext'
-import AuthGuard from '@/components/AuthGuard'
+import { LanguageProvider, useLanguage } from '@/context/LanguageContext'
 import { AuthProvider } from '@/context/AuthContext'
+import AuthGuard from '@/components/AuthGuard'
 
-const montserrat = Montserrat({
-  weight: ['700'], // Bold
-  subsets: ['latin'],
-  variable: '--font-montserrat',
-})
+function LayoutInner({ children }: { children: React.ReactNode }) {
+  // ✅ 컨텍스트의 lang을 <html lang={lang}>에 직접 바인딩
+  const { lang } = useLanguage()
+  const isLogin = typeof window !== 'undefined' && window.location.pathname.startsWith('/login')
 
-const nanumGothic = Nanum_Gothic({
-  weight: ["400", "700", "800"], // 사용할 굵기 지정
-  subsets: ["latin"],
-  variable: "--font-nanum-gothic", // 커스텀 CSS 변수
-});
-
-const geistSans = Geist({
-  variable: "--font-geist-sans",
-  subsets: ["latin"],
-});
-
-const geistMono = Geist_Mono({
-  variable: "--font-geist-mono",
-  subsets: ["latin"],
-});
-
-export const metadata: Metadata = {
-  title: "LiT PT",
-  description: "LiT Personal Training",
-};
-
-export default function RootLayout({
-  children,
-}: Readonly<{
-  children: React.ReactNode;
-}>) {
   return (
-    <html lang="en">
-      <body
-        className={`${geistSans.variable} ${geistMono.variable} ${nanumGothic.variable} ${montserrat.variable} font-nanum antialiased`}
-      >
+    <html lang={lang}>
+      <body className="font-nanum bg-gray-50 min-h-screen">
         <AuthProvider>
-          <LanguageProvider>
-            {typeof window !== 'undefined' && !window.location.pathname.startsWith('/login') ? (
-              <AuthGuard>
-                {children}
-              </AuthGuard>
-            ) : (
-              children
-            )}
-            <Toaster position="top-right" richColors expand />
-          </LanguageProvider>
+          {isLogin ? children : <AuthGuard>{children}</AuthGuard>}
+          <Toaster position="top-right" richColors expand />
         </AuthProvider>
       </body>
     </html>
-  );
+  )
+}
+
+export default function RootLayout({ children }: { children: React.ReactNode }) {
+  // ✅ LanguageProvider를 최상단으로 끌어올리고,
+  //    LayoutInner 안에서 lang을 <html>에 반영
+  return (
+    <LanguageProvider>
+      <LayoutInner>{children}</LayoutInner>
+    </LanguageProvider>
+  )
 }

@@ -144,6 +144,7 @@
       "favorites": "즐겨찾기",
       "log": "기록지",
       "graph": "그래프",
+      "insight": "요약",
       "emptydata": "등록된 운동 로그가 없습니다. 기록을 추가해주세요 😎"
     },
     "health": {
@@ -166,6 +167,24 @@
       "upload": "사진 업로드",
       "addphoto": "추가 After 사진 추가",
       "title": "비포&애프터"
+    },
+    "workout_insight": {
+      "workoutInsight": "Workout 요약",
+      "noData": "운동 기록이 없습니다.",
+      "thisWeek": "이번 주",
+      "nextWeek": "다음 주",
+      "workoutCnt": "운동 횟수",
+      "workoutUnit": "회",
+      "recent3Workouts": "최근 3개 운동 요약",
+      "personalBest": "최고기록",
+      "latestRecord": "최근기록",
+      "newBest": "🔥 최고 기록 갱신!",
+      "keepitup": "💪 꾸준함 유지!",
+      "noDataAvailable": "데이터 없음",
+      "hide": "숨기기",
+      "graph": "그래프", 
+      "recent7records": "최근 7일간 기록"
+
     }
   }
   

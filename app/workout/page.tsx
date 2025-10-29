@@ -6,6 +6,7 @@ import Header from '@/components/layout/Header'
 import TrainerHeader from '@/components/layout/TrainerHeader'
 import MemberGraphs from '@/components/workout/MemberGraphs'
 import WorkoutLogManager from '@/components/workout/WorkoutLogManager'
+import WorkoutInsight from '@/components/workout/WorkoutInsight'
 import SplitWorkout from '@/components/workout/SplitWorkout'
 import OrderFavoriteWorkout from '@/components/workout/OrderFavoriteWorkout'
 import OrderManagementModal from '@/components/workout/OrderManagementModal'
@@ -36,7 +37,7 @@ export default function MembersPage() {
 
   const [workoutLogs, setWorkoutLogs] = useState<WorkoutRecord[]>([])
   const [splitWorkouts, setSplitWorkouts] = useState<{ target: string, workout: string, split_name: string, split_index: number }[]>([])
-  const [activeTab, setActiveTab] = useState<'records' | 'graphs'>('records')
+  const [activeTab, setActiveTab] = useState<'records' | 'graphs' | 'insight'>('records');
   const [showFavoritesOnly, setShowFavoritesOnly] = useState(false)
   const [favorites, setFavorites] = useState<Set<string>>(new Set())
   const [description, setDescription] = useState<string>('')
@@ -46,6 +47,7 @@ export default function MembersPage() {
   const [allTypes, setAllTypes] = useState<WorkoutType[]>([]);
   const [showSplitModal, setShowSplitModal] = useState(false)
   const [memberTab, setMemberTab] = useState<'all' | 'active'>('active')
+  const [hasInitializedTab, setHasInitializedTab] = useState(false);
 
   // 사용자 정보 초기화
   // useEffect(() => {
@@ -70,6 +72,18 @@ export default function MembersPage() {
     }
   }, [user])
   
+  useEffect(() => {
+    if (!user || hasInitializedTab) return;
+
+    // user.role에 따라 최초 1회만 초기 탭 설정
+    if (user.role === 'member') {
+      setActiveTab('insight');
+    } else {
+      setActiveTab('records');
+    }
+
+    setHasInitializedTab(true); // ✅ 이후 다시 실행되지 않도록 막기
+  }, [user, hasInitializedTab]);
 
   useEffect(() => {
     if (selectedMember) {
@@ -384,6 +398,15 @@ export default function MembersPage() {
             {/* 탭 메뉴 */}
             <div className="flex gap-3 mb-6">
               <Button
+                variant={activeTab === 'insight' ? 'menu_click' : 'menu_unclick'}
+                size="sm"
+                onClick={() => setActiveTab('insight')}
+                className='text-xs sm:text-sm'
+              >
+                {t('workout.insight')}
+              </Button>
+              
+              <Button
                 variant={activeTab === 'records' ? 'menu_click' : 'menu_unclick'}
                 size="sm"
                 onClick={() => setActiveTab('records')}
@@ -400,6 +423,8 @@ export default function MembersPage() {
               >
                 {t('workout.graph')}
               </Button>
+
+              
 
               {userRole === 'trainer' && (
                 <Button
@@ -460,6 +485,13 @@ export default function MembersPage() {
                   splitWorkouts={splitWorkouts}
                 />
               )}
+
+              {activeTab === 'insight' && (
+                <WorkoutInsight
+                  member={selectedMember}  // 선택된 멤버 정보
+                />
+              )}
+
             </motion.div>
           </>
         ) : (

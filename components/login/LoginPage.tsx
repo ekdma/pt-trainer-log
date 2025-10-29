@@ -7,7 +7,7 @@ import LanguageToggle from '@/components/LanguageToggle'
 import { useAuth } from '@/context/AuthContext'
 
 export default function LoginPage() {
-  const { t } = useLanguage()
+  const { t, lang, setLang } = useLanguage()
   const [name, setName] = useState('')
   const [password, setPassword] = useState('')
   const [role, setRole] = useState<'member' | 'trainer'>('member')
@@ -17,7 +17,7 @@ export default function LoginPage() {
   const supabase = getSupabaseClient()
   const { setUser } = useAuth()
 
-  const SESSION_DURATION = 30 * 60 * 1000 // 15분
+  const SESSION_DURATION = 30 * 60 * 1000 // 30분
 
   const ADMIN_CODE = process.env.NEXT_PUBLIC_ADMIN_CODE || 'secret123'
 
@@ -67,10 +67,21 @@ export default function LoginPage() {
 
     const expiresAt = Date.now() + SESSION_DURATION
     const memberWithSession = { ...member, loginBy, expiresAt }
-    // localStorage.setItem('litpt_member', JSON.stringify(memberWithSession))
+
+    console.log('Current selected language before login:', lang)
+
+    // 언어 상태 업데이트
+    document.cookie = `litpt_lang=${lang}; path=/; max-age=31536000; samesite=lax`
+    localStorage.setItem('litpt_lang', lang)
+
+    // 언어 변경 이벤트 발생
+    window.dispatchEvent(new Event('language-change'))
+
+    // 사용자 세션 설정 및 페이지 이동
     setUser(memberWithSession)
     router.push(member.role === 'trainer' ? '/trainer' : '/my')
   }
+
 
   return (
     <main className="min-h-screen grid grid-cols-1 md:grid-cols-2 bg-gradient-to-br from-indigo-100 to-white">
