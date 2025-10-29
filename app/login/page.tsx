@@ -12,18 +12,22 @@ export default function LoginPage() {
   const [password, setPassword] = useState('')
   const [role, setRole] = useState<'member' | 'trainer'>('member')
   const [adminCode, setAdminCode] = useState('')
-  const [saveLoginInfo, setSaveLoginInfo] = useState(false)  
+  const [saveLoginInfo, setSaveLoginInfo] = useState(false)
   const [error, setError] = useState('')
+
   const router = useRouter()
   const supabase = getSupabaseClient()
   const { setUser } = useAuth()
 
-  const SESSION_DURATION = 30 * 60 * 1000 // 2분
-
+  const SESSION_DURATION = 30 * 60 * 1000
   const ADMIN_CODE = process.env.NEXT_PUBLIC_ADMIN_CODE || 'secret123'
 
   const scrollWrapRef = useRef<HTMLDivElement | null>(null)
+  const nameRef = useRef<HTMLInputElement | null>(null)
+  const passwordRef = useRef<HTMLInputElement | null>(null)
+  const adminCodeRef = useRef<HTMLInputElement | null>(null)
 
+  // 로그인 정보 자동 불러오기
   useEffect(() => {
     const saved = localStorage.getItem('litpt_login_info')
     if (saved) {
@@ -42,6 +46,7 @@ export default function LoginPage() {
     }
   }, [])
 
+  // 모바일 키보드 관련 처리: 비주얼 뷰포트 기반으로 하단 패딩 부여
   useEffect(() => {
     const el = scrollWrapRef.current
     if (!el || typeof window === 'undefined' || !('visualViewport' in window)) return
@@ -69,11 +74,12 @@ export default function LoginPage() {
       target.scrollIntoView({ behavior: 'smooth', block: 'center' })
     }
   }
-  
+
+  // 로그인 처리
   const handleLogin = async () => {
     setError('')
     const inputName = name.trim().toLowerCase()
-    
+
     if (role === 'trainer' && adminCode !== ADMIN_CODE) {
       setError(t('login.wrongAdmin'))
       return
@@ -99,7 +105,6 @@ export default function LoginPage() {
         .eq('role', role)
         .eq('status', 'active')
         .single()
-
       member = res.data
       error = res.error
       loginBy = 'name'
@@ -109,13 +114,13 @@ export default function LoginPage() {
       setError(t('login.noMatch'))
       return
     }
-    
+
     const phoneLast4 = (member.phone || '').slice(-4)
     if (password !== phoneLast4) {
       setError(t('login.wrongPassword'))
       return
     }
-    
+
     if (saveLoginInfo) {
       localStorage.setItem(
         'litpt_login_info',
@@ -127,11 +132,9 @@ export default function LoginPage() {
 
     const expiresAt = Date.now() + SESSION_DURATION
     const memberWithSession = { ...member, loginBy, expiresAt }
-    
-    const userLang = member.language || 'ko';  // 예시로 회원의 언어가 있다면 적용
-    setLang(userLang); // 로그인 후 언어 설정
-    
-    // localStorage.setItem('litpt_member', JSON.stringify(memberWithSession))
+    const userLang = member.language || 'ko'
+    setLang(userLang)
+
     setUser(memberWithSession)
     router.push(member.role === 'trainer' ? '/trainer' : '/my')
   }
@@ -142,7 +145,7 @@ export default function LoginPage() {
       className="min-h-[100svh] bg-gradient-to-br from-indigo-100 to-white flex flex-col md:grid md:grid-cols-2 overflow-y-auto overscroll-contain"
     >
       {/* 소개 섹션 */}
-      <section className="flex flex-col justify-center items-center p-8 md:p-16 text-center md:text-left bg-white/30 backdrop-blur-md">
+      <section className="flex flex-col justify-center items-center p-8 md:p-16 text-center bg-white/30 backdrop-blur-md">
         <h1 className="text-center text-3xl sm:text-4xl md:text-5xl font-montserrat font-bold drop-shadow mb-4 leading-tight">
           <span className="text-[#FF8000]">LiT</span>{' '}
           <span className="text-[#595959]">{t('app.title')}</span>
@@ -155,10 +158,9 @@ export default function LoginPage() {
       {/* 로그인 카드 */}
       <section className="flex items-center justify-center p-6 sm:p-10">
         <div className="w-full max-w-md bg-white shadow-2xl rounded-3xl p-8 sm:p-10 flex flex-col items-center">
-            {/* LanguageToggle 위쪽 중앙 정렬 */}
-            <div className="mb-6">
+          <div className="mb-6">
             <LanguageToggle />
-            </div>
+          </div>
 
           <h2 className="text-2xl sm:text-3xl font-bold text-indigo-700 text-center mb-8">
             {t('login.title')}
@@ -192,6 +194,7 @@ export default function LoginPage() {
 
           {/* 입력 필드 */}
           <input
+            ref={nameRef}
             type="text"
             placeholder={t('login.name')}
             value={name}
@@ -201,6 +204,7 @@ export default function LoginPage() {
             className="text-sm w-full border border-gray-300 p-3 rounded-lg mb-4"
           />
           <input
+            ref={passwordRef}
             type="password"
             placeholder={t('login.password')}
             value={password}
@@ -211,6 +215,7 @@ export default function LoginPage() {
           />
           {role === 'trainer' && (
             <input
+              ref={adminCodeRef}
               type="password"
               placeholder={t('login.adminCode')}
               value={adminCode}
@@ -221,6 +226,7 @@ export default function LoginPage() {
             />
           )}
 
+          {/* 로그인 정보 저장 */}
           <div className="flex items-center self-start mb-4">
             <input
               type="checkbox"
