@@ -1,5 +1,5 @@
 'use client'
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import { getSupabaseClient } from '@/lib/supabase'
 import { useLanguage } from '@/context/LanguageContext'
@@ -20,6 +20,20 @@ export default function LoginPage() {
   const SESSION_DURATION = 30 * 60 * 1000 // 30분
 
   const ADMIN_CODE = process.env.NEXT_PUBLIC_ADMIN_CODE || 'secret123'
+
+  useEffect(() => {
+    const handleResize = () => {
+      document.body.style.height = window.innerHeight + 'px'
+    }
+    handleResize()
+    window.addEventListener('resize', handleResize)
+    return () => window.removeEventListener('resize', handleResize)
+  }, [])
+
+  // ✅ 입력 시 화면 튕김 방지
+  const handleFocus = (e: React.FocusEvent<HTMLInputElement>) => {
+    e.target.scrollIntoView({ behavior: 'smooth', block: 'center' })
+  }
 
   const handleLogin = async () => {
     setError('')
@@ -84,9 +98,17 @@ export default function LoginPage() {
 
 
   return (
-    <main className="min-h-screen grid grid-cols-1 md:grid-cols-2 bg-gradient-to-br from-indigo-100 to-white">
+    <main
+      className="
+        min-h-screen
+        bg-gradient-to-br from-indigo-100 to-white
+        flex flex-col md:grid md:grid-cols-2
+        overflow-y-auto
+        overscroll-contain
+      "
+    >
       {/* 소개 섹션 */}
-      <section className="flex flex-col justify-center items-center p-8 md:p-16 text-center md:text-left bg-white/30 backdrop-blur-md">
+      <section className="hidden md:flex flex-col justify-center items-center p-8 md:p-16 text-center bg-white/30 backdrop-blur-md">
         <h1 className="text-center text-3xl sm:text-4xl md:text-5xl font-montserrat font-bold drop-shadow mb-4 leading-tight">
           <span className="text-[#FF8000]">LiT</span>{' '}
           <span className="text-[#595959]">{t('app.title')}</span>
@@ -140,6 +162,7 @@ export default function LoginPage() {
             placeholder={t('login.name')}
             value={name}
             onChange={(e) => setName(e.target.value)}
+            onFocus={handleFocus}
             onKeyDown={(e) => e.key === 'Enter' && handleLogin()}
             className="text-sm w-full border border-gray-300 p-3 rounded-lg mb-4"
           />
@@ -148,6 +171,7 @@ export default function LoginPage() {
             placeholder={t('login.password')}
             value={password}
             onChange={(e) => setPassword(e.target.value)}
+            onFocus={handleFocus}
             onKeyDown={(e) => e.key === 'Enter' && handleLogin()}
             className="text-sm w-full border border-gray-300 p-3 rounded-lg mb-4"
           />
@@ -157,6 +181,7 @@ export default function LoginPage() {
               placeholder={t('login.adminCode')}
               value={adminCode}
               onChange={(e) => setAdminCode(e.target.value)}
+              onFocus={handleFocus}
               onKeyDown={(e) => e.key === 'Enter' && handleLogin()}
               className="text-sm w-full border border-gray-300 p-3 rounded-lg mb-4"
             />

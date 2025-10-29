@@ -453,7 +453,7 @@ const WorkoutInsight = ({ member }: WorkoutInsightProps) => {
                             {/* 한 줄 요약형 */}
                             <div className="space-y-3">
                               <div className="flex justify-between items-baseline">
-                                <span className="text-sm text-gray-600">🏆 {t("workout_insight.personalBest")}</span>
+                                <span className="text-sm text-gray-600">🏆 {t("workout_insight.previousPR")}</span>
                                 <span className="text-xl font-bold text-purple-600 tracking-tight">
                                   {bestRecord.weight}
                                   <span className="text-sm text-gray-500 ml-1 font-normal">
@@ -463,7 +463,7 @@ const WorkoutInsight = ({ member }: WorkoutInsightProps) => {
                               </div>
 
                               <div className="flex justify-between items-baseline">
-                                <span className="text-sm text-gray-600">🕒 {t("workout_insight.latestRecord")}</span>
+                                <span className="text-sm text-gray-600">🕒 {t("workout_insight.thisMonthPR")}</span>
                                 <span className="text-xl font-bold text-blue-600 tracking-tight">
                                   {latestRecord.weight}
                                   <span className="text-sm text-gray-500 ml-1 font-normal">
