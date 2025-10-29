@@ -1,5 +1,5 @@
 'use client'
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import { useRouter } from 'next/navigation'
 import { getSupabaseClient } from '@/lib/supabase'
 import { useLanguage } from '@/context/LanguageContext'
@@ -12,16 +12,18 @@ export default function LoginPage() {
   const [password, setPassword] = useState('')
   const [role, setRole] = useState<'member' | 'trainer'>('member')
   const [adminCode, setAdminCode] = useState('')
-  const [saveLoginInfo, setSaveLoginInfo] = useState(false)
+  const [saveLoginInfo, setSaveLoginInfo] = useState(false)  
   const [error, setError] = useState('')
   const router = useRouter()
   const supabase = getSupabaseClient()
   const { setUser } = useAuth()
 
-  const SESSION_DURATION = 30 * 60 * 1000
+  const SESSION_DURATION = 30 * 60 * 1000 // 2분
+
   const ADMIN_CODE = process.env.NEXT_PUBLIC_ADMIN_CODE || 'secret123'
 
-  // ✅ 로그인 정보 자동 불러오기
+  const scrollWrapRef = useRef<HTMLDivElement | null>(null)
+
   useEffect(() => {
     const saved = localStorage.getItem('litpt_login_info')
     if (saved) {
@@ -30,22 +32,34 @@ export default function LoginPage() {
         setName(parsed.name || '')
         setPassword(parsed.password || '')
         setRole(parsed.role || 'member')
-        if (parsed.role === 'trainer') setAdminCode(parsed.adminCode || '')
-        setSaveLoginInfo(true)
+        if (parsed.role === 'trainer') {
+          setAdminCode(parsed.adminCode || '')
+        }
+        setSaveLoginInfo(true) // ✅ 저장된 게 있으면 체크박스 켜기
       } catch (e) {
         console.error('저장된 로그인 정보 불러오기 실패:', e)
       }
     }
   }, [])
 
-  // ✅ 모바일 키보드 올라올 때 화면 튕김 방지
   useEffect(() => {
-    const handleResize = () => {
-      document.body.style.height = `${window.innerHeight}px`
+    const el = scrollWrapRef.current
+    if (!el || typeof window === 'undefined' || !('visualViewport' in window)) return
+
+    const vv = window.visualViewport!
+    const applyInset = () => {
+      // 키보드가 올라오면 레이아웃 뷰포트와 비주얼 뷰포트 차이만큼 하단 패딩 부여
+      const bottomInset = Math.max(0, window.innerHeight - (vv.height + vv.offsetTop))
+      el.style.paddingBottom = bottomInset > 0 ? `${bottomInset + 16}px` : '16px'
     }
-    handleResize()
-    window.addEventListener('resize', handleResize)
-    return () => window.removeEventListener('resize', handleResize)
+
+    vv.addEventListener('resize', applyInset)
+    vv.addEventListener('scroll', applyInset)
+    applyInset()
+    return () => {
+      vv.removeEventListener('resize', applyInset)
+      vv.removeEventListener('scroll', applyInset)
+    }
   }, [])
 
   // ✅ 입력창 포커스 시 자동 스크롤 보정
@@ -56,7 +70,7 @@ export default function LoginPage() {
   const handleLogin = async () => {
     setError('')
     const inputName = name.trim().toLowerCase()
-
+    
     if (role === 'trainer' && adminCode !== ADMIN_CODE) {
       setError(t('login.wrongAdmin'))
       return
@@ -82,6 +96,7 @@ export default function LoginPage() {
         .eq('role', role)
         .eq('status', 'active')
         .single()
+
       member = res.data
       error = res.error
       loginBy = 'name'
@@ -91,14 +106,13 @@ export default function LoginPage() {
       setError(t('login.noMatch'))
       return
     }
-
+    
     const phoneLast4 = (member.phone || '').slice(-4)
     if (password !== phoneLast4) {
       setError(t('login.wrongPassword'))
       return
     }
-
-    // ✅ 로그인 정보 저장
+    
     if (saveLoginInfo) {
       localStorage.setItem(
         'litpt_login_info',
@@ -110,48 +124,43 @@ export default function LoginPage() {
 
     const expiresAt = Date.now() + SESSION_DURATION
     const memberWithSession = { ...member, loginBy, expiresAt }
-
-    const userLang = member.language || 'ko'
-    setLang(userLang)
-
+    
+    const userLang = member.language || 'ko';  // 예시로 회원의 언어가 있다면 적용
+    setLang(userLang); // 로그인 후 언어 설정
+    
+    // localStorage.setItem('litpt_member', JSON.stringify(memberWithSession))
     setUser(memberWithSession)
     router.push(member.role === 'trainer' ? '/trainer' : '/my')
   }
 
   return (
     <main
+      ref={scrollWrapRef}
       className="
-        min-h-screen
-        flex flex-col md:grid md:grid-cols-2
+        min-h-[100svh]                    
         bg-gradient-to-br from-indigo-100 to-white
-        overflow-y-auto
-        overscroll-contain
+        flex flex-col md:grid md:grid-cols-2
+        overflow-y-auto overscroll-contain 
       "
     >
       {/* 소개 섹션 */}
-      <section className="hidden md:flex flex-col justify-center items-center p-8 md:p-16 text-center bg-white/30 backdrop-blur-md">
-        <h1 className="text-4xl font-bold mb-4">
+      <section className="flex flex-col justify-center items-center p-8 md:p-16 text-center md:text-left bg-white/30 backdrop-blur-md">
+        <h1 className="text-center text-3xl sm:text-4xl md:text-5xl font-montserrat font-bold drop-shadow mb-4 leading-tight">
           <span className="text-[#FF8000]">LiT</span>{' '}
           <span className="text-[#595959]">{t('app.title')}</span>
         </h1>
-        <p className="text-gray-700 max-w-md leading-relaxed whitespace-pre-line">
+        <p className="text-center text-sm sm:text-base md:text-lg text-gray-700 max-w-md leading-relaxed whitespace-pre-line">
           {t('app.description')}
         </p>
       </section>
 
       {/* 로그인 카드 */}
-      <section
-        className="
-          flex-1 flex items-center justify-center
-          p-6 sm:p-10
-          overflow-y-auto md:overflow-visible
-        "
-      >
+      <section className="flex items-center justify-center p-6 sm:p-10">
         <div className="w-full max-w-md bg-white shadow-2xl rounded-3xl p-8 sm:p-10 flex flex-col items-center">
-          {/* 언어 토글 */}
-          <div className="mb-6 text-center">
+            {/* LanguageToggle 위쪽 중앙 정렬 */}
+            <div className="mb-6">
             <LanguageToggle />
-          </div>
+            </div>
 
           <h2 className="text-2xl sm:text-3xl font-bold text-indigo-700 text-center mb-8">
             {t('login.title')}
@@ -214,7 +223,6 @@ export default function LoginPage() {
             />
           )}
 
-          {/* 로그인 정보 저장 */}
           <div className="flex items-center self-start mb-4">
             <input
               type="checkbox"
