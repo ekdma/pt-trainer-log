@@ -131,17 +131,6 @@ export default function LoginPage() {
 
   return (
     <main className="min-h-screen bg-gradient-to-br from-indigo-100 to-white flex flex-col justify-center items-center">
-      {/* 소개 섹션: app.title과 app.description 추가 */}
-      <section className="w-full  backdrop-blur-md text-center py-8 md:py-16">
-        <h1 className="text-3xl sm:text-4xl md:text-5xl font-montserrat font-bold drop-shadow mb-4">
-          <span className="text-[#FF8000]">LiT</span> <span className="text-gray-700">{t('app.title')}</span>
-        </h1>
-        <p className="text-sm sm:text-base md:text-lg text-gray-700 max-w-md mx-auto mb-8 p-6">
-          {t('app.description')}
-        </p>
-      </section>
-
-
       {/* 로그인 카드 */}
       <section className="w-full max-w-md bg-white shadow-2xl rounded-3xl p-8 sm:p-10 flex flex-col items-center">
         <div className="mb-6">
