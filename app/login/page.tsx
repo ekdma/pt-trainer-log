@@ -68,11 +68,10 @@ export default function LoginPage() {
 
   // ✅ 포커스 시 자동 스크롤 처리
   const handleFocus = (e: React.FocusEvent<HTMLInputElement>) => {
-    // 해당 입력칸만 스크롤 중앙으로 보이도록 처리
     const target = e.target
     if (target instanceof HTMLInputElement) {
-      // 현재 포커스가 된 입력 필드가 화면 중앙에 오도록 설정
-      target.scrollIntoView({ behavior: 'smooth', block: 'center' })
+      // 해당 입력칸만 스크롤 중앙으로 보이도록 처리
+      target.scrollIntoView({ behavior: 'smooth', block: 'nearest' })
     }
   }
 
