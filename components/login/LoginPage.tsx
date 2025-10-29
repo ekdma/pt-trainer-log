@@ -7,7 +7,7 @@ import LanguageToggle from '@/components/LanguageToggle'
 import { useAuth } from '@/context/AuthContext'
 
 export default function LoginPage() {
-  const { t, lang, setLang } = useLanguage()
+  const { t, lang } = useLanguage()
   const [name, setName] = useState('')
   const [password, setPassword] = useState('')
   const [role, setRole] = useState<'member' | 'trainer'>('member')

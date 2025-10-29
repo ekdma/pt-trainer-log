@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { getSupabaseClient } from '@/lib/supabase';
-import { WorkoutRecord } from '@/components/members/types';
+import { WorkoutRecord, Member } from '@/components/members/types'; // ✅ 기존 Member 타입 그대로 사용
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
 import dayjs from 'dayjs';
 import isBetween from 'dayjs/plugin/isBetween';
@@ -12,8 +12,21 @@ import { useLanguage } from '@/context/LanguageContext'
 dayjs.extend(isBetween);
 dayjs.extend(isSameOrAfter);
 
+interface WorkoutType {
+  target: string;
+  workout: string;
+  order_target: number;
+  order_workout: number;
+}
+
+interface TotalStats {
+  thisWeekWorkoutCount: number;
+  lastWeekWorkoutCount: number;
+  updatedBestRecords: BestRecord[];
+}
+
 interface WorkoutInsightProps {
-  member: any;
+  member: Member;
 }
 
 interface BestRecord {
@@ -33,9 +46,9 @@ const WorkoutInsight = ({ member }: WorkoutInsightProps) => {
   const [isEmptyLog, setIsEmptyLog] = useState(false);
   const [showGraph, setShowGraph] = useState<string | null>(null);
   const [selectedTarget, setSelectedTarget] = useState<string | null>(null);
-  const [totalStats, setTotalStats] = useState<any>(null); 
+  const [totalStats, setTotalStats] = useState<TotalStats | null>(null);
   // const [chartData, setChartData] = useState<any[]>([]);
-  const [workoutTypes, setWorkoutTypes] = useState<any[]>([]);
+  const [workoutTypes, setWorkoutTypes] = useState<WorkoutType[]>([]);
 
   useEffect(() => {
     const fetchWorkoutTypes = async () => {
@@ -375,7 +388,7 @@ const WorkoutInsight = ({ member }: WorkoutInsightProps) => {
                   </p>
                 </div>
                 <div className="bg-green-50 border border-green-100 rounded-xl p-4 text-center shadow-sm">
-                  <p className="text-gray-600 text-sm">{t("workout_insight.nextWeek")} <br /> {t("workout_insight.workoutCnt")} </p>
+                  <p className="text-gray-600 text-sm">{t("workout_insight.lastWeek")} <br /> {t("workout_insight.workoutCnt")} </p>
                   <p className="text-2xl font-bold text-green-700">
                     {totalStats?.lastWeekWorkoutCount || 0}{t("workout_insight.workoutUnit")}
                   </p>
