@@ -46,26 +46,6 @@ export default function LoginPage() {
     }
   }, [])
 
-  // 모바일 키보드 관련 처리: 비주얼 뷰포트 기반으로 하단 패딩 부여
-  useEffect(() => {
-    const el = document.body
-    if (!el || typeof window === 'undefined' || !('visualViewport' in window)) return
-
-    const vv = window.visualViewport!
-    const applyInset = () => {
-      const bottomInset = Math.max(0, window.innerHeight - (vv.height + vv.offsetTop))
-      el.style.paddingBottom = bottomInset > 0 ? `${bottomInset + 16}px` : '16px'
-    }
-
-    vv.addEventListener('resize', applyInset)
-    vv.addEventListener('scroll', applyInset)
-    applyInset()
-    return () => {
-      vv.removeEventListener('resize', applyInset)
-      vv.removeEventListener('scroll', applyInset)
-    }
-  }, [])
-
   // 로그인 처리
   const handleLogin = async () => {
     setError('')
@@ -131,17 +111,7 @@ export default function LoginPage() {
   }
 
   return (
-    <main className="min-h-screen bg-gradient-to-br from-indigo-100 to-white flex flex-col justify-center items-center">
-      {/* 소개 섹션: app.title과 app.description 추가 */}
-      <section className="w-full backdrop-blur-md text-center py-8 md:py-16">
-        <h1 className="text-3xl sm:text-4xl md:text-5xl font-montserrat font-bold drop-shadow mb-4">
-          <span className="text-[#FF8000]">LiT</span> <span className="text-gray-700">{t('app.title')}</span>
-        </h1>
-        <p className="text-sm sm:text-base md:text-lg text-gray-700 max-w-md mx-auto mb-8 p-6">
-          {t('app.description')}
-        </p>
-      </section>
-
+    <main className="min-h-screen bg-gradient-to-br from-indigo-100 to-white flex flex-col justify-center items-center pt-16 px-4">
       {/* 로그인 카드 */}
       <section className="w-full max-w-md bg-white shadow-2xl rounded-3xl p-8 sm:p-10 flex flex-col items-center">
         <div className="mb-6">
@@ -178,7 +148,7 @@ export default function LoginPage() {
           </label>
         </div>
 
-        {/* 입력 필드 */}
+        {/* 아이디 입력 칸 */}
         <input
           ref={nameRef}
           type="text"
@@ -188,6 +158,8 @@ export default function LoginPage() {
           onKeyDown={(e) => e.key === 'Enter' && handleLogin()}
           className="text-sm w-full border border-gray-300 p-3 rounded-lg mb-4"
         />
+
+        {/* 비밀번호 입력 칸 */}
         <input
           ref={passwordRef}
           type="password"
@@ -197,6 +169,8 @@ export default function LoginPage() {
           onKeyDown={(e) => e.key === 'Enter' && handleLogin()}
           className="text-sm w-full border border-gray-300 p-3 rounded-lg mb-4"
         />
+
+        {/* 트레이너인 경우 관리자 코드 입력 */}
         {role === 'trainer' && (
           <input
             ref={adminCodeRef}
@@ -223,7 +197,7 @@ export default function LoginPage() {
           </label>
         </div>
 
-        {/* 버튼 */}
+        {/* 로그인 버튼 */}
         <button
           onClick={handleLogin}
           className="w-full bg-indigo-600 hover:bg-indigo-700 text-white py-3 rounded-lg font-semibold transition"
@@ -231,6 +205,7 @@ export default function LoginPage() {
           {t('login.button')}
         </button>
 
+        {/* 에러 메시지 */}
         {error && <p className="text-red-600 mt-4 text-center">{error}</p>}
       </section>
     </main>
