@@ -1,5 +1,6 @@
 'use client'
-import { useState } from 'react'
+
+import { useEffect, useState, useRef } from 'react'
 import { useRouter } from 'next/navigation'
 import { getSupabaseClient } from '@/lib/supabase'
 import { useLanguage } from '@/context/LanguageContext'
@@ -22,7 +23,26 @@ export default function LoginPage() {
   const SESSION_DURATION = 30 * 60 * 1000
   const ADMIN_CODE = process.env.NEXT_PUBLIC_ADMIN_CODE || 'secret123'
 
-  // 로그인 로직 동일
+  // 화면 스크롤을 막고 입력 필드가 화면에 잘 보이도록 처리
+  const rootRef = useRef<HTMLDivElement | null>(null)
+  useEffect(() => {
+    const onVVChange = () => {
+      const vv = (window as any).visualViewport
+      const root = rootRef.current
+      if (!vv || !root) return
+      const kb = Math.max(0, window.innerHeight - vv.height - vv.offsetTop)
+      root.style.setProperty('--kb', `${kb}px`) // 하단 패딩으로 사용
+    }
+    ;(window as any).visualViewport?.addEventListener('resize', onVVChange)
+    ;(window as any).visualViewport?.addEventListener('scroll', onVVChange)
+    onVVChange()
+    return () => {
+      ;(window as any).visualViewport?.removeEventListener('resize', onVVChange)
+      ;(window as any).visualViewport?.removeEventListener('scroll', onVVChange)
+    }
+  }, [])
+
+  // 로그인 처리
   const handleLogin = async () => {
     setError('')
     const inputName = name.trim().toLowerCase()
@@ -31,6 +51,8 @@ export default function LoginPage() {
       setError(t('login.wrongAdmin'))
       return
     }
+
+    setUser(null)
 
     let { data: member, error } = await supabase
       .from('members')
@@ -77,16 +99,23 @@ export default function LoginPage() {
 
     const expiresAt = Date.now() + SESSION_DURATION
     const memberWithSession = { ...member, loginBy, expiresAt }
-    const userLang = member.language || 'ko'
+    const userLang = (member as any).language || 'ko'
     setLang(userLang)
 
-    setUser(memberWithSession)
-    router.push(member.role === 'trainer' ? '/trainer' : '/my')
+    setUser(memberWithSession as any)
+    router.push((member as any).role === 'trainer' ? '/trainer' : '/my')
   }
 
   return (
-    <div className="min-h-[100dvh] bg-gradient-to-br from-indigo-100 to-white flex flex-col justify-center items-center overflow-y-auto px-4 py-10">
-      <section className="w-full max-w-xs sm:max-w-sm bg-white shadow-lg rounded-3xl p-6 sm:p-8 space-y-6">
+    <div
+      ref={rootRef}
+      className="min-h-[100dvh] bg-gradient-to-br from-indigo-100 to-white overflow-y-auto px-4"
+      style={{ paddingBottom: 'var(--kb, 0px)' }} // 키보드 높이만큼 여유
+    >
+      {/* 상단 간격(푸시) → 중앙정렬 대신 자연스런 위여백 */}
+      <div className="h-6" />
+
+      <section className="w-full max-w-xs sm:max-w-sm mx-auto bg-white shadow-lg rounded-3xl p-6 sm:p-8 space-y-6">
         <div className="flex justify-center">
           <LanguageToggle />
         </div>
@@ -96,7 +125,7 @@ export default function LoginPage() {
         </h2>
 
         {/* 역할 선택 */}
-        <div className="flex justify-center gap-4">
+        <div className="flex justify-center gap-6">
           <label className="inline-flex items-center cursor-pointer">
             <input
               type="radio"
@@ -121,16 +150,15 @@ export default function LoginPage() {
           </label>
         </div>
 
-        {/* 입력 영역 - FoodDiaryMemberView input 스타일 적용 */}
+        {/* ✅ FoodDiary 스타일의 카드형 input들 */}
         <div className="space-y-4">
           <div className="p-3 rounded-xl bg-white border border-gray-100 shadow-inner hover:shadow-md transition-all duration-300">
-            <label className="block text-xs font-semibold text-gray-600 mb-1">
-              👤 {t('login.name')}
-            </label>
+            <label className="block text-xs font-semibold text-gray-600 mb-1">👤 {t('login.name')}</label>
             <input
               type="text"
               inputMode="text"
               value={name}
+              onFocus={(e) => e.currentTarget.scrollIntoView({ behavior: 'smooth', block: 'center' })}
               onChange={(e) => setName(e.target.value)}
               onKeyDown={(e) => e.key === 'Enter' && handleLogin()}
               className="w-full text-sm border border-gray-200 rounded-xl px-3 py-2 focus:ring-2 focus:ring-indigo-300 transition text-gray-800"
@@ -139,13 +167,12 @@ export default function LoginPage() {
           </div>
 
           <div className="p-3 rounded-xl bg-white border border-gray-100 shadow-inner hover:shadow-md transition-all duration-300">
-            <label className="block text-xs font-semibold text-gray-600 mb-1">
-              🔑 {t('login.password')}
-            </label>
+            <label className="block text-xs font-semibold text-gray-600 mb-1">🔑 {t('login.password')}</label>
             <input
               type="password"
               inputMode="text"
               value={password}
+              onFocus={(e) => e.currentTarget.scrollIntoView({ behavior: 'smooth', block: 'center' })}
               onChange={(e) => setPassword(e.target.value)}
               onKeyDown={(e) => e.key === 'Enter' && handleLogin()}
               className="w-full text-sm border border-gray-200 rounded-xl px-3 py-2 focus:ring-2 focus:ring-indigo-300 transition text-gray-800"
@@ -155,13 +182,12 @@ export default function LoginPage() {
 
           {role === 'trainer' && (
             <div className="p-3 rounded-xl bg-white border border-gray-100 shadow-inner hover:shadow-md transition-all duration-300">
-              <label className="block text-xs font-semibold text-gray-600 mb-1">
-                🧾 {t('login.adminCode')}
-              </label>
+              <label className="block text-xs font-semibold text-gray-600 mb-1">🧾 {t('login.adminCode')}</label>
               <input
                 type="password"
                 inputMode="text"
                 value={adminCode}
+                onFocus={(e) => e.currentTarget.scrollIntoView({ behavior: 'smooth', block: 'center' })}
                 onChange={(e) => setAdminCode(e.target.value)}
                 onKeyDown={(e) => e.key === 'Enter' && handleLogin()}
                 className="w-full text-sm border border-gray-200 rounded-xl px-3 py-2 focus:ring-2 focus:ring-indigo-300 transition text-gray-800"
@@ -171,8 +197,7 @@ export default function LoginPage() {
           )}
         </div>
 
-        {/* 저장 체크박스 */}
-        <div className="flex items-center mt-2">
+        <div className="flex items-center">
           <input
             type="checkbox"
             id="saveLogin"
@@ -192,8 +217,11 @@ export default function LoginPage() {
           {t('login.button')}
         </button>
 
-        {error && <p className="text-red-600 mt-2 text-center">{error}</p>}
+        {error && <p className="text-red-600 text-center">{error}</p>}
       </section>
+
+      {/* 아래 여백: 키보드 없을 때도 살짝 여유 */}
+      <div className="h-10" />
     </div>
   )
 }
