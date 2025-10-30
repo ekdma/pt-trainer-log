@@ -144,12 +144,12 @@ export default function LoginPage() {
       </section>
 
       {/* 로그인 카드 */}
-      <section className="w-full max-w-xs sm:max-w-sm lg:max-w-md bg-white shadow-xl rounded-3xl p-8 sm:p-10 flex flex-col items-center transform transition-all duration-300 ease-in-out">
+      <section className="w-full lg:w-1/3 max-w-md bg-white shadow-xl rounded-3xl p-8 sm:p-10 flex flex-col items-center">
         <div className="mb-6">
           <LanguageToggle />
         </div>
 
-        <h2 className="text-2xl sm:text-3xl font-extrabold text-indigo-700 text-center mb-8 animate__animated animate__fadeIn">
+        <h2 className="text-2xl sm:text-3xl font-black text-indigo-700 text-center mb-8">
           {t('login.title')}
         </h2>
 
@@ -187,7 +187,7 @@ export default function LoginPage() {
           value={name}
           onChange={(e) => setName(e.target.value)}
           onKeyDown={(e) => e.key === 'Enter' && handleLogin()}
-          className="text-sm w-full border border-gray-300 p-4 rounded-lg mb-4 focus:outline-none focus:ring-2 focus:ring-indigo-500 transition duration-300 ease-in-out hover:ring-2 hover:ring-indigo-400"
+          className="text-sm w-full border border-gray-300 p-3 rounded-lg mb-4"
         />
         <input
           ref={passwordRef}
@@ -196,9 +196,7 @@ export default function LoginPage() {
           value={password}
           onChange={(e) => setPassword(e.target.value)}
           onKeyDown={(e) => e.key === 'Enter' && handleLogin()}
-          className="text-sm w-full border border-gray-300 p-4 rounded-lg mb-4 focus:outline-none focus:ring-2 focus:ring-indigo-500 transition duration-300 ease-in-out hover:ring-2 hover:ring-indigo-400"
-          inputMode="numeric"
-          autoComplete="off"
+          className="text-sm w-full border border-gray-300 p-3 rounded-lg mb-4"
         />
         {role === 'trainer' && (
           <input
@@ -208,7 +206,7 @@ export default function LoginPage() {
             value={adminCode}
             onChange={(e) => setAdminCode(e.target.value)}
             onKeyDown={(e) => e.key === 'Enter' && handleLogin()}
-            className="text-sm w-full border border-gray-300 p-4 rounded-lg mb-4 focus:outline-none focus:ring-2 focus:ring-indigo-500 transition duration-300 ease-in-out hover:ring-2 hover:ring-indigo-400"
+            className="text-sm w-full border border-gray-300 p-3 rounded-lg mb-4"
           />
         )}
 
@@ -229,14 +227,13 @@ export default function LoginPage() {
         {/* 버튼 */}
         <button
           onClick={handleLogin}
-          className="w-full bg-indigo-600 hover:bg-indigo-700 text-white py-3 rounded-lg font-semibold transition-all duration-300 ease-in-out transform active:scale-95"
+          className="w-full bg-indigo-600 hover:bg-indigo-700 text-white py-3 rounded-lg font-semibold transition"
         >
           {t('login.button')}
         </button>
 
         {error && <p className="text-red-600 mt-4 text-center">{error}</p>}
       </section>
-
     </main>
   )
 }
