@@ -108,11 +108,16 @@ export default function LoginPage() {
     router.push(member.role === 'trainer' ? '/trainer' : '/my')
   }
 
-  // Disable auto-scroll when input is focused
+  // Disable auto-scroll when input is focused and adjust scroll position
   useEffect(() => {
-    const handleFocus = () => {
-      const scrollY = window.scrollY // Save current scroll position
-      window.scrollTo(0, scrollY) // Prevent page from scrolling when keyboard shows
+    const handleFocus = (event: FocusEvent) => {
+      const input = event.target as HTMLInputElement
+      const rect = input.getBoundingClientRect()
+
+      // Check if the input is too close to the bottom
+      if (rect.bottom > window.innerHeight - 100) {
+        window.scrollTo(0, window.scrollY + rect.bottom - window.innerHeight + 100)
+      }
     }
 
     // Adding focus event listener to inputs
