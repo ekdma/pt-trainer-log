@@ -7,6 +7,13 @@ import { useLanguage } from '@/context/LanguageContext'
 import LanguageToggle from '@/components/LanguageToggle'
 import { useAuth } from '@/context/AuthContext'
 
+// VisualViewport 타입 명시
+interface VisualViewport {
+  height: number
+  offsetTop: number
+  // 필요한 속성만 추가하세요.
+}
+
 export default function LoginPage() {
   const { t, setLang } = useLanguage()
   const [name, setName] = useState('')
@@ -25,20 +32,25 @@ export default function LoginPage() {
 
   // 화면 스크롤을 막고 입력 필드가 화면에 잘 보이도록 처리
   const rootRef = useRef<HTMLDivElement | null>(null)
+
   useEffect(() => {
     const onVVChange = () => {
-      const vv = (window as any).visualViewport
+      const vv = (window.visualViewport as VisualViewport) // VisualViewport 타입 명시
       const root = rootRef.current
       if (!vv || !root) return
       const kb = Math.max(0, window.innerHeight - vv.height - vv.offsetTop)
       root.style.setProperty('--kb', `${kb}px`) // 하단 패딩으로 사용
     }
-    ;(window as any).visualViewport?.addEventListener('resize', onVVChange)
-    ;(window as any).visualViewport?.addEventListener('scroll', onVVChange)
-    onVVChange()
+    if (window.visualViewport) {
+      window.visualViewport.addEventListener('resize', onVVChange)
+      window.visualViewport.addEventListener('scroll', onVVChange)
+      onVVChange()
+    }
     return () => {
-      ;(window as any).visualViewport?.removeEventListener('resize', onVVChange)
-      ;(window as any).visualViewport?.removeEventListener('scroll', onVVChange)
+      if (window.visualViewport) {
+        window.visualViewport.removeEventListener('resize', onVVChange)
+        window.visualViewport.removeEventListener('scroll', onVVChange)
+      }
     }
   }, [])
 
