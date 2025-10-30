@@ -7,7 +7,7 @@ import LanguageToggle from '@/components/LanguageToggle'
 import { useAuth } from '@/context/AuthContext'
 
 export default function LoginPage() {
-  const { t, setLang, lang } = useLanguage()
+  const { t, setLang } = useLanguage()
   const [name, setName] = useState('')
   const [password, setPassword] = useState('')
   const [role, setRole] = useState<'member' | 'trainer'>('member')
@@ -38,10 +38,30 @@ export default function LoginPage() {
         if (parsed.role === 'trainer') {
           setAdminCode(parsed.adminCode || '')
         }
-        setSaveLoginInfo(true) // 저장된 로그인 정보 체크
+        setSaveLoginInfo(true) // ✅ 저장된 게 있으면 체크박스 켜기
       } catch (e) {
         console.error('저장된 로그인 정보 불러오기 실패:', e)
       }
+    }
+  }, [])
+
+  // 모바일 키보드 관련 처리: 비주얼 뷰포트 기반으로 하단 패딩 부여
+  useEffect(() => {
+    const el = document.body
+    if (!el || typeof window === 'undefined' || !('visualViewport' in window)) return
+
+    const vv = window.visualViewport!
+    const applyInset = () => {
+      const bottomInset = Math.max(0, window.innerHeight - (vv.height + vv.offsetTop))
+      el.style.paddingBottom = bottomInset > 0 ? `${bottomInset + 16}px` : '16px'
+    }
+
+    vv.addEventListener('resize', applyInset)
+    vv.addEventListener('scroll', applyInset)
+    applyInset()
+    return () => {
+      vv.removeEventListener('resize', applyInset)
+      vv.removeEventListener('scroll', applyInset)
     }
   }, [])
 
@@ -102,52 +122,27 @@ export default function LoginPage() {
 
     const expiresAt = Date.now() + SESSION_DURATION
     const memberWithSession = { ...member, loginBy, expiresAt }
-
-    // 로그인 후 사용자의 언어를 그대로 설정
-    const userLang = member.language || lang
+    const userLang = member.language || 'ko'
     setLang(userLang)
 
     setUser(memberWithSession)
-
-    // 로그인 후 화면을 상단으로 리셋
-    window.scrollTo(0, 0)
-
-    // 포커스를 제거하여 화면이 다시 원래대로 돌아오게 함
-    if (nameRef.current) {
-      nameRef.current.blur()
-    }
-    if (passwordRef.current) {
-      passwordRef.current.blur()
-    }
-
     router.push(member.role === 'trainer' ? '/trainer' : '/my')
   }
 
-
   return (
-    <main className="min-h-screen bg-gradient-to-br from-indigo-100 to-white flex flex-col justify-center items-center p-4">
-      {/* 소개 섹션 */}
-      <section className="w-full backdrop-blur-md text-center py-8 md:py-16 mb-8 lg:mb-0">
-        <h1 className="text-3xl sm:text-4xl md:text-5xl font-montserrat font-black drop-shadow mb-4">
-          <span className="text-[#FF8000]">LiT</span> <span className="text-gray-700">{t('app.title')}</span>
-        </h1>
-        <p className="text-sm sm:text-base md:text-lg text-gray-700 font-bold max-w-md mx-auto mb-8 p-6">
-          {t('app.description_1')} <br /> {t('app.description_2')}
-        </p>
-      </section>
-
+    <main className="min-h-screen bg-gradient-to-br from-indigo-100 to-white flex flex-col justify-center items-center">
       {/* 로그인 카드 */}
-      <section className="w-full max-w-xs sm:max-w-sm lg:max-w-md bg-white shadow-lg rounded-3xl p-6 sm:p-8 flex flex-col items-center">
-        <div className="mb-4">
+      <section className="w-full max-w-md bg-white shadow-2xl rounded-3xl p-8 sm:p-10 flex flex-col items-center">
+        <div className="mb-6">
           <LanguageToggle />
         </div>
 
-        <h2 className="text-2xl sm:text-3xl font-bold text-indigo-700 font-black text-center mb-6">
+        <h2 className="text-2xl sm:text-3xl font-bold text-indigo-700 text-center mb-8">
           {t('login.title')}
         </h2>
 
         {/* 역할 선택 */}
-        <div className="flex justify-center gap-4 mb-6">
+        <div className="flex justify-center gap-6 text-sm sm:text-base mb-6">
           <label className="inline-flex items-center cursor-pointer">
             <input
               type="radio"
@@ -157,7 +152,7 @@ export default function LoginPage() {
               onChange={() => setRole('member')}
               className="form-radio text-indigo-600"
             />
-            <span className="ml-2 text-gray-700 font-bold text-sm">{t('login.member')}</span>
+            <span className="ml-2 text-gray-700 font-semibold">{t('login.member')}</span>
           </label>
           <label className="inline-flex items-center cursor-pointer">
             <input
@@ -168,7 +163,7 @@ export default function LoginPage() {
               onChange={() => setRole('trainer')}
               className="form-radio text-indigo-600"
             />
-            <span className="ml-2 text-gray-700 font-bold text-sm">{t('login.coach')}</span>
+            <span className="ml-2 text-gray-700 font-semibold">{t('login.coach')}</span>
           </label>
         </div>
 
@@ -180,7 +175,7 @@ export default function LoginPage() {
           value={name}
           onChange={(e) => setName(e.target.value)}
           onKeyDown={(e) => e.key === 'Enter' && handleLogin()}
-          className="text-sm w-full border border-gray-300 p-3 rounded-lg mb-4 focus:outline-none focus:ring-2 focus:ring-indigo-600 transition"
+          className="text-sm w-full border border-gray-300 p-3 rounded-lg mb-4"
         />
         <input
           ref={passwordRef}
@@ -189,9 +184,7 @@ export default function LoginPage() {
           value={password}
           onChange={(e) => setPassword(e.target.value)}
           onKeyDown={(e) => e.key === 'Enter' && handleLogin()}
-          className="text-sm w-full border border-gray-300 p-3 rounded-lg mb-4 focus:outline-none focus:ring-2 focus:ring-indigo-600 transition"
-          inputMode="numeric"
-          autoComplete="off"
+          className="text-sm w-full border border-gray-300 p-3 rounded-lg mb-4"
         />
         {role === 'trainer' && (
           <input
@@ -219,7 +212,7 @@ export default function LoginPage() {
           </label>
         </div>
 
-        {/* 로그인 버튼 */}
+        {/* 버튼 */}
         <button
           onClick={handleLogin}
           className="w-full bg-indigo-600 hover:bg-indigo-700 text-white py-3 rounded-lg font-semibold transition"
