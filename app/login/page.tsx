@@ -40,6 +40,30 @@ export default function LoginPage() {
     }
   }, [])
 
+  useEffect(() => {
+    // 모바일 키보드 관련 처리: 비주얼 뷰포트 기반으로 하단 패딩 부여
+    const el = document.body;
+    if (!el || typeof window === 'undefined' || !('visualViewport' in window)) return;
+
+    const vv = window.visualViewport!;
+    
+    const applyInset = () => {
+      // 키보드 높이만큼 아래 패딩을 추가
+      const bottomInset = Math.max(0, window.innerHeight - (vv.height + vv.offsetTop));
+      el.style.paddingBottom = bottomInset > 0 ? `${bottomInset + 16}px` : '16px';
+    };
+
+    vv.addEventListener('resize', applyInset);
+    vv.addEventListener('scroll', applyInset);
+    applyInset(); // 초기 실행
+
+    return () => {
+      vv.removeEventListener('resize', applyInset);
+      vv.removeEventListener('scroll', applyInset);
+    };
+  }, []);
+
+
   const handleLogin = async () => {
     setError('')
     const inputName = name.trim().toLowerCase()
