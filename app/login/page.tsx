@@ -108,6 +108,22 @@ export default function LoginPage() {
     router.push(member.role === 'trainer' ? '/trainer' : '/my')
   }
 
+  // Disable auto-scroll when input is focused
+  useEffect(() => {
+    const handleFocus = () => {
+      const scrollY = window.scrollY // Save current scroll position
+      window.scrollTo(0, scrollY) // Prevent page from scrolling when keyboard shows
+    }
+
+    // Adding focus event listener to inputs
+    const inputs = document.querySelectorAll('input')
+    inputs.forEach(input => input.addEventListener('focus', handleFocus))
+
+    return () => {
+      inputs.forEach(input => input.removeEventListener('focus', handleFocus))
+    }
+  }, [])
+
   return (
     <main className="min-h-screen bg-gradient-to-br from-indigo-100 to-white flex justify-center items-center p-4">
       <section className="w-full max-w-xs sm:max-w-sm bg-white shadow-lg rounded-3xl p-6 sm:p-8 flex flex-col items-center">
