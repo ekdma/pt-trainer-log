@@ -14,9 +14,9 @@ export default function LoginPage() {
 
   return (
     <div className="min-h-screen bg-gray-100 p-4">
-
+      
       {/* 소개 섹션: app.title과 app.description 추가 */}
-      <section className="w-full  backdrop-blur-md text-center py-8 md:py-16">
+      <section className="w-full backdrop-blur-md text-center py-8 md:py-16">
         <h1 className="text-3xl sm:text-4xl md:text-5xl font-montserrat font-bold drop-shadow mb-4">
           <span className="text-[#FF8000]">LiT</span> <span className="text-gray-700">{t('app.title')}</span>
         </h1>
@@ -25,7 +25,8 @@ export default function LoginPage() {
         </p>
       </section>
 
-      <section className="w-full max-w-sm bg-white shadow-lg rounded-xl p-8 mx-auto">
+      {/* 로그인 섹션 */}
+      <section className="w-full max-w-sm bg-white shadow-lg rounded-xl p-8 mx-auto mt-8">
         <h2 className="text-2xl font-bold text-center text-indigo-700 mb-6">로그인</h2>
 
         {/* 아이디 입력 칸 */}
