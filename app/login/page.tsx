@@ -26,13 +26,13 @@ export default function LoginPage() {
   const passwordRef = useRef<HTMLInputElement | null>(null)
   const adminCodeRef = useRef<HTMLInputElement | null>(null)
 
-  // 화면 스크롤 위치 조정 (입력 필드 가리기 방지)
+  // 화면 스크롤을 막고 입력 필드가 화면에 잘 보이도록 처리
   useEffect(() => {
     const handleFocus = (event: FocusEvent) => {
       const input = event.target as HTMLInputElement
       const rect = input.getBoundingClientRect()
 
-      // 화면 하단 가까운 입력 필드 스크롤 방지
+      // 입력 필드가 화면 하단에 너무 가까우면 스크롤을 올려줌
       if (rect.bottom > window.innerHeight - 100) {
         window.scrollTo(0, window.scrollY + rect.bottom - window.innerHeight + 100)
       }
@@ -110,7 +110,6 @@ export default function LoginPage() {
     router.push(member.role === 'trainer' ? '/trainer' : '/my')
   }
 
-  // 화면 구성
   return (
     <main className="min-h-screen bg-gradient-to-br from-indigo-100 to-white flex justify-center items-center p-4">
       <section className="w-full max-w-xs sm:max-w-sm bg-white shadow-lg rounded-3xl p-6 sm:p-8 flex flex-col items-center">
@@ -122,7 +121,6 @@ export default function LoginPage() {
           {t('login.title')}
         </h2>
 
-        {/* 역할 선택 */}
         <div className="flex justify-center gap-4 mb-6">
           <label className="inline-flex items-center cursor-pointer">
             <input
@@ -148,7 +146,7 @@ export default function LoginPage() {
           </label>
         </div>
 
-        {/* 입력 필드 */}
+        {/* 사용자 이름 입력 */}
         <input
           ref={nameRef}
           type="text"
@@ -158,6 +156,8 @@ export default function LoginPage() {
           onKeyDown={(e) => e.key === 'Enter' && handleLogin()}
           className="text-sm w-full border border-gray-300 p-3 rounded-lg mb-4"
         />
+
+        {/* 비밀번호 입력 */}
         <input
           ref={passwordRef}
           type="password"
@@ -167,6 +167,8 @@ export default function LoginPage() {
           onKeyDown={(e) => e.key === 'Enter' && handleLogin()}
           className="text-sm w-full border border-gray-300 p-3 rounded-lg mb-4"
         />
+
+        {/* 트레이너 역할일 때만 관리자 코드 입력 */}
         {role === 'trainer' && (
           <input
             ref={adminCodeRef}
