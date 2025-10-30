@@ -11,7 +11,6 @@ import { useAuth } from '@/context/AuthContext'
 interface VisualViewport {
   height: number
   offsetTop: number
-  // 필요한 속성만 추가하세요.
 }
 
 export default function LoginPage() {
@@ -35,7 +34,8 @@ export default function LoginPage() {
 
   useEffect(() => {
     const onVVChange = () => {
-      const vv = (window.visualViewport as VisualViewport) // VisualViewport 타입 명시
+      // VisualViewport를 정확히 타입 지정
+      const vv = window.visualViewport as VisualViewport // VisualViewport 타입 명시
       const root = rootRef.current
       if (!vv || !root) return
       const kb = Math.max(0, window.innerHeight - vv.height - vv.offsetTop)
