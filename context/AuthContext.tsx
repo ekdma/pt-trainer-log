@@ -49,10 +49,11 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
 
   const logout = () => {
     setUserState(null)
-    const prevLang = localStorage.getItem('litpt_lang')
-    localStorage.clear()
-    if (prevLang) localStorage.setItem('litpt_lang', prevLang)
-    window.dispatchEvent(new Event('storage'))
+    localStorage.removeItem('litpt_member')
+    if (timerRef.current) {
+      clearTimeout(timerRef.current)
+      timerRef.current = null
+    }
     router.replace('/')
   }
 
