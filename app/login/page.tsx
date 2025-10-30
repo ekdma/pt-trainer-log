@@ -1,5 +1,4 @@
 'use client'
-
 import { useState, useEffect, useRef } from 'react'
 import { useRouter } from 'next/navigation'
 import { getSupabaseClient } from '@/lib/supabase'
@@ -46,7 +45,6 @@ export default function LoginPage() {
     }
   }, [])
 
-  // 로그인 처리
   const handleLogin = async () => {
     setError('')
     const inputName = name.trim().toLowerCase()
@@ -111,13 +109,22 @@ export default function LoginPage() {
   }
 
   return (
-    <main className="min-h-screen bg-gradient-to-br from-indigo-100 to-white flex flex-col justify-center items-center pt-16 px-4">
+    <main className="min-h-screen bg-gradient-to-br from-indigo-100 to-white flex flex-col  justify-center items-start pt-16 px-4">
+      <section className="w-full  backdrop-blur-md text-center py-8 md:py-16">
+        <h1 className="text-3xl sm:text-4xl md:text-5xl font-montserrat font-bold drop-shadow mb-4">
+          <span className="text-[#FF8000]">LiT</span> <span className="text-gray-700">{t('app.title')}</span>
+        </h1>
+        <p className="text-sm sm:text-base md:text-lg text-gray-700 max-w-md mx-auto mb-8 p-6">
+          {t('app.description_1')} <br /> {t('app.description_2')}
+        </p>
+      </section>
+      
       {/* 로그인 카드 */}
-      <section className="w-full max-w-md bg-white shadow-2xl rounded-3xl p-8 sm:p-10 flex flex-col items-center">
+      <section className="w-full max-w-sm bg-white shadow-lg rounded-xl p-8">
         <div className="mb-6">
           <LanguageToggle />
         </div>
-
+        
         <h2 className="text-2xl sm:text-3xl font-bold text-indigo-700 text-center mb-8">
           {t('login.title')}
         </h2>
@@ -153,24 +160,23 @@ export default function LoginPage() {
           ref={nameRef}
           type="text"
           placeholder={t('login.name')}
+          id="name"
           value={name}
           onChange={(e) => setName(e.target.value)}
           onKeyDown={(e) => e.key === 'Enter' && handleLogin()}
-          className="text-sm w-full border border-gray-300 p-3 rounded-lg mb-4"
+          className="w-full border border-gray-300 rounded-lg p-3 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 mb-4"
         />
-
         {/* 비밀번호 입력 칸 */}
         <input
           ref={passwordRef}
           type="password"
           placeholder={t('login.password')}
+          id="password"
           value={password}
           onChange={(e) => setPassword(e.target.value)}
           onKeyDown={(e) => e.key === 'Enter' && handleLogin()}
-          className="text-sm w-full border border-gray-300 p-3 rounded-lg mb-4"
+          className="w-full border border-gray-300 rounded-lg p-3 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 mb-4"
         />
-
-        {/* 트레이너인 경우 관리자 코드 입력 */}
         {role === 'trainer' && (
           <input
             ref={adminCodeRef}
@@ -200,12 +206,10 @@ export default function LoginPage() {
         {/* 로그인 버튼 */}
         <button
           onClick={handleLogin}
-          className="w-full bg-indigo-600 hover:bg-indigo-700 text-white py-3 rounded-lg font-semibold transition"
+          className="w-full bg-indigo-600 text-white py-3 rounded-lg font-semibold hover:bg-indigo-700 transition"
         >
           {t('login.button')}
         </button>
-
-        {/* 에러 메시지 */}
         {error && <p className="text-red-600 mt-4 text-center">{error}</p>}
       </section>
     </main>
