@@ -1,4 +1,5 @@
 'use client'
+
 import { useState, useEffect, useRef } from 'react'
 import { useRouter } from 'next/navigation'
 import { getSupabaseClient } from '@/lib/supabase'
@@ -110,9 +111,9 @@ export default function LoginPage() {
   }
 
   return (
-    <div className="min-h-screen bg-gray-100 p-4">
-      {/* 소개 섹션: app.title과 app.description 추가 */}
-      <section className="w-full  backdrop-blur-md text-center py-8 md:py-16">
+    <div className="min-h-screen bg-gradient-to-br from-indigo-100 to-white p-6">
+      {/* 소개 섹션 */}
+      <section className="w-full backdrop-blur-md text-center py-8 md:py-16">
         <h1 className="text-3xl sm:text-4xl md:text-5xl font-montserrat font-bold drop-shadow mb-4">
           <span className="text-[#FF8000]">LiT</span> <span className="text-gray-700">{t('app.title')}</span>
         </h1>
@@ -120,19 +121,17 @@ export default function LoginPage() {
           {t('app.description_1')} <br /> {t('app.description_2')}
         </p>
       </section>
-      
+
       {/* 로그인 카드 */}
-      <section className="w-full max-w-sm bg-white shadow-2xl rounded-3xl p-8 mx-auto items-center">
+      <section className="w-full max-w-sm bg-white shadow-2xl rounded-3xl p-8 mx-auto">
         <div className="mb-6">
           <LanguageToggle />
         </div>
 
-        <h2 className="text-2xl sm:text-3xl font-bold text-indigo-700 text-center mb-8">
-          {t('login.title')}
-        </h2>
+        <h2 className="text-2xl sm:text-3xl font-bold text-indigo-700 text-center mb-8">{t('login.title')}</h2>
 
         {/* 역할 선택 */}
-        <div className="flex justify-center gap-6 text-sm sm:text-base mb-6">
+        <div className="mb-6 text-sm sm:text-base">
           <label className="inline-flex items-center cursor-pointer">
             <input
               type="radio"
@@ -144,7 +143,7 @@ export default function LoginPage() {
             />
             <span className="ml-2 text-gray-700 font-semibold">{t('login.member')}</span>
           </label>
-          <label className="inline-flex items-center cursor-pointer">
+          <label className="inline-flex items-center cursor-pointer ml-4">
             <input
               type="radio"
               name="role"
@@ -180,6 +179,7 @@ export default function LoginPage() {
           placeholder={t('login.adminCode')}
           className="text-sm w-full border border-gray-300 p-3 rounded-lg mb-4"
         />
+
         {role === 'trainer' && (
           <input
             ref={adminCodeRef}
@@ -215,7 +215,6 @@ export default function LoginPage() {
         </button>
 
         {error && <p className="text-red-600 mt-4 text-center">{error}</p>}
-
       </section>
     </div>
   )
