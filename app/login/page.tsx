@@ -26,7 +26,6 @@ export default function LoginPage() {
             onChange={(e) => setName(e.target.value)}
             placeholder="아이디를 입력하세요"
             className="w-full border border-gray-300 rounded-lg p-3 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500"
-            onFocus={(e) => e.currentTarget.scrollIntoView({ behavior: 'smooth', block: 'center' })}
           />
         </div>
 
@@ -40,7 +39,6 @@ export default function LoginPage() {
             onChange={(e) => setPassword(e.target.value)}
             placeholder="비밀번호를 입력하세요"
             className="w-full border border-gray-300 rounded-lg p-3 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500"
-            onFocus={(e) => e.currentTarget.scrollIntoView({ behavior: 'smooth', block: 'center' })}
           />
         </div>
 
