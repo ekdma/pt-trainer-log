@@ -27,18 +27,18 @@ export default function LoginPage() {
   const rootRef = useRef<HTMLDivElement | null>(null)
   useEffect(() => {
     const onVVChange = () => {
-      const vv = (window as any).visualViewport
+      const vv = (window).visualViewport
       const root = rootRef.current
       if (!vv || !root) return
       const kb = Math.max(0, window.innerHeight - vv.height - vv.offsetTop)
       root.style.setProperty('--kb', `${kb}px`) // 하단 패딩으로 사용
     }
-    ;(window as any).visualViewport?.addEventListener('resize', onVVChange)
-    ;(window as any).visualViewport?.addEventListener('scroll', onVVChange)
+    ;(window).visualViewport?.addEventListener('resize', onVVChange)
+    ;(window).visualViewport?.addEventListener('scroll', onVVChange)
     onVVChange()
     return () => {
-      ;(window as any).visualViewport?.removeEventListener('resize', onVVChange)
-      ;(window as any).visualViewport?.removeEventListener('scroll', onVVChange)
+      ;(window).visualViewport?.removeEventListener('resize', onVVChange)
+      ;(window).visualViewport?.removeEventListener('scroll', onVVChange)
     }
   }, [])
 
