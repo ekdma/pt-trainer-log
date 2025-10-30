@@ -134,10 +134,10 @@ export default function LoginPage() {
     <main className="min-h-screen bg-gradient-to-br from-indigo-100 to-white flex flex-col lg:flex-row justify-center items-center p-4">
       {/* 소개 섹션 */}
       <section className="w-full lg:w-1/2 backdrop-blur-md text-center py-8 md:py-16 mb-8 lg:mb-0">
-        <h1 className="text-3xl sm:text-4xl md:text-5xl font-montserrat font-bold drop-shadow mb-4">
+        <h1 className="text-3xl sm:text-4xl md:text-5xl font-montserrat font-black drop-shadow mb-4">
           <span className="text-[#FF8000]">LiT</span> <span className="text-gray-700">{t('app.title')}</span>
         </h1>
-        <p className="text-sm sm:text-base md:text-lg text-gray-700 max-w-md mx-auto mb-8 p-6">
+        <p className="text-sm font-bold sm:text-base md:text-lg text-gray-700 max-w-md mx-auto mb-8 p-6">
           {t('app.description_1')} <br /> {t('app.description_2')}
         </p>
       </section>
@@ -148,7 +148,7 @@ export default function LoginPage() {
           <LanguageToggle />
         </div>
 
-        <h2 className="text-2xl sm:text-3xl font-bold text-indigo-700 text-center mb-8">
+        <h2 className="text-2xl sm:text-3xl font-extrabold text-indigo-700 text-center mb-8">
           {t('login.title')}
         </h2>
 
@@ -190,13 +190,16 @@ export default function LoginPage() {
         />
         <input
           ref={passwordRef}
-          type="password"
+          type="password"  // 비밀번호를 숨기기 위해 type="password" 사용
           placeholder={t('login.password')}
           value={password}
           onChange={(e) => setPassword(e.target.value)}
           onKeyDown={(e) => e.key === 'Enter' && handleLogin()}
           className="text-sm w-full border border-gray-300 p-4 rounded-lg mb-4 focus:outline-none focus:ring-2 focus:ring-indigo-600 transition"
+          inputMode="numeric"  // 숫자 키보드 강제 호출
+          autoComplete="off"  // 자동완성 방지
         />
+
         {role === 'trainer' && (
           <input
             ref={adminCodeRef}

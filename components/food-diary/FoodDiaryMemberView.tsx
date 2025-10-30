@@ -7,6 +7,7 @@ import { Button } from '@/components/ui/button'
 import { toast } from 'sonner'
 import { useLanguage } from '@/context/LanguageContext'
 import { X, Send, MessageCircleMore } from 'lucide-react';
+import { HiChevronLeft, HiChevronRight } from 'react-icons/hi'
 // import { ChatBubbleLeftIcon, ChatBubbleLeftRightIcon } from '@heroicons/react/24/solid'
 
 interface Props {
@@ -338,14 +339,15 @@ export default function FoodDiaryMemberView({ memberId, memberName }: Props) {
               
       {/* 📅 날짜 + 기본정보 */}
       <div className="relative bg-white rounded-2xl p-5 border border-gray-100 shadow-[0_2px_8px_rgba(0,0,0,0.04)] transition-all duration-300 hover:shadow-[0_4px_16px_rgba(0,0,0,0.08)] hover:border-rose-100">
-        <div className="absolute inset-0 rounded-2xl bg-gradient-to-br from-rose-50/50 via-transparent to-blue-50/50 pointer-events-none z-0" />
+        <div className="absolute inset-0 rounded-2xl bg-gradient-to-br from-rose-100/50 via-transparent to-blue-50/50 pointer-events-none z-0" />
         {/* 날짜 이동 */}
         <div className="flex justify-between items-center text-sm font-medium text-gray-600 relative z-5">
           <button
             onClick={() => handleDateChange('prev')}
-            className="px-3 py-1 rounded-full bg-white text-rose-500 hover:bg-rose-100 hover:text-rose-700 transition"
+            className="flex items-center px-2 py-1 rounded-full bg-rose-50 text-rose-500 hover:bg-rose-100 hover:text-rose-700 transition-all duration-300 shadow-md hover:shadow-lg transform hover:scale-105"
           >
-            ‹ {t('master.previous')}
+            <HiChevronLeft size={18} />
+            {t('master.previous')}
           </button>
 
           <div className="text-center">
@@ -355,9 +357,10 @@ export default function FoodDiaryMemberView({ memberId, memberName }: Props) {
 
           <button
             onClick={() => handleDateChange('next')}
-            className="px-3 py-1 rounded-full bg-white text-rose-500 hover:bg-rose-100 hover:text-rose-700 transition"
+            className="flex items-center px-2 py-1 rounded-full bg-rose-50 text-rose-500 hover:bg-rose-100 hover:text-rose-700 transition-all duration-300 shadow-md hover:shadow-lg transform hover:scale-105"
           >
-            {t('master.next')} ›
+            {t('master.next')}
+            <HiChevronRight size={18} />
           </button>
         </div>
 

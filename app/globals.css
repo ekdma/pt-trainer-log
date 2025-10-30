@@ -26,6 +26,12 @@
   }
 }
 
+*,
+*::before,
+*::after {
+  font-family: 'Nanum Gothic', sans-serif;
+}
+
 body {
   @apply font-nanum;
 }
