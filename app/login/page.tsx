@@ -111,7 +111,7 @@ export default function LoginPage() {
           <span className="text-[#595959]">{t('app.title')}</span>
         </h1>
         <p className="text-center text-sm sm:text-base md:text-lg text-gray-700 max-w-md leading-relaxed whitespace-pre-line">
-          {t('app.description')}
+          {t('app.description_1')} <br /> {t('app.description_2')}
         </p>
       </section>
 
