@@ -7,7 +7,7 @@ import LanguageToggle from '@/components/LanguageToggle'
 import { useAuth } from '@/context/AuthContext'
 
 export default function LoginPage() {
-  const { t, setLang, lang } = useLanguage()
+  const { t, setLang, lang } = useLanguage() // lang 추가
   const [name, setName] = useState('')
   const [password, setPassword] = useState('')
   const [role, setRole] = useState<'member' | 'trainer'>('member')
@@ -38,14 +38,14 @@ export default function LoginPage() {
         if (parsed.role === 'trainer') {
           setAdminCode(parsed.adminCode || '')
         }
-        setSaveLoginInfo(true)
+        setSaveLoginInfo(true) // ✅ 저장된 게 있으면 체크박스 켜기
       } catch (e) {
         console.error('저장된 로그인 정보 불러오기 실패:', e)
       }
     }
   }, [])
 
-  // 모바일 키보드 관련 처리
+  // 모바일 키보드 관련 처리: 비주얼 뷰포트 기반으로 하단 패딩 부여
   useEffect(() => {
     const el = document.body
     if (!el || typeof window === 'undefined' || !('visualViewport' in window)) return
@@ -123,7 +123,8 @@ export default function LoginPage() {
     const expiresAt = Date.now() + SESSION_DURATION
     const memberWithSession = { ...member, loginBy, expiresAt }
 
-    const userLang = member.language || lang // 언어 설정
+    // 로그인 후 사용자의 언어를 설정
+    const userLang = member.language || lang // `lang`이 기본값으로 사용되도록 수정
     setLang(userLang)
 
     setUser(memberWithSession)
@@ -131,9 +132,9 @@ export default function LoginPage() {
   }
 
   return (
-    <main className="min-h-screen bg-gradient-to-br from-indigo-100 to-white flex flex-col justify-center items-center p-4">
-      {/* 소개 섹션 */}
-      <section className="w-full text-center py-8 md:py-16 mb-8 lg:mb-0">
+    <main className="min-h-screen bg-gradient-to-br from-indigo-100 to-white flex flex-col justify-center items-center">
+      {/* 소개 섹션: app.title과 app.description 추가 */}
+      <section className="w-full backdrop-blur-md text-center py-8 md:py-16">
         <h1 className="text-3xl sm:text-4xl md:text-5xl font-montserrat font-black drop-shadow mb-4">
           <span className="text-[#FF8000]">LiT</span> <span className="text-gray-700">{t('app.title')}</span>
         </h1>
@@ -143,12 +144,12 @@ export default function LoginPage() {
       </section>
 
       {/* 로그인 카드 */}
-      <section className="w-full max-w-md bg-white shadow-xl rounded-3xl p-8 sm:p-10 flex flex-col items-center">
+      <section className="w-full max-w-xs sm:max-w-sm lg:max-w-md bg-white shadow-xl rounded-3xl p-8 sm:p-10 flex flex-col items-center transform transition-all duration-300 ease-in-out">
         <div className="mb-6">
           <LanguageToggle />
         </div>
 
-        <h2 className="text-2xl sm:text-3xl font-extrabold text-indigo-700 text-center mb-8">
+        <h2 className="text-2xl sm:text-3xl font-extrabold text-indigo-700 text-center mb-8 animate__animated animate__fadeIn">
           {t('login.title')}
         </h2>
 
@@ -186,7 +187,7 @@ export default function LoginPage() {
           value={name}
           onChange={(e) => setName(e.target.value)}
           onKeyDown={(e) => e.key === 'Enter' && handleLogin()}
-          className="text-sm w-full border border-gray-300 p-4 rounded-lg mb-4 focus:outline-none focus:ring-2 focus:ring-indigo-600 transition"
+          className="text-sm w-full border border-gray-300 p-4 rounded-lg mb-4 focus:outline-none focus:ring-2 focus:ring-indigo-500 transition duration-300 ease-in-out hover:ring-2 hover:ring-indigo-400"
         />
         <input
           ref={passwordRef}
@@ -195,11 +196,10 @@ export default function LoginPage() {
           value={password}
           onChange={(e) => setPassword(e.target.value)}
           onKeyDown={(e) => e.key === 'Enter' && handleLogin()}
-          className="text-sm w-full border border-gray-300 p-4 rounded-lg mb-4 focus:outline-none focus:ring-2 focus:ring-indigo-600 transition"
+          className="text-sm w-full border border-gray-300 p-4 rounded-lg mb-4 focus:outline-none focus:ring-2 focus:ring-indigo-500 transition duration-300 ease-in-out hover:ring-2 hover:ring-indigo-400"
           inputMode="numeric"
           autoComplete="off"
         />
-
         {role === 'trainer' && (
           <input
             ref={adminCodeRef}
@@ -208,7 +208,7 @@ export default function LoginPage() {
             value={adminCode}
             onChange={(e) => setAdminCode(e.target.value)}
             onKeyDown={(e) => e.key === 'Enter' && handleLogin()}
-            className="text-sm w-full border border-gray-300 p-4 rounded-lg mb-4 focus:outline-none focus:ring-2 focus:ring-indigo-600 transition"
+            className="text-sm w-full border border-gray-300 p-4 rounded-lg mb-4 focus:outline-none focus:ring-2 focus:ring-indigo-500 transition duration-300 ease-in-out hover:ring-2 hover:ring-indigo-400"
           />
         )}
 
@@ -229,13 +229,14 @@ export default function LoginPage() {
         {/* 버튼 */}
         <button
           onClick={handleLogin}
-          className="w-full bg-indigo-600 hover:bg-indigo-700 text-white py-3 rounded-lg font-semibold transition"
+          className="w-full bg-indigo-600 hover:bg-indigo-700 text-white py-3 rounded-lg font-semibold transition-all duration-300 ease-in-out transform active:scale-95"
         >
           {t('login.button')}
         </button>
 
         {error && <p className="text-red-600 mt-4 text-center">{error}</p>}
       </section>
+
     </main>
   )
 }
