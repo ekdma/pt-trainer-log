@@ -22,31 +22,7 @@ export default function LoginPage() {
   const SESSION_DURATION = 30 * 60 * 1000
   const ADMIN_CODE = process.env.NEXT_PUBLIC_ADMIN_CODE || 'secret123'
 
-  const nameRef = useRef<HTMLInputElement | null>(null)
-  const passwordRef = useRef<HTMLInputElement | null>(null)
-  const adminCodeRef = useRef<HTMLInputElement | null>(null)
-
-  // 화면 스크롤을 막고 입력 필드가 화면에 잘 보이도록 처리
-  useEffect(() => {
-    const handleFocus = (event: FocusEvent) => {
-      const input = event.target as HTMLInputElement
-      const rect = input.getBoundingClientRect()
-
-      // 입력 필드가 화면 하단에 너무 가까우면 스크롤을 올려줌
-      if (rect.bottom > window.innerHeight - 100) {
-        window.scrollTo(0, window.scrollY + rect.bottom - window.innerHeight + 100)
-      }
-    }
-
-    const inputs = document.querySelectorAll('input')
-    inputs.forEach(input => input.addEventListener('focus', handleFocus))
-
-    return () => {
-      inputs.forEach(input => input.removeEventListener('focus', handleFocus))
-    }
-  }, [])
-
-  // 로그인 처리
+  // 로그인 로직 동일
   const handleLogin = async () => {
     setError('')
     const inputName = name.trim().toLowerCase()
@@ -55,8 +31,6 @@ export default function LoginPage() {
       setError(t('login.wrongAdmin'))
       return
     }
-
-    setUser(null)
 
     let { data: member, error } = await supabase
       .from('members')
@@ -111,17 +85,18 @@ export default function LoginPage() {
   }
 
   return (
-    <main className="min-h-screen bg-gradient-to-br from-indigo-100 to-white flex justify-center items-center p-4">
-      <section className="w-full max-w-xs sm:max-w-sm bg-white shadow-lg rounded-3xl p-6 sm:p-8 flex flex-col items-center">
-        <div className="mb-4">
+    <div className="min-h-[100dvh] bg-gradient-to-br from-indigo-100 to-white flex flex-col justify-center items-center overflow-y-auto px-4 py-10">
+      <section className="w-full max-w-xs sm:max-w-sm bg-white shadow-lg rounded-3xl p-6 sm:p-8 space-y-6">
+        <div className="flex justify-center">
           <LanguageToggle />
         </div>
 
-        <h2 className="text-2xl sm:text-3xl font-bold text-indigo-700 text-center mb-6">
+        <h2 className="text-2xl sm:text-3xl font-bold text-indigo-700 text-center">
           {t('login.title')}
         </h2>
 
-        <div className="flex justify-center gap-4 mb-6">
+        {/* 역할 선택 */}
+        <div className="flex justify-center gap-4">
           <label className="inline-flex items-center cursor-pointer">
             <input
               type="radio"
@@ -146,43 +121,58 @@ export default function LoginPage() {
           </label>
         </div>
 
-        {/* 사용자 이름 입력 */}
-        <input
-          ref={nameRef}
-          type="text"
-          placeholder={t('login.name')}
-          value={name}
-          onChange={(e) => setName(e.target.value)}
-          onKeyDown={(e) => e.key === 'Enter' && handleLogin()}
-          className="text-sm w-full border border-gray-300 p-3 rounded-lg mb-4"
-        />
+        {/* 입력 영역 - FoodDiaryMemberView input 스타일 적용 */}
+        <div className="space-y-4">
+          <div className="p-3 rounded-xl bg-white border border-gray-100 shadow-inner hover:shadow-md transition-all duration-300">
+            <label className="block text-xs font-semibold text-gray-600 mb-1">
+              👤 {t('login.name')}
+            </label>
+            <input
+              type="text"
+              inputMode="text"
+              value={name}
+              onChange={(e) => setName(e.target.value)}
+              onKeyDown={(e) => e.key === 'Enter' && handleLogin()}
+              className="w-full text-sm border border-gray-200 rounded-xl px-3 py-2 focus:ring-2 focus:ring-indigo-300 transition text-gray-800"
+              placeholder={t('login.name')}
+            />
+          </div>
 
-        {/* 비밀번호 입력 */}
-        <input
-          ref={passwordRef}
-          type="password"
-          placeholder={t('login.password')}
-          value={password}
-          onChange={(e) => setPassword(e.target.value)}
-          onKeyDown={(e) => e.key === 'Enter' && handleLogin()}
-          className="text-sm w-full border border-gray-300 p-3 rounded-lg mb-4"
-        />
+          <div className="p-3 rounded-xl bg-white border border-gray-100 shadow-inner hover:shadow-md transition-all duration-300">
+            <label className="block text-xs font-semibold text-gray-600 mb-1">
+              🔑 {t('login.password')}
+            </label>
+            <input
+              type="password"
+              inputMode="text"
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
+              onKeyDown={(e) => e.key === 'Enter' && handleLogin()}
+              className="w-full text-sm border border-gray-200 rounded-xl px-3 py-2 focus:ring-2 focus:ring-indigo-300 transition text-gray-800"
+              placeholder={t('login.password')}
+            />
+          </div>
 
-        {/* 트레이너 역할일 때만 관리자 코드 입력 */}
-        {role === 'trainer' && (
-          <input
-            ref={adminCodeRef}
-            type="password"
-            placeholder={t('login.adminCode')}
-            value={adminCode}
-            onChange={(e) => setAdminCode(e.target.value)}
-            onKeyDown={(e) => e.key === 'Enter' && handleLogin()}
-            className="text-sm w-full border border-gray-300 p-3 rounded-lg mb-4"
-          />
-        )}
+          {role === 'trainer' && (
+            <div className="p-3 rounded-xl bg-white border border-gray-100 shadow-inner hover:shadow-md transition-all duration-300">
+              <label className="block text-xs font-semibold text-gray-600 mb-1">
+                🧾 {t('login.adminCode')}
+              </label>
+              <input
+                type="password"
+                inputMode="text"
+                value={adminCode}
+                onChange={(e) => setAdminCode(e.target.value)}
+                onKeyDown={(e) => e.key === 'Enter' && handleLogin()}
+                className="w-full text-sm border border-gray-200 rounded-xl px-3 py-2 focus:ring-2 focus:ring-indigo-300 transition text-gray-800"
+                placeholder={t('login.adminCode')}
+              />
+            </div>
+          )}
+        </div>
 
-        {/* 로그인 정보 저장 여부 */}
-        <div className="flex items-center self-start mb-4">
+        {/* 저장 체크박스 */}
+        <div className="flex items-center mt-2">
           <input
             type="checkbox"
             id="saveLogin"
@@ -202,8 +192,8 @@ export default function LoginPage() {
           {t('login.button')}
         </button>
 
-        {error && <p className="text-red-600 mt-4 text-center">{error}</p>}
+        {error && <p className="text-red-600 mt-2 text-center">{error}</p>}
       </section>
-    </main>
+    </div>
   )
 }
