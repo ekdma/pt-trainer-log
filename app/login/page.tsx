@@ -26,7 +26,6 @@ export default function LoginPage() {
   const passwordRef = useRef<HTMLInputElement | null>(null)
   const adminCodeRef = useRef<HTMLInputElement | null>(null)
 
-  // 로그인 정보 자동 불러오기
   useEffect(() => {
     const saved = localStorage.getItem('litpt_login_info')
     if (saved) {
@@ -38,30 +37,10 @@ export default function LoginPage() {
         if (parsed.role === 'trainer') {
           setAdminCode(parsed.adminCode || '')
         }
-        setSaveLoginInfo(true) // ✅ 저장된 게 있으면 체크박스 켜기
+        setSaveLoginInfo(true)
       } catch (e) {
         console.error('저장된 로그인 정보 불러오기 실패:', e)
       }
-    }
-  }, [])
-
-  // 모바일 키보드 관련 처리: 비주얼 뷰포트 기반으로 하단 패딩 부여
-  useEffect(() => {
-    const el = document.body
-    if (!el || typeof window === 'undefined' || !('visualViewport' in window)) return
-
-    const vv = window.visualViewport!
-    const applyInset = () => {
-      const bottomInset = Math.max(0, window.innerHeight - (vv.height + vv.offsetTop))
-      el.style.paddingBottom = bottomInset > 0 ? `${bottomInset + 16}px` : '16px'
-    }
-
-    vv.addEventListener('resize', applyInset)
-    vv.addEventListener('scroll', applyInset)
-    applyInset()
-    return () => {
-      vv.removeEventListener('resize', applyInset)
-      vv.removeEventListener('scroll', applyInset)
     }
   }, [])
 
@@ -130,19 +109,17 @@ export default function LoginPage() {
   }
 
   return (
-    <main className="min-h-screen bg-gradient-to-br from-indigo-100 to-white flex flex-col justify-center items-center">
-      {/* 로그인 카드 */}
-      <section className="w-full max-w-md bg-white shadow-2xl rounded-3xl p-8 sm:p-10 flex flex-col items-center">
-        <div className="mb-6">
+    <main className="min-h-screen bg-gradient-to-br from-indigo-100 to-white flex justify-center items-center p-4">
+      <section className="w-full max-w-xs sm:max-w-sm bg-white shadow-lg rounded-3xl p-6 sm:p-8 flex flex-col items-center">
+        <div className="mb-4">
           <LanguageToggle />
         </div>
 
-        <h2 className="text-2xl sm:text-3xl font-bold text-indigo-700 text-center mb-8">
+        <h2 className="text-2xl sm:text-3xl font-bold text-indigo-700 text-center mb-6">
           {t('login.title')}
         </h2>
 
-        {/* 역할 선택 */}
-        <div className="flex justify-center gap-6 text-sm sm:text-base mb-6">
+        <div className="flex justify-center gap-4 mb-6">
           <label className="inline-flex items-center cursor-pointer">
             <input
               type="radio"
@@ -167,7 +144,6 @@ export default function LoginPage() {
           </label>
         </div>
 
-        {/* 입력 필드 */}
         <input
           ref={nameRef}
           type="text"
@@ -198,7 +174,6 @@ export default function LoginPage() {
           />
         )}
 
-        {/* 로그인 정보 저장 */}
         <div className="flex items-center self-start mb-4">
           <input
             type="checkbox"
@@ -212,7 +187,6 @@ export default function LoginPage() {
           </label>
         </div>
 
-        {/* 버튼 */}
         <button
           onClick={handleLogin}
           className="w-full bg-indigo-600 hover:bg-indigo-700 text-white py-3 rounded-lg font-semibold transition"
