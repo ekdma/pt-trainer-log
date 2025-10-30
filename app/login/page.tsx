@@ -12,7 +12,7 @@ export default function LoginPage() {
   }
 
   return (
-    <div className="min-h-screen bg-gray-100 flex justify-center items-center">
+    <div className="min-h-screen bg-gray-100 flex justify-center items-start pt-16 px-4">
       <section className="w-full max-w-sm bg-white shadow-lg rounded-xl p-8">
         <h2 className="text-2xl font-bold text-center text-indigo-700 mb-6">로그인</h2>
 
