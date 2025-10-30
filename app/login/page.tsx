@@ -109,7 +109,7 @@ export default function LoginPage() {
   }
 
   return (
-    <main className="min-h-screen bg-gradient-to-br from-indigo-100 to-white flex flex-col  justify-center items-start pt-16 px-4">
+    <main className="min-h-screen bg-gradient-to-br from-indigo-100 to-white flex flex-col justify-between pt-16 px-4">
       <section className="w-full  backdrop-blur-md text-center py-8 md:py-16">
         <h1 className="text-3xl sm:text-4xl md:text-5xl font-montserrat font-bold drop-shadow mb-4">
           <span className="text-[#FF8000]">LiT</span> <span className="text-gray-700">{t('app.title')}</span>
