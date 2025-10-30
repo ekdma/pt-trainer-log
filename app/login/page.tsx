@@ -3,7 +3,7 @@ import { useLanguage } from '@/context/LanguageContext'
 import { useState } from 'react'
 
 export default function LoginPage() {
-  const { t, setLang } = useLanguage()
+  const { t } = useLanguage()
   const [name, setName] = useState('')
   const [password, setPassword] = useState('')
 
