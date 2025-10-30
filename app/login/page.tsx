@@ -26,21 +26,23 @@ export default function LoginPage() {
   const passwordRef = useRef<HTMLInputElement | null>(null)
   const adminCodeRef = useRef<HTMLInputElement | null>(null)
 
+  // 화면 스크롤 위치 조정 (입력 필드 가리기 방지)
   useEffect(() => {
-    const saved = localStorage.getItem('litpt_login_info')
-    if (saved) {
-      try {
-        const parsed = JSON.parse(saved)
-        setName(parsed.name || '')
-        setPassword(parsed.password || '')
-        setRole(parsed.role || 'member')
-        if (parsed.role === 'trainer') {
-          setAdminCode(parsed.adminCode || '')
-        }
-        setSaveLoginInfo(true)
-      } catch (e) {
-        console.error('저장된 로그인 정보 불러오기 실패:', e)
+    const handleFocus = (event: FocusEvent) => {
+      const input = event.target as HTMLInputElement
+      const rect = input.getBoundingClientRect()
+
+      // 화면 하단 가까운 입력 필드 스크롤 방지
+      if (rect.bottom > window.innerHeight - 100) {
+        window.scrollTo(0, window.scrollY + rect.bottom - window.innerHeight + 100)
       }
+    }
+
+    const inputs = document.querySelectorAll('input')
+    inputs.forEach(input => input.addEventListener('focus', handleFocus))
+
+    return () => {
+      inputs.forEach(input => input.removeEventListener('focus', handleFocus))
     }
   }, [])
 
@@ -108,27 +110,7 @@ export default function LoginPage() {
     router.push(member.role === 'trainer' ? '/trainer' : '/my')
   }
 
-  // Disable auto-scroll when input is focused and adjust scroll position
-  useEffect(() => {
-    const handleFocus = (event: FocusEvent) => {
-      const input = event.target as HTMLInputElement
-      const rect = input.getBoundingClientRect()
-
-      // Check if the input is too close to the bottom
-      if (rect.bottom > window.innerHeight - 100) {
-        window.scrollTo(0, window.scrollY + rect.bottom - window.innerHeight + 100)
-      }
-    }
-
-    // Adding focus event listener to inputs
-    const inputs = document.querySelectorAll('input')
-    inputs.forEach(input => input.addEventListener('focus', handleFocus))
-
-    return () => {
-      inputs.forEach(input => input.removeEventListener('focus', handleFocus))
-    }
-  }, [])
-
+  // 화면 구성
   return (
     <main className="min-h-screen bg-gradient-to-br from-indigo-100 to-white flex justify-center items-center p-4">
       <section className="w-full max-w-xs sm:max-w-sm bg-white shadow-lg rounded-3xl p-6 sm:p-8 flex flex-col items-center">
@@ -140,6 +122,7 @@ export default function LoginPage() {
           {t('login.title')}
         </h2>
 
+        {/* 역할 선택 */}
         <div className="flex justify-center gap-4 mb-6">
           <label className="inline-flex items-center cursor-pointer">
             <input
@@ -165,6 +148,7 @@ export default function LoginPage() {
           </label>
         </div>
 
+        {/* 입력 필드 */}
         <input
           ref={nameRef}
           type="text"
@@ -195,6 +179,7 @@ export default function LoginPage() {
           />
         )}
 
+        {/* 로그인 정보 저장 여부 */}
         <div className="flex items-center self-start mb-4">
           <input
             type="checkbox"
