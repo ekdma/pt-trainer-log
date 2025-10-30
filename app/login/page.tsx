@@ -7,12 +7,6 @@ import { useLanguage } from '@/context/LanguageContext'
 import LanguageToggle from '@/components/LanguageToggle'
 import { useAuth } from '@/context/AuthContext'
 
-// VisualViewport 타입 명시
-interface VisualViewport {
-  height: number
-  offsetTop: number
-}
-
 export default function LoginPage() {
   const { t, setLang } = useLanguage()
   const [name, setName] = useState('')
@@ -31,26 +25,20 @@ export default function LoginPage() {
 
   // 화면 스크롤을 막고 입력 필드가 화면에 잘 보이도록 처리
   const rootRef = useRef<HTMLDivElement | null>(null)
-
   useEffect(() => {
     const onVVChange = () => {
-      // VisualViewport를 정확히 타입 지정
-      const vv = window.visualViewport as VisualViewport // VisualViewport 타입 명시
+      const vv = (window as any).visualViewport
       const root = rootRef.current
       if (!vv || !root) return
       const kb = Math.max(0, window.innerHeight - vv.height - vv.offsetTop)
       root.style.setProperty('--kb', `${kb}px`) // 하단 패딩으로 사용
     }
-    if (window.visualViewport) {
-      window.visualViewport.addEventListener('resize', onVVChange)
-      window.visualViewport.addEventListener('scroll', onVVChange)
-      onVVChange()
-    }
+    ;(window as any).visualViewport?.addEventListener('resize', onVVChange)
+    ;(window as any).visualViewport?.addEventListener('scroll', onVVChange)
+    onVVChange()
     return () => {
-      if (window.visualViewport) {
-        window.visualViewport.removeEventListener('resize', onVVChange)
-        window.visualViewport.removeEventListener('scroll', onVVChange)
-      }
+      ;(window as any).visualViewport?.removeEventListener('resize', onVVChange)
+      ;(window as any).visualViewport?.removeEventListener('scroll', onVVChange)
     }
   }, [])
 
@@ -111,11 +99,11 @@ export default function LoginPage() {
 
     const expiresAt = Date.now() + SESSION_DURATION
     const memberWithSession = { ...member, loginBy, expiresAt }
-    const userLang = (member as any).language || 'ko'
+    const userLang = member.language || 'ko'
     setLang(userLang)
 
-    setUser(memberWithSession as any)
-    router.push((member as any).role === 'trainer' ? '/trainer' : '/my')
+    setUser(memberWithSession)
+    router.push(member.role === 'trainer' ? '/trainer' : '/my')
   }
 
   return (
