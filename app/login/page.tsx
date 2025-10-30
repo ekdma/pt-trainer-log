@@ -106,10 +106,10 @@ export default function LoginPage() {
     document.body.style.overflow = 'hidden'; // 스크롤 방지
   };
 
-  // const handleBlur = () => {
-  //   // 포커스를 잃었을 때 스크롤 복원
-  //   document.body.style.overflow = '';
-  // };
+  const handleBlur = () => {
+    // 포커스를 잃었을 때 스크롤 복원
+    document.body.style.overflow = '';
+  };
 
   return (
     <main className="min-h-screen grid grid-cols-1 md:grid-cols-2 bg-gradient-to-br from-indigo-100 to-white">
@@ -169,7 +169,7 @@ export default function LoginPage() {
             value={name}
             onChange={(e) => setName(e.target.value)}
             onFocus={handleFocus} // 포커스 시 스크롤 방지
-            // onBlur={handleBlur}   // 포커스 잃으면 스크롤 복원
+            onBlur={handleBlur}   // 포커스 잃으면 스크롤 복원
             onKeyDown={(e) => e.key === 'Enter' && handleLogin()}
             className="text-sm w-full border border-gray-300 p-3 rounded-lg mb-4"
           />
@@ -179,7 +179,7 @@ export default function LoginPage() {
             value={password}
             onChange={(e) => setPassword(e.target.value)}
             onFocus={handleFocus} // 포커스 시 스크롤 방지
-            // onBlur={handleBlur}   // 포커스 잃으면 스크롤 복원
+            onBlur={handleBlur}   // 포커스 잃으면 스크롤 복원
             onKeyDown={(e) => e.key === 'Enter' && handleLogin()}
             className="text-sm w-full border border-gray-300 p-3 rounded-lg mb-4"
           />
@@ -190,7 +190,7 @@ export default function LoginPage() {
               value={adminCode}
               onChange={(e) => setAdminCode(e.target.value)}
               onFocus={handleFocus} // 포커스 시 스크롤 방지
-              // onBlur={handleBlur}   // 포커스 잃으면 스크롤 복원
+              onBlur={handleBlur}   // 포커스 잃으면 스크롤 복원
               onKeyDown={(e) => e.key === 'Enter' && handleLogin()}
               className="text-sm w-full border border-gray-300 p-3 rounded-lg mb-4"
             />
