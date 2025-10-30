@@ -7,7 +7,7 @@ import LanguageToggle from '@/components/LanguageToggle'
 import { useAuth } from '@/context/AuthContext'
 
 export default function LoginPage() {
-  const { t, setLang } = useLanguage()
+  const { t, setLang, lang } = useLanguage()
   const [name, setName] = useState('')
   const [password, setPassword] = useState('')
   const [role, setRole] = useState<'member' | 'trainer'>('member')
@@ -38,14 +38,14 @@ export default function LoginPage() {
         if (parsed.role === 'trainer') {
           setAdminCode(parsed.adminCode || '')
         }
-        setSaveLoginInfo(true) // ✅ 저장된 게 있으면 체크박스 켜기
+        setSaveLoginInfo(true)
       } catch (e) {
         console.error('저장된 로그인 정보 불러오기 실패:', e)
       }
     }
   }, [])
 
-  // 모바일 키보드 관련 처리: 비주얼 뷰포트 기반으로 하단 패딩 부여
+  // 모바일 키보드 관련 처리
   useEffect(() => {
     const el = document.body
     if (!el || typeof window === 'undefined' || !('visualViewport' in window)) return
@@ -122,7 +122,8 @@ export default function LoginPage() {
 
     const expiresAt = Date.now() + SESSION_DURATION
     const memberWithSession = { ...member, loginBy, expiresAt }
-    const userLang = member.language || 'ko'
+
+    const userLang = member.language || lang // 언어 설정
     setLang(userLang)
 
     setUser(memberWithSession)
@@ -130,20 +131,19 @@ export default function LoginPage() {
   }
 
   return (
-    <main className="min-h-screen bg-gradient-to-br from-indigo-100 to-white flex flex-col justify-center items-center">
-      {/* 소개 섹션: app.title과 app.description 추가 */}
-      <section className="w-full  backdrop-blur-md text-center py-8 md:py-16">
+    <main className="min-h-screen bg-gradient-to-br from-indigo-100 to-white flex flex-col lg:flex-row justify-center items-center p-4">
+      {/* 소개 섹션 */}
+      <section className="w-full lg:w-1/2 backdrop-blur-md text-center py-8 md:py-16 mb-8 lg:mb-0">
         <h1 className="text-3xl sm:text-4xl md:text-5xl font-montserrat font-bold drop-shadow mb-4">
           <span className="text-[#FF8000]">LiT</span> <span className="text-gray-700">{t('app.title')}</span>
         </h1>
         <p className="text-sm sm:text-base md:text-lg text-gray-700 max-w-md mx-auto mb-8 p-6">
-          {t('app.description')}
+          {t('app.description_1')} <br /> {t('app.description_2')}
         </p>
       </section>
 
-
       {/* 로그인 카드 */}
-      <section className="w-full max-w-md bg-white shadow-2xl rounded-3xl p-8 sm:p-10 flex flex-col items-center">
+      <section className="w-full lg:w-1/3 max-w-md bg-white shadow-xl rounded-3xl p-8 sm:p-10 flex flex-col items-center">
         <div className="mb-6">
           <LanguageToggle />
         </div>
@@ -186,7 +186,7 @@ export default function LoginPage() {
           value={name}
           onChange={(e) => setName(e.target.value)}
           onKeyDown={(e) => e.key === 'Enter' && handleLogin()}
-          className="text-sm w-full border border-gray-300 p-3 rounded-lg mb-4"
+          className="text-sm w-full border border-gray-300 p-4 rounded-lg mb-4 focus:outline-none focus:ring-2 focus:ring-indigo-600 transition"
         />
         <input
           ref={passwordRef}
@@ -195,7 +195,7 @@ export default function LoginPage() {
           value={password}
           onChange={(e) => setPassword(e.target.value)}
           onKeyDown={(e) => e.key === 'Enter' && handleLogin()}
-          className="text-sm w-full border border-gray-300 p-3 rounded-lg mb-4"
+          className="text-sm w-full border border-gray-300 p-4 rounded-lg mb-4 focus:outline-none focus:ring-2 focus:ring-indigo-600 transition"
         />
         {role === 'trainer' && (
           <input
@@ -205,7 +205,7 @@ export default function LoginPage() {
             value={adminCode}
             onChange={(e) => setAdminCode(e.target.value)}
             onKeyDown={(e) => e.key === 'Enter' && handleLogin()}
-            className="text-sm w-full border border-gray-300 p-3 rounded-lg mb-4"
+            className="text-sm w-full border border-gray-300 p-4 rounded-lg mb-4 focus:outline-none focus:ring-2 focus:ring-indigo-600 transition"
           />
         )}
 

@@ -51,7 +51,8 @@
     },
     "app": {
       "title": "Personal Training Log",
-      "description": "Track and visualize your fitness data\nwith LiT PT for a healthier lifestyle 🙌"
+      "description_1": "Track and visualize your fitness data",
+      "description_2": "with LiT PT for a healthier lifestyle 🙌"
     },
     "login": {
       "title": "Log In",

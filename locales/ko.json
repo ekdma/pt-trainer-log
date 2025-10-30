@@ -52,7 +52,8 @@
     },
     "app": {
       "title": "Personal Training Log",
-      "description": "LiT PT 회원의 운동 데이터를 기록하고 시각화하여\n건강한 피트니스 라이프를 돕는 시스템입니다 🙌"
+      "description_1": "LiT PT 회원의 운동 데이터를 기록하고 시각화하여", 
+      "description_2": "건강한 피트니스 라이프를 돕는 시스템입니다 🙌"
     },
     "login": {
       "title": "로그인",
