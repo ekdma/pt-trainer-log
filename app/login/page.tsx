@@ -131,9 +131,9 @@ export default function LoginPage() {
   }
 
   return (
-    <main className="min-h-screen bg-gradient-to-br from-indigo-100 to-white flex flex-col lg:flex-row justify-center items-center p-4">
+    <main className="min-h-screen bg-gradient-to-br from-indigo-100 to-white flex flex-col justify-center items-center p-4">
       {/* 소개 섹션 */}
-      <section className="w-full lg:w-1/2 backdrop-blur-md text-center py-8 md:py-16 mb-8 lg:mb-0">
+      <section className="w-full text-center py-8 md:py-16 mb-8 lg:mb-0">
         <h1 className="text-3xl sm:text-4xl md:text-5xl font-montserrat font-black drop-shadow mb-4">
           <span className="text-[#FF8000]">LiT</span> <span className="text-gray-700">{t('app.title')}</span>
         </h1>
@@ -143,7 +143,7 @@ export default function LoginPage() {
       </section>
 
       {/* 로그인 카드 */}
-      <section className="w-full lg:w-1/3 max-w-md bg-white shadow-xl rounded-3xl p-8 sm:p-10 flex flex-col items-center">
+      <section className="w-full max-w-md bg-white shadow-xl rounded-3xl p-8 sm:p-10 flex flex-col items-center">
         <div className="mb-6">
           <LanguageToggle />
         </div>
@@ -190,14 +190,14 @@ export default function LoginPage() {
         />
         <input
           ref={passwordRef}
-          type="password"  // 비밀번호를 숨기기 위해 type="password" 사용
+          type="password"
           placeholder={t('login.password')}
           value={password}
           onChange={(e) => setPassword(e.target.value)}
           onKeyDown={(e) => e.key === 'Enter' && handleLogin()}
           className="text-sm w-full border border-gray-300 p-4 rounded-lg mb-4 focus:outline-none focus:ring-2 focus:ring-indigo-600 transition"
-          inputMode="numeric"  // 숫자 키보드 강제 호출
-          autoComplete="off"  // 자동완성 방지
+          inputMode="numeric"
+          autoComplete="off"
         />
 
         {role === 'trainer' && (
