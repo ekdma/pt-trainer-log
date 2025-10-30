@@ -7,7 +7,7 @@ import LanguageToggle from '@/components/LanguageToggle'
 import { useAuth } from '@/context/AuthContext'
 
 export default function LoginPage() {
-  const { t, setLang, lang } = useLanguage() // lang 추가
+  const { t, setLang } = useLanguage()
   const [name, setName] = useState('')
   const [password, setPassword] = useState('')
   const [role, setRole] = useState<'member' | 'trainer'>('member')
@@ -122,9 +122,7 @@ export default function LoginPage() {
 
     const expiresAt = Date.now() + SESSION_DURATION
     const memberWithSession = { ...member, loginBy, expiresAt }
-
-    // 로그인 후 사용자의 언어를 설정
-    const userLang = member.language || lang // `lang`이 기본값으로 사용되도록 수정
+    const userLang = member.language || 'ko'
     setLang(userLang)
 
     setUser(memberWithSession)
@@ -134,22 +132,23 @@ export default function LoginPage() {
   return (
     <main className="min-h-screen bg-gradient-to-br from-indigo-100 to-white flex flex-col justify-center items-center">
       {/* 소개 섹션: app.title과 app.description 추가 */}
-      <section className="w-full backdrop-blur-md text-center py-8 md:py-16">
+      <section className="w-full  backdrop-blur-md text-center py-8 md:py-16">
         <h1 className="text-3xl sm:text-4xl md:text-5xl font-montserrat font-black drop-shadow mb-4">
           <span className="text-[#FF8000]">LiT</span> <span className="text-gray-700">{t('app.title')}</span>
         </h1>
-        <p className="text-sm font-bold sm:text-base md:text-lg text-gray-700 max-w-md mx-auto mb-8 p-6">
+        <p className="text-sm sm:text-base md:text-lg text-gray-700 font-bold max-w-md mx-auto mb-8 p-6">
           {t('app.description_1')} <br /> {t('app.description_2')}
         </p>
       </section>
 
+
       {/* 로그인 카드 */}
-      <section className="w-full lg:w-1/3 max-w-md bg-white shadow-xl rounded-3xl p-8 sm:p-10 flex flex-col items-center">
+      <section className="w-full max-w-md bg-white shadow-2xl rounded-3xl p-8 sm:p-10 flex flex-col items-center">
         <div className="mb-6">
           <LanguageToggle />
         </div>
 
-        <h2 className="text-2xl sm:text-3xl font-black text-indigo-700 text-center mb-8">
+        <h2 className="text-2xl sm:text-3xl font-bold text-indigo-700 text-center mb-8">
           {t('login.title')}
         </h2>
 
