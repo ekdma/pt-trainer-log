@@ -1,4 +1,4 @@
-@import url('https://fonts.googleapis.com/css2?family=Nanum+Gothic&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Nanum+Gothic:wght@400;700&display=swap');
 
 @tailwind base;
 @tailwind components;
@@ -26,18 +26,25 @@
   }
 }
 
-*,
+/* *,
 *::before,
 *::after {
   font-family: 'Nanum Gothic', sans-serif;
+} */
+
+html, body, * {
+  font-family: 'Nanum Gothic', 'Noto Sans KR', 'Apple SD Gothic Neo', 'Roboto', sans-serif !important;
+  -webkit-font-smoothing: antialiased;
+  text-rendering: optimizeLegibility;
 }
 
+/* ✅ Tailwind의 font-nanum을 보완 */
 body {
-  @apply font-nanum;
+  @apply text-gray-800 bg-white;
 }
 
 .react-calendar {
-  font-family: 'Nanum Gothic', sans-serif !important;
+  font-family: inherit !important;
   border: none !important;
   box-shadow: none !important; /* 혹시 그림자도 제거하고 싶으면 */
 }
@@ -202,6 +209,7 @@ button,
 select {
   -webkit-tap-highlight-color: transparent !important; /* 터치 시 오렌지 highlight 제거 */
   outline: none !important; /* 포커스 외곽선 제거 */
+  font-family: inherit !important;
 }
 
 /* ✅ focus 시 Tailwind ring 색상만 적용되도록 통일 */

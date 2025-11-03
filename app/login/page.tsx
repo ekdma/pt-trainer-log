@@ -103,7 +103,9 @@ export default function LoginPage() {
   // 이 부분에서 FoodDiaryTrainerView 방식에 맞추어 화면의 스크롤을 제어합니다.
   const handleFocus = () => {
     // 화면의 스크롤을 잠그고, 포커스된 필드를 상단에 고정
-    document.body.style.overflow = 'hidden'; // 스크롤 방지
+    if (window.innerWidth <= 1024) {
+      document.body.style.overflow = 'hidden';
+    }
   };
 
   const handleBlur = () => {
