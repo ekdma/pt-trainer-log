@@ -23,6 +23,21 @@ interface CalendarSession {
 
 const HOURS = Array.from({ length: 16 }, (_, i) => 6 + i)
 
+const MEMBER_COLOR_PALETTE = [
+  // 부드러운 파스텔 톤 배경 + 조금 진한 글자색
+  { backgroundColor: '#fee2e2', color: '#b91c1c' }, // 핑크
+  { backgroundColor: '#e0f2fe', color: '#1d4ed8' }, // 파랑
+  { backgroundColor: '#dcfce7', color: '#15803d' }, // 연두
+  { backgroundColor: '#fef9c3', color: '#a16207' }, // 노랑
+  { backgroundColor: '#ede9fe', color: '#5b21b6' }, // 보라
+  { backgroundColor: '#e0f2f1', color: '#00695c' }, // 민트
+  { backgroundColor: '#ffedd5', color: '#c05621' }, // 주황
+  { backgroundColor: '#fce7f3', color: '#9d174d' }, // 로즈
+  { backgroundColor: '#dbeafe', color: '#1e40af' }, // 진파랑
+  { backgroundColor: '#f1f5f9', color: '#0f172a' }, // 아주 연한 회색
+]
+
+
 export default function HomePage() {
   const supabase = getSupabaseClient()
   const [sessions, setSessions] = useState<CalendarSession[]>([])
@@ -44,9 +59,33 @@ export default function HomePage() {
   const currentMinute = now.getMinutes()
   const minutePosition = (currentMinute / 60) * 100 // 셀 안에서의 위치(백분율)
   
+  // 임의의 색상을 만드는 부분
+  // const getColorStyleForMember = (memberId: string | number | null | undefined, status?: string) => {
+  //   if (memberId == null) return {}
+    
+  //   if (status === '신청') {
+  //     return {
+  //       backgroundColor: 'rgba(254, 202, 202, 0.5)', // tailwind rose-200 반투명
+  //       color: '#b91c1c', // tailwind rose-800 정도
+  //     }
+  //   }
+
+  //   const strId = String(memberId)
+  //   let hash = 0
+  //   for (let i = 0; i < strId.length; i++) {
+  //     hash = strId.charCodeAt(i) + ((hash << 5) - hash)
+  //   }
+  //   const hue = Math.abs(hash) % 360
+  //   return {
+  //     backgroundColor: `hsl(${hue}, 90%, 90%)`,
+  //     color: `hsl(${hue}, 30%, 30%)`,
+  //   }
+  // }
+
   const getColorStyleForMember = (memberId: string | number | null | undefined, status?: string) => {
     if (memberId == null) return {}
-    
+
+    // 신청 상태는 기존처럼 고정 색상 유지
     if (status === '신청') {
       return {
         backgroundColor: 'rgba(254, 202, 202, 0.5)', // tailwind rose-200 반투명
@@ -54,18 +93,17 @@ export default function HomePage() {
       }
     }
 
+    // 🧩 memberId를 기반으로 항상 같은 인덱스가 나오도록 해시 계산
     const strId = String(memberId)
     let hash = 0
     for (let i = 0; i < strId.length; i++) {
       hash = strId.charCodeAt(i) + ((hash << 5) - hash)
     }
-    const hue = Math.abs(hash) % 360
-    return {
-      backgroundColor: `hsl(${hue}, 90%, 90%)`,
-      color: `hsl(${hue}, 30%, 30%)`,
-    }
+
+    // 팔레트 길이로 나눈 나머지를 인덱스로 사용
+    const index = Math.abs(hash) % MEMBER_COLOR_PALETTE.length
+    return MEMBER_COLOR_PALETTE[index]
   }
-  
 
   useAuthGuard()
 
