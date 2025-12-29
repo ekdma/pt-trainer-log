@@ -20,6 +20,14 @@ interface SplitWorkoutProps {
   onClose: () => void
 }
 
+type SplitWorkoutRow = {
+  target: string
+  workout: string
+  split_index: number
+  split_name: string | null
+}
+
+
 export default function SplitWorkout({ member, allTypes, onClose }: SplitWorkoutProps) {
   const supabase = getSupabaseClient()
 
@@ -47,17 +55,25 @@ export default function SplitWorkout({ member, allTypes, onClose }: SplitWorkout
         keySet.add(`${t.target}||${t.workout}`)
       })
 
+      const rows = (data ?? []) as SplitWorkoutRow[]
+      
       // DB 기준 (⭐️ 이게 핵심)
-      data?.forEach(d => {
-        keySet.add(`${d.target}||${d.workout}`)
+      rows.forEach(({ target, workout }) => {
+        keySet.add(`${target}||${workout}`)
       })
 
       const initial: Record<string, boolean[]> = {}
 
+
       const maxIndex =
-        data && data.length > 0
-          ? data.reduce((max, d) => Math.max(max, d.split_index), 0)
+        rows.length > 0
+          ? rows.reduce(
+              (max: number, d: SplitWorkoutRow) =>
+                Math.max(max, d.split_index),
+              0
+            )
           : 1
+
 
       keySet.forEach(key => {
         if (!initial[key]) {
@@ -70,7 +86,7 @@ export default function SplitWorkout({ member, allTypes, onClose }: SplitWorkout
         .fill('')
         .map((_, i) => String.fromCharCode(65 + i))
 
-      data?.forEach(({ target, workout, split_index, split_name }) => {
+      rows.forEach(({ target, workout, split_index, split_name }) => {
         const key = `${target}||${workout}`
 
         // 🔥 핵심 방어 코드
