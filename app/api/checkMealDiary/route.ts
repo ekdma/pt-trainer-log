@@ -8,7 +8,7 @@ export const dynamic = 'force-dynamic'
 // Supabase Server Client
 const supabase = createClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL!,
-  process.env.SUPABASE_SERVICE_ROLE_KEY! // ⚠️ 반드시 Service Role
+  process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY! // ⚠️ 반드시 Service Role
 )
 
 export async function POST() {
