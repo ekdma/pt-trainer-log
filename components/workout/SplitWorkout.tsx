@@ -26,7 +26,7 @@ export default function SplitWorkout({ member, allTypes, onClose }: SplitWorkout
   const [numSplits, setNumSplits] = useState(3)
   const [splitNames, setSplitNames] = useState<string[]>(['A', 'B', 'C']) // 커스텀 헤더 이름
   const [selected, setSelected] = useState<Record<string, boolean[]>>({})
-  const [initialSelected, setInitialSelected] = useState<Record<string, boolean[]>>({})
+  // const [initialSelected, setInitialSelected] = useState<Record<string, boolean[]>>({})
 
   const initializedRef = useRef(false)
   const isHydratingRef = useRef(true)
@@ -91,7 +91,7 @@ export default function SplitWorkout({ member, allTypes, onClose }: SplitWorkout
         setNumSplits(maxIndex + 1)
         setSplitNames(names)
         setSelected(initial)
-        setInitialSelected(initial)
+        // setInitialSelected(initial)
         initializedRef.current = true
         isHydratingRef.current = false
       }
