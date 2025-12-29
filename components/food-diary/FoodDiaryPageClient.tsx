@@ -1,4 +1,3 @@
-// @ts-nocheck
 'use client'
 
 import { useEffect, useState } from 'react'
@@ -88,6 +87,7 @@ export default function FoodDiaryPageClient() {
       nickname: '',
       status: '',
       expiresAt: null,
+      meal_enabled: false,
     }
   : null
   // const initialSelectedMember = memberIdFromQuery

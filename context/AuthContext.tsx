@@ -45,6 +45,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     modified_dt: u.modified_dt ?? new Date().toISOString(),
     phone: u.phone ?? '',
     expiresAt: typeof u.expiresAt === 'number' ? u.expiresAt : null,
+    meal_enabled: u.meal_enabled ?? false,
   })
 
   const logout = () => {
