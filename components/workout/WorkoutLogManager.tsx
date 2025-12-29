@@ -1489,9 +1489,11 @@ export default function WorkoutLogManager({
                               w-full text-center border rounded text-sm
                               ${isDisabled
                                 ? 'bg-gray-100 text-gray-600 border-gray-300 cursor-not-allowed pointer-events-none'
-                                : logMap[rowKey]?.[date]?.weight == null
-                                  ? 'bg-sky-50 border-sky-100'
-                                  : 'border-gray-200'
+                                : logInputMap[rowKey]?.[date] !== undefined
+                                  ? 'bg-white border-indigo-400 ring-1 ring-indigo-200'  // 🔥 입력 중
+                                  : logMap[rowKey]?.[date]?.weight == null
+                                    ? 'bg-sky-50 border-sky-100'               // 미입력
+                                    : 'bg-white border-gray-200'               // 기존 저장값
                               }
                             `}
                             value={

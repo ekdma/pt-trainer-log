@@ -14,6 +14,7 @@ import { Button } from '@/components/ui/button'
 import { toast } from 'sonner'
 import ConfirmDeleteItem from '@/components/ui/ConfirmDeleteItem' 
 import { ToggleGroup, ToggleGroupItem } from '@/components/ui/toggle-group'
+import { Utensils } from 'lucide-react'
 
 function toOrdinal(num: number) {
   const v = num % 100;
@@ -534,6 +535,41 @@ export default function MemberSearch({
                   <ToggleGroupItem value="active">Active</ToggleGroupItem>
                   <ToggleGroupItem value="inactive">Inactive</ToggleGroupItem>
                 </ToggleGroup>
+
+                {/* 식단 관리 토글 */}
+                <ToggleGroup
+                  type="single"
+                  value={member.meal_enabled ? 'on' : 'off'}
+                  onValueChange={async (value) => {
+                    if (!value || !supabase) return
+
+                    const enabled = value === 'on'
+
+                    const { error } = await supabase
+                      .from('members')
+                      .update({ meal_enabled: enabled })
+                      .eq('member_id', member.member_id)
+
+                    if (error) {
+                      console.error('meal_enabled update error:', error)
+                      toast.error(error.message)   // 👈 진짜 원인 출력
+                    }
+                    else {
+                      toast.success(
+                        `식단 관리가 ${enabled ? '활성화' : '비활성화'}되었습니다`
+                      )
+                      onRefresh?.()
+                    }
+                  }}
+                  className="mt-1"
+                >
+                  <ToggleGroupItem value="on" className="flex gap-1">
+                    <Utensils size={14} />
+                    ON
+                  </ToggleGroupItem>
+                  <ToggleGroupItem value="off">OFF</ToggleGroupItem>
+                </ToggleGroup>
+
                 
                 <div className="flex gap-2">
                   <Button

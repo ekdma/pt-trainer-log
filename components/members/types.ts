@@ -14,6 +14,7 @@ export type Member = {
   nickname: string
   status: string
   expiresAt: number | null 
+  meal_enabled: boolean
 }
 
 export type MemberCounsel = {
