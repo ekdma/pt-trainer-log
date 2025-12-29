@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import { getSupabaseClient } from '@/lib/supabase'
 import type { WorkoutType, Member } from '@/components/members/types'
 import { Checkbox } from '@/components/ui/checkbox'
@@ -28,6 +28,10 @@ export default function SplitWorkout({ member, allTypes, onClose }: SplitWorkout
   const [selected, setSelected] = useState<Record<string, boolean[]>>({})
   const [initialSelected, setInitialSelected] = useState<Record<string, boolean[]>>({})
 
+  const initializedRef = useRef(false)
+  const isHydratingRef = useRef(true)
+
+
   // ✅ 초기 분할 불러오기
   useEffect(() => {
     const init = async () => {
@@ -36,55 +40,103 @@ export default function SplitWorkout({ member, allTypes, onClose }: SplitWorkout
         .select('target, workout, split_index, split_name')
         .eq('member_id', member.member_id)
 
-      const keySet = new Set(allTypes.map(t => `${t.target}||${t.workout}`))
-      const initial: Record<string, boolean[]> = {}
-      // const maxIndex = data?.reduce((max, d) => Math.max(max, d.split_index), 0) ?? 0
-      const maxIndex = data && data.length > 0
-        ? data.reduce((max, d) => Math.max(max, d.split_index), 0)
-        : 1 // ← 최소 2분할로 시작
+      const keySet = new Set<string>()
 
+      // allTypes 기준
+      allTypes.forEach(t => {
+        keySet.add(`${t.target}||${t.workout}`)
+      })
+
+      // DB 기준 (⭐️ 이게 핵심)
+      data?.forEach(d => {
+        keySet.add(`${d.target}||${d.workout}`)
+      })
+
+      const initial: Record<string, boolean[]> = {}
+
+      const maxIndex =
+        data && data.length > 0
+          ? data.reduce((max, d) => Math.max(max, d.split_index), 0)
+          : 1
 
       keySet.forEach(key => {
-        initial[key] = Array(maxIndex + 1).fill(false)
+        if (!initial[key]) {
+          initial[key] = Array(maxIndex + 1).fill(false)
+        }
       })
 
-      const names = Array(maxIndex + 1).fill('').map((_, i) => String.fromCharCode(65 + i)) // 기본 A, B, ...
+
+      const names = Array(maxIndex + 1)
+        .fill('')
+        .map((_, i) => String.fromCharCode(65 + i))
+
       data?.forEach(({ target, workout, split_index, split_name }) => {
         const key = `${target}||${workout}`
-        if (!initial[key]) initial[key] = Array(maxIndex + 1).fill(false)
+
+        // 🔥 핵심 방어 코드
+        if (!initial[key]) {
+          initial[key] = Array(maxIndex + 1).fill(false)
+        }
+
         initial[key][split_index] = true
-        if (split_name) names[split_index] = split_name
+
+        if (split_name) {
+          names[split_index] = split_name
+        }
       })
 
-      setNumSplits(maxIndex + 1)
-      setSelected(initial)
-      setSplitNames(names)
-      setInitialSelected(initial)
+
+      // ✅ 모든 초기 상태를 최초 1회만 세팅
+      if (!initializedRef.current) {
+        setNumSplits(maxIndex + 1)
+        setSplitNames(names)
+        setSelected(initial)
+        setInitialSelected(initial)
+        initializedRef.current = true
+        isHydratingRef.current = false
+      }
     }
 
     init()
   }, [member.member_id, allTypes])
 
+
+
   // ✅ 분할 수 변경 시 초기화
   useEffect(() => {
-    const uniqueKeys = Array.from(new Set(allTypes.map(t => `${t.target}||${t.workout}`)))
-    const updated: Record<string, boolean[]> = {}
-    uniqueKeys.forEach(key => {
-      const prev = initialSelected[key] ?? []
-      const newArr = Array(numSplits).fill(false).map((_, i) => prev[i] || false)
-      updated[key] = newArr
+    if (isHydratingRef.current) return
+    
+    setSelected(prevSelected => {
+      const updated: Record<string, boolean[]> = {}
+
+      const keys = Array.from(
+        new Set(allTypes.map(t => `${t.target}||${t.workout}`))
+      )
+
+      keys.forEach(key => {
+        const prev = prevSelected[key] ?? []
+        const next = Array(numSplits).fill(false)
+
+        for (let i = 0; i < Math.min(prev.length, numSplits); i++) {
+          next[i] = prev[i]
+        }
+
+        updated[key] = next
+      })
+
+      return updated
     })
-    setSelected(updated)
 
     // splitNames 동기화
-    setSplitNames((prev) => {
-      const newNames = [...prev]
-      while (newNames.length < numSplits) {
-        newNames.push(String.fromCharCode(65 + newNames.length))
+    setSplitNames(prev => {
+      const next = [...prev]
+      while (next.length < numSplits) {
+        next.push(String.fromCharCode(65 + next.length))
       }
-      return newNames.slice(0, numSplits)
+      return next.slice(0, numSplits)
     })
-  }, [numSplits, allTypes, initialSelected])
+  }, [numSplits]) // 🔥 allTypes / initialSelected 제거
+
 
   const handleToggle = (key: string, index: number) => {
     setSelected(prev => {
@@ -149,20 +201,31 @@ export default function SplitWorkout({ member, allTypes, onClose }: SplitWorkout
 
   return (
     <Dialog open onOpenChange={onClose}>
-      <DialogContent className="!max-w-[1000px] w-full max-h-[90vh] overflow-y-auto">
+      <DialogContent className="
+        !max-w-[1100px]
+        w-full
+        max-h-[90vh]
+        overflow-y-auto
+        rounded-2xl
+        p-6
+      ">
         <DialogHeader>
           <DialogTitle className="text-lg font-semibold text-gray-800">
             운동 분할 설정
           </DialogTitle>
         </DialogHeader>
 
-        <div className="mb-4">
-          <label className="mr-2 font-medium">분할 수:</label>
+        <div className="inline-flex rounded-lg border bg-gray-50 p-1">
           {[2, 3, 4, 5, 6].map(n => (
             <button
               key={n}
               onClick={() => setNumSplits(n)}
-              className={`px-3 py-1 mx-1 rounded ${numSplits === n ? 'bg-gray-600 text-white' : 'bg-gray-200'}`}
+              className={`
+                px-4 py-1.5 text-sm font-medium rounded-md transition
+                ${numSplits === n
+                  ? 'bg-gray-700 text-white shadow'
+                  : 'text-gray-600 hover:bg-gray-200'}
+              `}
             >
               {n}분할
             </button>
@@ -173,14 +236,17 @@ export default function SplitWorkout({ member, allTypes, onClose }: SplitWorkout
           <table className="w-full text-sm border">
             <thead>
               <tr className="bg-gray-100">
-                <th className="p-2 border text-left w-48">운동</th>
+                <th className="p-2 border text-center w-48">운동</th>
                 {splitNames.map((name, i) => (
-                  <th key={i} className="p-2 border">
-                    <div className="flex justify-center items-center">
+                  <th key={i} className="p-2 border bg-gray-50">
+                    <div className="flex flex-col items-center gap-1">
+                      <span className="text-xs text-gray-500">
+                        Split {i + 1}
+                      </span>
                       <Input
                         value={name}
                         onChange={(e) => handleNameChange(i, e.target.value)}
-                        className="text-center text-sm w-16 text-black bg-white"
+                        className="text-center text-sm w-20 font-semibold bg-white"
                       />
                     </div>
                   </th>
@@ -202,9 +268,27 @@ export default function SplitWorkout({ member, allTypes, onClose }: SplitWorkout
                   const [target, workout] = key.split('||')
                   return (
                     <tr key={i}>
-                      <td className="p-2 border whitespace-nowrap">{target} - {workout}</td>
+                      <td className="p-2 border">
+                        <div className="flex items-center gap-2">
+                          <span className="px-2 py-0.5 rounded text-xs bg-gray-200 text-gray-700">
+                            {target}
+                          </span>
+                          <span className="font-medium text-gray-800">
+                            {workout}
+                          </span>
+                        </div>
+                      </td>
+                      
                       {splitNames.map((_, idx) => (
-                        <td key={idx} className="p-2 border text-center">
+                        <td
+                          key={idx}
+                          className={`
+                            p-2 border text-center transition
+                            ${selected[key]?.[idx]
+                              ? 'bg-gray-100'
+                              : 'hover:bg-gray-50'}
+                          `}
+                        >
                           <Checkbox
                             checked={selected[key]?.[idx] || false}
                             onCheckedChange={() => handleToggle(key, idx)}
