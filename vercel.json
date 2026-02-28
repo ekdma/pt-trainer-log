@@ -1,7 +1,8 @@
 {
-  "functions": {
-    "app/api/mealReminderCron/route.ts": {
+  "crons": [
+    {
+      "path": "/api/mealReminderCron",
       "schedule": "50 11 * * *"
     }
-  }
+  ]
 }
