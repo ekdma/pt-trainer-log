@@ -2,31 +2,45 @@
   "compilerOptions": {
     "jsx": "react-jsx",
     "target": "ES2017",
-
-    "lib": ["dom", "dom.iterable", "esnext"],
-
+    "lib": [
+      "dom",
+      "dom.iterable",
+      "esnext"
+    ],
     "allowJs": true,
-    "checkJs": false,                // ⭐ JS 타입 체크 OFF
+    "checkJs": false, // ⭐ JS 타입 체크 OFF
     "skipLibCheck": true,
-
     "strict": false,
     "noImplicitAny": false,
-    "strictNullChecks": false,       // ⭐ 추가
+    "strictNullChecks": false, // ⭐ 추가
     "useUnknownInCatchVariables": false,
-
     "noEmit": true,
     "esModuleInterop": true,
-
     "module": "esnext",
     "moduleResolution": "node",
-
     "resolveJsonModule": true,
-    "isolatedModules": false,        // ⭐ 중요 (Next랑 충돌 줄임)
-
+    "isolatedModules": true, // ⭐ 중요 (Next랑 충돌 줄임)
     "incremental": true,
-
     "paths": {
-      "@/*": ["./*"]
-    }
-  }
+      "@/*": [
+        "./*"
+      ]
+    },
+    "plugins": [
+      {
+        "name": "next"
+      }
+    ]
+  },
+  "include": [
+    "next-env.d.ts",
+    ".next/types/**/*.ts",
+    ".next/dev/types/**/*.ts",
+    "**/*.mts",
+    "**/*.ts",
+    "**/*.tsx"
+  ],
+  "exclude": [
+    "node_modules"
+  ]
 }

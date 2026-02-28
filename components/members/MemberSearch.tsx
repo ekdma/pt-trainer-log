@@ -15,6 +15,7 @@ import { toast } from 'sonner'
 import ConfirmDeleteItem from '@/components/ui/ConfirmDeleteItem' 
 import { ToggleGroup, ToggleGroupItem } from '@/components/ui/toggle-group'
 import { Utensils } from 'lucide-react'
+import MealToggle from './MealToggle'
 
 function toOrdinal(num: number) {
   const v = num % 100;
@@ -537,7 +538,12 @@ export default function MemberSearch({
                 </ToggleGroup>
 
                 {/* 식단 관리 토글 */}
-                <ToggleGroup
+                <MealToggle
+                  memberId={member.member_id}
+                  mealEnabled={member.meal_enabled}
+                  onRefresh={onRefresh}
+                />
+                {/* <ToggleGroup
                   type="single"
                   value={member.meal_enabled ? 'on' : 'off'}
                   onValueChange={async (value) => {
@@ -568,7 +574,7 @@ export default function MemberSearch({
                     ON
                   </ToggleGroupItem>
                   <ToggleGroupItem value="off">OFF</ToggleGroupItem>
-                </ToggleGroup>
+                </ToggleGroup> */}
 
                 
                 <div className="flex gap-2">
