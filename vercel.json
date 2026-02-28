@@ -2,7 +2,7 @@
   "crons": [
     {
       "path": "/api/mealReminderCron",
-      "schedule": "50 11 * * *"
+      "schedule": "00 12 * * *"
     }
   ]
 }
