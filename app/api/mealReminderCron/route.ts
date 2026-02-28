@@ -2,7 +2,7 @@ import { NextResponse } from 'next/server'
 import { createClient } from '@supabase/supabase-js'
 import https from 'https'
 
-export async function POST() {
+export async function GET() {
   console.log('🔥 Cron triggered')
 
   const supabase = createClient(
