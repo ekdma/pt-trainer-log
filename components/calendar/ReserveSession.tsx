@@ -55,8 +55,18 @@ export default function ReserveMemberSession({ selectedDate, trainerId, onSessio
   const [memberPackageMap, setMemberPackageMap] = useState<Record<string, { start_date: string, end_date: string }>>({})
   const [allConfirmedSessions, setAllConfirmedSessions] = useState<CalendarSession[]>([])
 
+  // useEffect(() => {
+  //   setAvailableTimes(Array.from({ length: 15 }, (_, i) => `${9 + i}:00`))
+  // }, [])
   useEffect(() => {
-    setAvailableTimes(Array.from({ length: 15 }, (_, i) => `${9 + i}:00`))
+    const times: string[] = []
+
+    for (let hour = 9; hour <= 23; hour++) {
+      times.push(`${hour}:00`)
+      times.push(`${hour}:30`)
+    }
+
+    setAvailableTimes(times)
   }, [])
 
   useEffect(() => {
