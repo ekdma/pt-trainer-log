@@ -21,7 +21,21 @@ interface CalendarSession {
   }
 }
 
-const HOURS = Array.from({ length: 16 }, (_, i) => 6 + i)
+// const HOURS = Array.from({ length: 16 }, (_, i) => 6 + i)
+const START_HOUR = 9
+const END_HOUR = 21 // 마지막은 21:30까지 나오게
+
+const TIME_SLOTS = Array.from(
+  { length: (END_HOUR - START_HOUR + 1) * 2 },
+  (_, i) => {
+    const totalMinutes = START_HOUR * 60 + i * 30
+    const hour = Math.floor(totalMinutes / 60)
+    const minute = totalMinutes % 60
+    return `${hour.toString().padStart(2, '0')}:${minute
+      .toString()
+      .padStart(2, '0')}`
+  }
+)
 
 const MEMBER_COLOR_PALETTE = [
   // 부드러운 파스텔 톤 배경 + 조금 진한 글자색
@@ -257,22 +271,25 @@ export default function HomePage() {
                 </tr>
               </thead>
               <tbody>
-                {HOURS.map((hour) => {
-                  const hourStr = hour.toString().padStart(2, '0') + ':00'
-                  const isCurrentHour = hour === currentHour
+                {TIME_SLOTS.map((time) => {
+                  const [hourStr, minuteStr] = time.split(':')
+                  const isCurrentSlot =
+                    Number(hourStr) === currentHour &&
+                    Number(minuteStr) === (currentMinute >= 30 ? 30 : 0)
+                  // const isCurrentHour = hour === currentHour
 
                   return (
-                    <tr key={hour} className={isCurrentHour ? 'relative' : ''}>
+                    <tr key={time} className={isCurrentSlot ? 'relative' : ''}>
                       <td
                         className="border border-gray-300 px-1 py-1 text-center text-[10px] sm:text-[12px] bg-gray-100 font-mono w-9 sm:w-16"
                       >
-                        {hour}:00
+                        {time}
                       </td>
                       {weekDays.map((day) => {
                         const cellSessions = sessions.filter(
                           (s) =>
                             s.workout_date === format(day, 'yyyy-MM-dd') &&
-                            s.workout_time.startsWith(hourStr) &&
+                            s.workout_time.slice(0, 5) === time &&
                             (selectedMemberId === null || s.member_id === selectedMemberId)
                         )
                       
@@ -281,10 +298,10 @@ export default function HomePage() {
 
                         return (
                           <td
-                            key={format(day, 'yyyy-MM-dd') + '-' + hour}
+                            key={format(day, 'yyyy-MM-dd') + '-' + time}
                             className="border border-gray-300 px-1 py-1 align-top min-h-[48px] max-h-[72px] overflow-hidden relative text-[10px] sm:text-[9px]"
                           >
-                            {isCurrentHour && (
+                            {isCurrentSlot && (
                               <div
                                 style={{
                                   position: 'absolute',
